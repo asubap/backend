@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { MemberInfoService } from "../services/memberInfoService";
 import extractToken from "../utils/extractToken";
-import UserRoleService from "../services/userRoleService";
+import UserRoleService from "../services/userService";
 import { EventService } from "../services/eventService";
 import { geocodeAddress } from "../utils/geocoding";
 
@@ -99,7 +99,7 @@ export class EventController {
 
 
         const { lat, lon } = await geocodeAddress(location);
-        const user_id = await this.userRoleService.getUserID(user_email);
+        const user_id = "hi"
 
         try {
             const event = await this.eventService.addEvent(user_id, name, date, location, description, lat, lon, time, sponsors);

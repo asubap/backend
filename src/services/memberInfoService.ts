@@ -29,53 +29,61 @@ export class MemberInfoService {
      * @param user_id 
      * @returns information about the member
      */
-    async getMemberInfo(user_id: string) {
-        const { data: member_info, error } = await this.supabase
-            .from('member_info')
-            .select('*')
-            .eq('user_id', user_id)
-
-        if (error) throw error;
-        return member_info;
-    }
-
-    /**
-     * Get all member info
-     * @returns information about all members
-     */
-    async getAllMemberInfo() {
-        const { data, error } = await this.supabase.from('member_info').select('*');
+    async getMemberInfo(user_email: string) {
+        const { data: members, error } = await this.supabase.from('member_info').select('*').eq('user_email', user_email);
         
         if (error) throw error;
 
-        // for each member, get their role as well
-        const member_info = await Promise.all(data.map(async (member) => {
-            const { data: role_data, error: role_error } = await this.supabase.from('user_roles_view').select('*').eq('user_id', member.user_id);
-            if (role_error) throw role_error;
-            return { ...member, roles: role_data[0].roles };
+        // Get roles for each member
+        const membersWithRoles = await Promise.all(members.map(async (member) => {
+            const { data: roleData, error: roleError } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            if (roleError) {
+                console.error(`Error fetching role for ${member.user_email}:`, roleError);
+                return { ...member, role: null };
+            }
+
+            return { ...member, role: roleData?.role };
         }));
 
-        return member_info;
+        return membersWithRoles;
     }
 
 
-    /**
-     * Edit member info
-     * @param user_id - The user id of the member
-     * @param bio - The bio of the member
-     * @param internship - The internship of the member
-     * @param first_name - The first name of the member
-     * @param last_name - The last name of the member
-     * @param year - The year of the member
-     * @param major - The major of the member
-     * @returns the updated member info
-     */
-    async editMemberInfo(user_id: string, updateFields: Record<string, string>) {
+    async getAllMemberInfo() {
+        const { data: members, error } = await this.supabase.from('member_info').select('*');
+        
+        if (error) throw error;
+
+        // Get roles for each member
+        const membersWithRoles = await Promise.all(members.map(async (member) => {
+            const { data: roleData, error: roleError } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            if (roleError) {
+                console.error(`Error fetching role for ${member.user_email}:`, roleError);
+                return { ...member, role: null };
+            }
+
+            return { ...member, role: roleData?.role || null };
+        }));
+
+        return membersWithRoles;
+    }
+
+    async editMemberInfo(user_email: string, updateFields: Record<string, string>) {
         const { data, error } = await this.supabase
             .from('member_info')
             .update(updateFields)
-            .eq('user_id', user_id)
-            .select();
+            .eq('user_email', user_email)
+            .select()
 
         if (error) throw error;
         return data;

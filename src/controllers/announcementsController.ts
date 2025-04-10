@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import extractToken from "../utils/extractToken";
-import UserRoleService from "../services/userRoleService";
+import UserRoleService from "../services/userService";
 import { announcementsService } from "../services/announcementsService";
 
 export class announcementsController {
@@ -72,7 +72,7 @@ export class announcementsController {
         }
 
 
-        const user_id = await this.userRoleService.getUserID(user_email);
+        const user_id = "hi"
 
         try {
             const announcements = await this.announcementsService.addannouncements(user_id, title, description);

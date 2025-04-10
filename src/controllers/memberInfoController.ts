@@ -1,23 +1,14 @@
 import { Request, Response } from "express";
 import { MemberInfoService } from "../services/memberInfoService";
-import extractToken from "../utils/extractToken";
-import UserRoleService from "../services/userRoleService";
+import extractToken from "../utils/extractToken";   
 export class MemberInfoController {
     private memberInfoService: MemberInfoService;
-    private userRoleService: UserRoleService;
 
     constructor() {
         this.memberInfoService = new MemberInfoService();
-        this.userRoleService = new UserRoleService();
     }
 
 
-    /**
-     * Get all member info
-     * @param req 
-     * @param res 
-     * @returns information about all members
-     */
     async getAllMemberInfo(req: Request, res: Response) {
         try {
             const token = extractToken(req);
@@ -28,26 +19,18 @@ export class MemberInfoController {
 
             this.memberInfoService.setToken(token);
 
-            const memberInfo = await this.memberInfoService.getAllMemberInfo();
-            // for the memberInfo, we need to convert the user_id to user_email
-            const memberInfoWithEmail = await Promise.all(memberInfo.map(async (member) => {
-                const user_email = await this.userRoleService.getUserEmail(member.user_id);
-                return { ...member, user_email };
-            }));
+            console.log("Getting all member info");
 
-            res.status(200).json(memberInfoWithEmail);
+            const memberInfo = await this.memberInfoService.getAllMemberInfo();
+
+            res.status(200).json(memberInfo);
         } catch (error) {
-            res.status(500).json({ error: 'Internal server error' });
+            res.status(500).json({ error: 'Couldn\'t get all member info' });
         }
     }
 
-    /**
-     * Get member info
-     * @param req 
-     * @param res 
-     * @returns information about the member
-     */
-    async getMemberInfo(req: Request, res: Response) {
+
+    async getMemberInfoByEmail(req: Request, res: Response) {
         try {
             const token = extractToken(req);
             if (!token) {
@@ -65,10 +48,10 @@ export class MemberInfoController {
                 return;
             }
 
-            const user_id = await this.userRoleService.getUserID(user_email);
-
+            console.log("User email: ", user_email);
             // get member info
-            const memberInfo = await this.memberInfoService.getMemberInfo(user_id);
+            const memberInfo = await this.memberInfoService.getMemberInfo(user_email);
+            console.log("Member info: ", memberInfo);
 
             res.status(200).json(memberInfo);
         } catch (error) {
@@ -83,7 +66,7 @@ export class MemberInfoController {
      * @returns the updated member info
      */
     async editMemberInfo(req: Request, res: Response) {
-        const { user_email, about, internship_experience, first_name, last_name, year, major, contact_me, phone_number, graduation_year, member_status } = req.body;
+        const { user_email, name, major, about, graduating_year, links } = req.body;
 
         const token = extractToken(req);
         if (!token) {
@@ -100,35 +83,20 @@ export class MemberInfoController {
 
         // Build an update object only with non-empty fields
         const updateFields: Record<string, string> = {};
-        if (about && about.trim() !== '') {
-            updateFields.about = about;
-        }
-        if (internship_experience && internship_experience.trim() !== '') {
-            updateFields.internship_experience = internship_experience;
-        }
-        if (first_name && first_name.trim() !== '') {
-            updateFields.first_name = first_name;
-        }
-        if (last_name && last_name.trim() !== '') {
-            updateFields.last_name = last_name;
-        }
-        if (year && year.trim() !== '') {
-            updateFields.year = year;
+        if (name && name.trim() !== '') {
+            updateFields.name = name;
         }
         if (major && major.trim() !== '') {
             updateFields.major = major;
         }
-        if (contact_me && contact_me.trim() !== '') {
-            updateFields.contact_me = contact_me;
+        if (about && about.trim() !== '') {
+            updateFields.about = about;
         }
-        if (phone_number && phone_number.trim() !== '') {
-            updateFields.phone_number = phone_number;
+        if (graduating_year && graduating_year.trim() !== '') {
+            updateFields.graduating_year = graduating_year;
         }
-        if (graduation_year && graduation_year.trim() !== '') {
-            updateFields.graduation_year = graduation_year;
-        }
-        if (member_status && member_status.trim() !== '') {
-            updateFields.member_status = member_status;
+        if (links) {
+            updateFields.links = links;
         }
         
         // If there's nothing to update, respond accordingly
@@ -138,55 +106,15 @@ export class MemberInfoController {
         }
 
         try {
-            const user_id = await this.userRoleService.getUserID(user_email);
             // edit member info
-            const memberInfo = await this.memberInfoService.editMemberInfo(user_id, updateFields);
+            const memberInfo = await this.memberInfoService.editMemberInfo(user_email, updateFields);
+            console.log("Member info: ", memberInfo);
             if (!memberInfo) {
                 res.status(404).json({ error: 'Member info not found.' });
                 return;
             }
 
             res.status(200).json("Member info updated successfully");
-        } catch (error) {
-            res.status(500).json({ error: 'Internal server error' });
-        }
-    }
-
-
-    /**
-     * Delete member
-     * @param req 
-     * @param res 
-     * @returns the updated member info
-     */
-    async deleteMember(req: Request, res: Response) {
-        try {
-            const token = extractToken(req);
-
-            if (!token) {
-                res.status(401).json({ error: 'No authorization token provided' });
-                return;
-            }
-
-            this.memberInfoService.setToken(token);
-
-            const { user_email } = req.body;
-            
-            if (!user_email) {
-                res.status(400).json({ error: 'User email is required' });
-                return;
-            }
-
-            const user_id = await this.userRoleService.getUserID(user_email);
-
-            // delete member
-            const memberInfo = await this.memberInfoService.deleteMember(user_id);
-            if (!memberInfo) {
-                res.status(404).json({ error: 'Member info not found.' });
-                return;
-            }
-
-            res.status(200).json("Member deleted successfully");
         } catch (error) {
             res.status(500).json({ error: 'Internal server error' });
         }
