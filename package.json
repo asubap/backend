@@ -1,0 +1,43 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "vercel-build": "echo hello",
+    "dev": "ts-node -r tsconfig-paths/register src/server.ts",
+    "build": "tsc",
+    "start": "node dist/api/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "@types/axios": "^0.14.4",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
+    "axios": "^1.8.4",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-jwt": "^8.5.1",
+    "express-validator": "^7.2.1",
+    "geolib": "^3.3.4",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "1.4.5-lts.2",
+    "node-fetch": "^3.3.2",
+    "ts-node": "^10.9.2",
+    "vercel": "^41.5.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/multer": "^1.4.12",
+    "tsconfig-paths": "^4.2.0"
+  }
+}
