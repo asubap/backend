@@ -22,11 +22,7 @@ export class EventController {
      */
     async getEvents(req: Request, res: Response) {
         try {
-
-            console.log('Getting events...');
             const token = extractToken(req);
-            console.log('Token:', token ? 'Present' : 'Missing');
-
 
             if (!token) {
                 res.status(401).json({ error: 'No authorization token provided' });
@@ -35,10 +31,7 @@ export class EventController {
 
             this.eventService.setToken(token as string);
 
-            console.log('Token set in service');
-
             const events = await this.eventService.getEvents();
-            console.log('Events retrieved:', events);
             res.json(events);
         } catch (error) {
             console.error('Error getting events:', error);
@@ -89,21 +82,17 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { user_email, name, date, location, description, time, sponsors} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending} = req.body;
 
-        if (!user_email || !name || !date || !location || !description || !time || !sponsors) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-
-
-        const { lat, lon } = await geocodeAddress(location);
-        const user_id = "hi"
+        const { lat, lon } = await geocodeAddress(event_location);
 
         try {
-            const event = await this.eventService.addEvent(user_id, name, date, location, description, lat, lon, time, sponsors);
-            // res.json(event);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, lat, lon, event_time, event_hours, event_hours_type, sponsors_attending);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -118,7 +107,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors} = req.body;
+        const { event_id, event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, event_rsvped, event_attending} = req.body;
 
         const token = extractToken(req);
         
@@ -137,26 +126,38 @@ export class EventController {
         
         // Build an update object only with non-empty fields
         const updateFields: Record<string, any> = {};
-        if (name && name.trim() !== '') {
-            updateFields.name = name;
+        if (event_name && event_name.trim() !== '') {
+            updateFields.event_name = event_name;
         }
-        if (date && date.trim() !== '') {
-            updateFields.date = date;
+        if (event_date && event_date.trim() !== '') {
+            updateFields.event_date = event_date;
         }
-        if (location && location.trim() !== '') {
-            updateFields.location = location;
-            const { lat, lon } = await geocodeAddress(location);
-            updateFields.location_lat = lat;
-            updateFields.location_long = lon;
+        if (event_location && event_location.trim() !== '') {
+            updateFields.event_location = event_location;
+            const { lat, lon } = await geocodeAddress(event_location);
+            updateFields.event_location_lat = lat;
+            updateFields.event_location_long = lon;
         }
-        if (description && description.trim() !== '') {
-            updateFields.description = description;
+        if (event_description && event_description.trim() !== '') {
+            updateFields.event_description = event_description;
         }
-        if (time && time.trim() !== '') {
-            updateFields.time = time;
+        if (event_time && event_time.trim() !== '') {
+            updateFields.event_time = event_time;
         }
-        if (sponsors && sponsors.length > 0) {
-            updateFields.sponsors = sponsors;
+        if (sponsors_attending && sponsors_attending.length > 0) {
+            updateFields.sponsors_attending = sponsors_attending;
+        }
+        if (event_rsvped && event_rsvped.length > 0) {
+            updateFields.event_rsvped = event_rsvped;
+        }
+        if (event_attending && event_attending.length > 0) {
+            updateFields.event_attending = event_attending;
+        }
+        if (event_hours && event_hours.trim() !== '') {
+            updateFields.event_hours = event_hours;
+        }
+        if (event_hours_type && event_hours_type.trim() !== '') {
+            updateFields.event_hours_type = event_hours_type;
         }
         
         // If there's nothing to update, respond accordingly
@@ -166,11 +167,7 @@ export class EventController {
         }
         
         try {
-            const updatedEvent = await this.eventService.editEvent(event_id, updateFields);
-            if (!updatedEvent) {
-                res.status(404).json({ error: 'Event not found.' });
-                return;
-            }
+            await this.eventService.editEvent(event_id, updateFields);
             res.json("Event updated successfully");
         } catch (error) {
             console.error('Error updating event:', error);
@@ -204,37 +201,6 @@ export class EventController {
             } else {
                 res.status(500).json({ error: 'Failed to delete event' });
             }
-        }
-    }
-
-
-    // return all events (past and present given a date)
-    async getEventsByDate(req: Request, res: Response) {
-        const token = extractToken(req);
-
-        if (!token) {
-            res.status(401).json({ error: 'No authorization token provided' });
-            return;
-        }
-
-        this.eventService.setToken(token as string);
-
-        const { date } = req.body;
-        
-        try {
-            let events;
-            if (date) {
-                const formattedDate = new Date(date).toISOString().split('T')[0]; // YYYY-MM-DD
-                events = await this.eventService.getEventsByDate(formattedDate);
-            } else {
-                // get today's date in YYYY-MM-DD format
-                const today = new Date().toISOString().split('T')[0];
-                events = await this.eventService.getEventsByDate(today);
-            }
-            res.json(events);
-        } catch (error) {
-            console.error('Error getting events:', error);
-            res.status(500).json({ error: 'Failed to get events' });
         }
     }
 
@@ -324,9 +290,7 @@ export class EventController {
      */
     async getPublicEvents(req: Request, res: Response) {
         try {
-            console.log('Getting public events...');
             const events = await this.eventService.getPublicEvents();
-            console.log('Public events retrieved:', events);
             res.json(events);
         } catch (error) {
             console.error('Error getting public events:', error);

@@ -15,13 +15,10 @@ export class EventService {
   }
 
   async getEvents() {
-    console.log('EventService: Getting events from Supabase...');
     const { data, error } = await this.supabase.from("events").select("*");
     if (error) {
-        console.error('EventService: Error fetching events:', error);
         throw error;
     }
-    console.log('EventService: Events fetched successfully:', data);
     return data;
   }
 
@@ -36,20 +33,21 @@ export class EventService {
   }
 
 
-  async addEvent(user_id: string, name: string, date: string, location: string, description: string, lat: number, long: number, time: string, sponsors: string[]) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[]) {
         const { data, error } = await this.supabase
             .from('events')
             .insert(
                 {
-                    time: time,
-                    name: name,
-                    date: date,
-                    location: location,
-                    location_lat: lat,
-                    location_long: long,
-                    description: description,
-                    created_by_id: user_id,
-                    sponsors: sponsors
+                    event_time: time,
+                    event_hours: hours,
+                    event_hours_type: hours_type,
+                    event_name: name,
+                    event_date: date,
+                    event_location: location,
+                    event_location_lat: lat,
+                    event_location_long: long,
+                    event_description: description,
+                    sponsors_attending: sponsors
                 });
 
         if (error) console.log(error);
