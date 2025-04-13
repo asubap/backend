@@ -19,8 +19,6 @@ export class MemberInfoController {
 
             this.memberInfoService.setToken(token);
 
-            console.log("Getting all member info");
-
             const memberInfo = await this.memberInfoService.getAllMemberInfo();
 
             res.status(200).json(memberInfo);
@@ -48,10 +46,8 @@ export class MemberInfoController {
                 return;
             }
 
-            console.log("User email: ", user_email);
             // get member info
             const memberInfo = await this.memberInfoService.getMemberInfo(user_email);
-            console.log("Member info: ", memberInfo);
 
             res.status(200).json(memberInfo);
         } catch (error) {
@@ -108,7 +104,6 @@ export class MemberInfoController {
         try {
             // edit member info
             const memberInfo = await this.memberInfoService.editMemberInfo(user_email, updateFields);
-            console.log("Member info: ", memberInfo);
             if (!memberInfo) {
                 res.status(404).json({ error: 'Member info not found.' });
                 return;

@@ -4,7 +4,7 @@ import eventRoutes from "./events";
 import announcementsRoutes from "./announcements";
 import profilePhotoRoutes from './profilePhotoRoutes';
 import memberInfoRoutes from "./memberInfo";
-import sponsorRoutes from "./sponsorRoutes";
+import sponsorRoutes from "./sponsor";
 const router = Router();
 
 router.get("/", (req: Request, res: Response) => {
@@ -16,6 +16,6 @@ router.use("/users", userRoutes);
 router.use("/events", eventRoutes);
 router.use("/announcements", announcementsRoutes);
 router.use('/profile-photo', profilePhotoRoutes);
-router.use("/sponsors", sponsorRoutes);
+router.use('/sponsors', sponsorRoutes);
 
 export default router;

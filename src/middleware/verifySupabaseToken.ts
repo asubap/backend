@@ -19,30 +19,25 @@ export interface SupabaseJwtPayload {
 }
 
 export const verifySupabaseToken = (req: Request, res: Response, next: NextFunction) => {
-  console.log('Verifying Supabase token...');
   
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    console.log('Missing Authorization header');
     res.status(401).json({ error: 'Missing Authorization header' });
     return;
   }
 
   const token = authHeader.split(' ')[1];
   if (!token) {
-    console.log('Missing token in Authorization header');
     res.status(401).json({ error: 'Missing token' });
     return;
   }
 
   try {
-    console.log('Attempting to verify token...');
     // First try to verify with JWT_SECRET
     const decoded = jwt.decode(token) as SupabaseJwtPayload;
-    console.log('Decoded token:', decoded);
+
 
     if (!decoded || !decoded.sub) {
-      console.error('Invalid token format');
       res.status(401).json({ error: 'Invalid token format' });
       return;
     }
@@ -54,7 +49,6 @@ export const verifySupabaseToken = (req: Request, res: Response, next: NextFunct
       role: decoded.role
     };
 
-    console.log('Token verified successfully. User:', (req as any).user);
     next();
   } catch (err) {
     console.error('Token verification failed:', err);
