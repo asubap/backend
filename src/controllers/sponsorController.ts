@@ -199,4 +199,79 @@ export const deleteSponsorProfilePhoto = async (req: Request, res: Response): Pr
     console.error('Error deleting sponsor profile photo:', error);
     res.status(500).json({ error: (error as Error).message });
   }
+};
+
+// Update sponsor details (about, links)
+export const updateSponsorDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { companyName } = req.params; 
+    const updateData = req.body; 
+
+    if (!companyName) {
+      res.status(400).json({ error: 'Company name is required in the URL' });
+      return;
+    }
+
+    if (typeof updateData !== 'object' || updateData === null || Object.keys(updateData).length === 0) {
+        res.status(400).json({ error: 'Request body must contain data to update (e.g., {"about": "..."} or {"links": [...]}).' });
+        return;
+    }
+
+    // Filter updateData and perform type checking
+    const allowedUpdates: { about?: string; links?: string[] } = {};
+    if (updateData.hasOwnProperty('about')) {
+        if (typeof updateData.about === 'string') {
+            allowedUpdates.about = updateData.about;
+        } else {
+             res.status(400).json({ error: "The 'about' field must be a string." });
+             return;
+        }
+    }
+    if (updateData.hasOwnProperty('links')) {
+        if (Array.isArray(updateData.links)) {
+            // Ensure all elements in the array are strings
+            if (updateData.links.every((link: unknown) => typeof link === 'string')) {
+                allowedUpdates.links = updateData.links as string[];
+            } else {
+                res.status(400).json({ error: "All items in the 'links' array must be strings." });
+                return;
+            }
+        } else {
+            res.status(400).json({ error: "The 'links' field must be an array of strings." });
+            return;
+        }
+    }
+
+    // Check if any valid fields were provided after filtering
+    if (Object.keys(allowedUpdates).length === 0) {
+        res.status(400).json({ error: "Request body must contain at least one valid field to update: 'about' (string) or 'links' (array of strings)." });
+        return;
+    }
+
+    const sponsorService = new SponsorService();
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    const token = authHeader.split(' ')[1];
+    sponsorService.setToken(token);
+
+    const result = await sponsorService.updateSponsorDetails(companyName, allowedUpdates);
+    res.status(200).json(result);
+
+  } catch (error) {
+    console.error('Error updating sponsor details:', error);
+    if (error instanceof Error) {
+        // Use specific error messages from the service or a generic one
+        if (error.message.includes('not found') || error.message.includes('No update data') || error.message.includes('must be an array') || error.message.includes('must be strings') || error.message.includes('must be a string')) {
+            res.status(400).json({ error: error.message });
+        } else {
+             res.status(500).json({ error: 'Failed to update sponsor details.' });
+        }
+    } else {
+        res.status(500).json({ error: 'An unexpected error occurred.' });
+    }
+  }
 }; 

@@ -327,4 +327,54 @@ export class SponsorService {
       throw error;
     }
   }
+
+  /**
+   * Update sponsor details (about, links)
+   * @param companyName - The current company name to identify the sponsor
+   * @param updateData - An object containing the fields to update (e.g., { about?: string, links?: string[] })
+   */
+  async updateSponsorDetails(companyName: string, updateData: { about?: string; links?: string[] }) {
+    try {
+      // Ensure at least one field is being updated
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No update data provided.");
+      }
+
+      // Validate links format if provided
+      if (updateData.links !== undefined && !Array.isArray(updateData.links)) {
+        throw new Error("Links must be an array of strings.");
+      }
+      // Optional: Further validate if each item in links is a string
+      if (updateData.links?.some(link => typeof link !== 'string')) {
+           throw new Error("All items in the links array must be strings.");
+      }
+      if (updateData.about !== undefined && typeof updateData.about !== 'string') {
+          throw new Error("About must be a string.");
+      }
+
+      const { data, error } = await this.supabase
+        .from('sponsor_info')
+        .update(updateData) 
+        .eq('company_name', companyName)
+        .select() // Optionally select the updated row to return it
+        .single(); // Expect only one row to be updated
+
+      if (error) {
+          if (error.code === 'PGRST116' && error.details.includes('0 rows')) {
+              throw new Error(`Sponsor with company name '${companyName}' not found.`);
+          }
+          throw error; // Re-throw other errors
+      }
+
+      return {
+        success: true,
+        message: 'Sponsor details updated successfully.',
+        updatedSponsor: data
+      };
+    } catch (error) {
+      console.error('Error updating sponsor details:', error);
+      // Re-throw the error to be caught by the controller
+      throw error;
+    }
+  }
 } 

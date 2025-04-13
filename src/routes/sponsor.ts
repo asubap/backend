@@ -21,6 +21,13 @@ router.get("/:companyName/resources", sponsorController.getSponsorResources);
 
 // Protected routes (authentication required)
 
+// Sponsor Details Management
+router.patch(
+  "/:companyName/details",
+  verifySupabaseToken,
+  sponsorController.updateSponsorDetails
+);
+
 // Resource Management
 router.post(
   "/:companyName/resources",
