@@ -115,8 +115,8 @@ export class SponsorController {
   // Get sponsor resources by passcode
   async getSponsorResources(req: Request, res: Response): Promise<void> {
     try {
-      const { passcode } = req.params;
-      if (!passcode) {
+      const { companyName } = req.params;
+      if (!companyName) {
         res.status(400).json({ error: 'Company name is required' });
         return;
       }
@@ -130,7 +130,7 @@ export class SponsorController {
         sponsorService.setToken(token);
       }
       
-      const resources = await sponsorService.getSponsorResources(passcode);
+      const resources = await sponsorService.getSponsorResources(companyName);
       res.status(200).json(resources);
     } catch (error) {
       console.error('Error fetching sponsor resources:', error);
