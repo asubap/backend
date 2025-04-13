@@ -2,13 +2,78 @@ import { Request, Response } from 'express';
 import { SponsorService } from '../services/sponsorService';
 import extractToken from "../utils/extractToken";  
 import { passcodeHash } from '../utils/passcode'; 
-
+import bcrypt from 'bcryptjs';
+import sgMail from '@sendgrid/mail';
 export class SponsorController {
   private sponsorService: SponsorService;
+  private sendgridApiKey: string = process.env.SENDGRID_API_KEY || '';
 
   constructor() {
     this.sponsorService = new SponsorService();
+    sgMail.setApiKey(this.sendgridApiKey);
+
   }
+
+
+
+  async addSponsor(req: Request, res: Response) {
+    try {
+        const token = extractToken(req);
+        if (!token) {
+            res.status(401).json('No authorization token provided');
+            return;
+        }
+
+        this.sponsorService.setToken(token as string);
+
+        const { sponsor_name, passcode, emailList } = req.body;
+
+        if (!sponsor_name || !passcode || !emailList) {
+            res.status(400).json('Sponsor name, passcode and email list are required');
+            return;
+        }
+        if (!Array.isArray(emailList)) {
+            res.status(400).json('Email list must be an array');
+            return;
+        }
+        if (emailList.length === 0) {
+            res.status(400).json('Email list cannot be empty');
+            return;
+        }
+        // Check if the user is a sponsor
+        // Ensure passcode is converted to string before hashing
+        //hash passcode
+        //"$2b$10$siwRx21fFrmlJeJDOR.Icesb6QYHdXtewWoBV9HUTilh6yQb2LBnG"
+        const hashedPasscode = await bcrypt.hash(passcode, 10);
+        //check and compare with hashcode in database
+        //const isMatch = await bcrypt.compare(passcode, "$2b$10$yeyihth2a3iJyIYoukurKujALO.r0rzZriWmYz4aYvVQhZnz67vJi");
+
+        // Use the sponsor service
+        await this.sponsorService.addSponsor(sponsor_name, hashedPasscode, emailList);
+        
+        // Send invitation emails to all recipients in emailList with the original passcode
+        try {
+          await this.sponsorService.sendSponsorInvitations(sponsor_name, passcode, emailList);
+        } catch (emailError) {
+          console.error('Failed to send some invitation emails:', emailError);
+          // Continue with the response even if some emails fail
+        }
+        
+        const sponsors = {sponsor_name, emailList};
+        
+        // Send success response
+        res.status(200).json({ 
+          message: 'Sponsors added successfully', 
+          sponsors,
+          emailsSent: true
+        });
+        
+    } catch (error) {
+        console.error('Error adding sponsor:', error);
+        res.status(500).json('Failed to add sponsor');
+        return;
+    }
+}
 
   // Get all sponsors
   async getAllSponsors(req: Request, res: Response): Promise<void> {
@@ -21,34 +86,7 @@ export class SponsorController {
     }
   };
 
-  // Add a new sponsor
-  async addSponsor(req: Request, res: Response) {
-    try {
-      const { sponsor, passcode, emails } = req.body;
-      if (!sponsor || !passcode || !emails) {
-        res.status(400).json({ error: 'Sponsor, passcode, and emails are required' });
-        return;
-      }
-
-      const token = extractToken(req);
-
-      if (!token) {
-        res.status(401).json({ error: 'Authentication required' });
-        return;
-      }
-
-      this.sponsorService.setToken(token);
-
-      // hash passcode and store
-      const passcode_hash: string = await passcodeHash(passcode);
-
-      await this.sponsorService.addSponsor(sponsor, passcode_hash, emails);
-      res.json("Sponsor added successfully");
-    } catch (error) {
-      console.error('Error adding sponsor:', error);
-      res.status(500).json({ error: (error as Error).message });
-    }
-  }
+  
 
   async getSponsorByPasscode(req: Request, res: Response): Promise<void> {
     try {
