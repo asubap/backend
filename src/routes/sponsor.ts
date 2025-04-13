@@ -18,12 +18,12 @@ const controller = new SponsorController();
 
 // Public routes (no authentication required)
 router
-.post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add sponsor-email and assign role
+.post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters 
  // delete user-email
 .get("/", controller.getAllSponsors.bind(controller)) // get all sponsors
 .get("/:companyName/resources", controller.getSponsorResources.bind(controller)) // get sponsor resources by company name
 
-.post("/add-sponsor", controller.addSponsor.bind(controller)) // add a new sponsor;
+
 .post("/get-sponsor-info",controller.getSponsorByPasscode.bind(controller)) // get sponsor info by company name;
 
 // Sponsor Details Management
