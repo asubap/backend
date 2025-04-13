@@ -238,8 +238,8 @@ export class EventService {
     console.log('EventService: Getting public events from Supabase...');
     const { data, error } = await this.supabase
       .from("events")
-      .select("id, name, description, date")
-      .order('date', { ascending: true });
+      .select("id, event_name, event_description, event_date")
+      .order('event_date', { ascending: true });
     
     if (error) {
       console.error('EventService: Error fetching public events:', error);
