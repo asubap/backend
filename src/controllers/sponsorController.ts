@@ -2,13 +2,20 @@ import { Request, Response } from 'express';
 import { SponsorService } from '../services/sponsorService';
 import extractToken from "../utils/extractToken";  
 import { passcodeHash } from '../utils/passcode'; 
-
+import bcrypt from 'bcryptjs';
+import sgMail from '@sendgrid/mail';
 export class SponsorController {
   private sponsorService: SponsorService;
+  private sendgridApiKey: string = process.env.SENDGRID_API_KEY || '';
 
   constructor() {
     this.sponsorService = new SponsorService();
+    sgMail.setApiKey(this.sendgridApiKey);
+
   }
+
+
+
   async addSponsor(req: Request, res: Response) {
     try {
         const token = extractToken(req);
@@ -36,17 +43,30 @@ export class SponsorController {
         // Check if the user is a sponsor
         // Ensure passcode is converted to string before hashing
         //hash passcode
+        //"$2b$10$siwRx21fFrmlJeJDOR.Icesb6QYHdXtewWoBV9HUTilh6yQb2LBnG"
         const hashedPasscode = await bcrypt.hash(passcode, 10);
         //check and compare with hashcode in database
-        // const isMatch = await bcrypt.compare(passcode, "your_hashed-passcode");
+        //const isMatch = await bcrypt.compare(passcode, "$2b$10$yeyihth2a3iJyIYoukurKujALO.r0rzZriWmYz4aYvVQhZnz67vJi");
 
         // Use the sponsor service
-        const sponsors = {sponsor_name, hashedPasscode, emailList};
-        //to check if hash is right
-        // const sponsors = {sponsor_name, isMatch, emailList};
-
+        await this.sponsorService.addSponsor(sponsor_name, hashedPasscode, emailList);
+        
+        // Send invitation emails to all recipients in emailList with the original passcode
+        try {
+          await this.sponsorService.sendSponsorInvitations(sponsor_name, passcode, emailList);
+        } catch (emailError) {
+          console.error('Failed to send some invitation emails:', emailError);
+          // Continue with the response even if some emails fail
+        }
+        
+        const sponsors = {sponsor_name, emailList};
+        
         // Send success response
-        res.status(200).json({ message: 'Sponsors added successfully', sponsors });
+        res.status(200).json({ 
+          message: 'Sponsors added successfully', 
+          sponsors,
+          emailsSent: true
+        });
         
     } catch (error) {
         console.error('Error adding sponsor:', error);
