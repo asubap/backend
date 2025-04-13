@@ -17,17 +17,35 @@ export class SponsorService {
     this.supabase = createSupabaseClient(token);
   }
 
-  // Get sponsor info by company name
-  async getSponsorInfo(companyName: string) {
+  // add a sponsor
+  async addSponsor(sponsor: string, passcode_hash: string, emails: string[]) {
     const { data, error } = await this.supabase
-      .from('sponsor_info')
-      .select('*')
-      .eq('company_name', companyName)
-      .single();
+      .from('sponsors_creds')
+      .insert({ sponsor, passcode_hash, emails });
 
     if (error) throw error;
     return data;
   }
+
+  // Get sponsor info by passcode
+  async getSponsorByPasscode(passcode: string) {
+      const { data: creds, error } = await this.supabase
+        .from('sponsors_creds')
+        .select('sponsor, passcode_hash')
+        .eq('passcode_hash', passcode) // if plain, insecure
+        .single()
+    
+      if (error || !creds) return null
+    
+      const { data: info, error: infoError } = await this.supabase
+        .from('sponsor_info')
+        .select('*')
+        .eq('company_name', creds.sponsor)
+        .single()
+    
+      return info
+  }
+
 
   // Get all sponsors
   async getAllSponsors() {
@@ -328,53 +346,31 @@ export class SponsorService {
     }
   }
 
-  /**
-   * Update sponsor details (about, links)
-   * @param companyName - The current company name to identify the sponsor
-   * @param updateData - An object containing the fields to update (e.g., { about?: string, links?: string[] })
-   */
-  async updateSponsorDetails(companyName: string, updateData: { about?: string; links?: string[] }) {
-    try {
-      // Ensure at least one field is being updated
-      if (Object.keys(updateData).length === 0) {
-        throw new Error("No update data provided.");
-      }
-
-      // Validate links format if provided
-      if (updateData.links !== undefined && !Array.isArray(updateData.links)) {
-        throw new Error("Links must be an array of strings.");
-      }
-      // Optional: Further validate if each item in links is a string
-      if (updateData.links?.some(link => typeof link !== 'string')) {
-           throw new Error("All items in the links array must be strings.");
-      }
-      if (updateData.about !== undefined && typeof updateData.about !== 'string') {
-          throw new Error("About must be a string.");
-      }
-
-      const { data, error } = await this.supabase
-        .from('sponsor_info')
-        .update(updateData) 
-        .eq('company_name', companyName)
-        .select() // Optionally select the updated row to return it
-        .single(); // Expect only one row to be updated
-
-      if (error) {
-          if (error.code === 'PGRST116' && error.details.includes('0 rows')) {
-              throw new Error(`Sponsor with company name '${companyName}' not found.`);
-          }
-          throw error; // Re-throw other errors
-      }
-
-      return {
-        success: true,
-        message: 'Sponsor details updated successfully.',
-        updatedSponsor: data
-      };
-    } catch (error) {
+  async updateSponsorDetails(passcode_hash: string, updateData: Record<string, any>) {
+    // First, get the sponsor name from sponsors_creds table
+    const { data: creds, error: credsError } = await this.supabase
+      .from('sponsors_creds')
+      .select('sponsor')
+      .eq('passcode_hash', passcode_hash)
+      .single();
+  
+    if (credsError || !creds) {
+      console.error('Error finding sponsor credentials:', credsError);
+      throw new Error('Sponsor not found');
+    }
+  
+    // Then update the sponsor_info table using the company name
+    console.log(updateData);
+    const { data, error } = await this.supabase
+      .from('sponsor_info')
+      .update(updateData)
+      .eq('company_name', creds.sponsor);
+  
+    if (error) {
       console.error('Error updating sponsor details:', error);
-      // Re-throw the error to be caught by the controller
       throw error;
     }
+  
+    return data;
   }
 } 

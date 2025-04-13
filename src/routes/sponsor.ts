@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifySupabaseToken } from "../middleware/verifySupabaseToken";
 import multer from "multer";
-import * as sponsorController from "../controllers/sponsorController";
+import { SponsorController } from "../controllers/sponsorController";
 
 const router = Router();
 
@@ -14,44 +14,25 @@ const upload = multer({
   }
 });
 
-// Public routes (no authentication required)
-router.get("/", sponsorController.getAllSponsors);
-router.get("/:companyName", sponsorController.getSponsorInfo);
-router.get("/:companyName/resources", sponsorController.getSponsorResources);
+const controller = new SponsorController();
 
-// Protected routes (authentication required)
+// Public routes (no authentication required)
+router
+.get("/", controller.getAllSponsors.bind(controller)) // get all sponsors
+.get("/:companyName/resources", controller.getSponsorResources.bind(controller)) // get sponsor resources by company name
+
+.post("/add-sponsor", controller.addSponsor.bind(controller)) // add a new sponsor;
+.post("/get-sponsor-info",controller.getSponsorByPasscode.bind(controller)) // get sponsor info by company name;
 
 // Sponsor Details Management
-router.patch(
-  "/:companyName/details",
-  verifySupabaseToken,
-  sponsorController.updateSponsorDetails
-);
+.patch("/details", verifySupabaseToken, controller.updateSponsorDetails.bind(controller)) // update sponsor details
 
 // Resource Management
-router.post(
-  "/:companyName/resources",
-  verifySupabaseToken,
-  upload.single("file"),
-  sponsorController.addSponsorResource
-);
-router.delete(
-  "/:companyName/resources",
-  verifySupabaseToken,
-  sponsorController.deleteSponsorResource
-);
+.post("/:companyName/resources", upload.single("file"), controller.addSponsorResource)
+.delete("/:companyName/resources", controller.deleteSponsorResource.bind(controller))
 
 // Profile Photo Management
-router.post(
-  "/:companyName/pfp",
-  verifySupabaseToken,
-  upload.single("file"), 
-  sponsorController.uploadSponsorProfilePhoto
-);
-router.delete(
-  "/:companyName/pfp",
-  verifySupabaseToken,
-  sponsorController.deleteSponsorProfilePhoto
-);
+.post("/:companyName/pfp",verifySupabaseToken,upload.single("file"), controller.uploadSponsorProfilePhoto)
+.delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto);
 
 export default router; 
