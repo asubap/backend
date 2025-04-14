@@ -43,7 +43,7 @@ router
 
 
 // Sponsor auth
-.post("/auth", controller.sponsorAuth.bind(controller)); // authenticate sponsor
+// .post("/auth", controller.sponsorAuth.bind(controller)); // authenticate sponsor
 
 
 export default router;

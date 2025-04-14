@@ -1,6 +1,8 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
+import { v4 as uuidv4 } from 'uuid';
+
 export interface SponsorResource {
   url: string;
   label: string;
@@ -8,13 +10,16 @@ export interface SponsorResource {
 
 export class SponsorService {
   private supabase: SupabaseClient;
+  private supabaseAdmin: SupabaseClient;
 
   constructor() {
     this.supabase = createSupabaseClient();
+    this.supabaseAdmin = createSupabaseClient(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY);
   }
 
   setToken(token: string) {
     this.supabase = createSupabaseClient(token);
+    this.supabaseAdmin = createSupabaseClient(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY);
   }
 
   // get sponsor names
@@ -64,12 +69,27 @@ export class SponsorService {
 
   // add a sponsor
   async addSponsor(sponsor: string, passcode_hash: string, emails: string[]) {
-    const { data, error } = await this.supabase
-      .from('sponsors_creds')
-      .insert({ sponsor: sponsor, passcode_hash: passcode_hash, emails: emails });
+      // Create user in auth.users
+      const { data, error } = await this.supabaseAdmin.auth.signUp({
+        email: `${sponsor}@example.com`,
+        password: passcode_hash,
+      })
+  
+      if (error) {
+          throw new Error(`Error creating user: ${error.message}`);
+      }
+  
+      // Add entry in public.sponsors_creds
+      const { error: dbError } = await this.supabaseAdmin.from('sponsor_info').insert({
+          company_name: sponsor,
+          emails: emails,
+      });
+  
+      if (dbError) {
+          throw new Error(`Error adding user to database: ${dbError.message}`);
+      }
 
-    if (error) throw error;
-    return data;
+      return data;
   }
 
   // Get sponsor info by passcode
@@ -419,19 +439,19 @@ export class SponsorService {
     return data;
   }
 
-  async sponsorAuth(companyName: string, passcode: string) {
-    // get passcode_hash from sponsors_creds table
-    const { data: creds, error: credsError } = await this.supabase
-      .from('sponsors_creds')
-      .select('passcode_hash')
-      .eq('sponsor', companyName) // Convert companyName to lowercase for case-insensitive matching
-      .single();
+  // async sponsorAuth(companyName: string, passcode: string) {
+  //   // get passcode_hash from sponsors_creds table
+  //   const { data: creds, error: credsError } = await this.supabase
+  //     .from('sponsors_creds')
+  //     .select('passcode_hash')
+  //     .eq('sponsor', companyName) // Convert companyName to lowercase for case-insensitive matching
+  //     .single();
 
-    if (credsError || !creds) {
-      throw new Error('Invalid company name or passcode');
-    }
+  //   if (credsError || !creds) {
+  //     throw new Error('Invalid company name or passcode');
+  //   }
 
-    // return passcode_hash
-    return creds.passcode_hash;
-  }
+  //   // return passcode_hash
+  //   return creds.passcode_hash;
+  // }
 } 
