@@ -25,6 +25,23 @@ export class SponsorController {
     }
   }
 
+  async getAllSponsors(req: Request, res: Response): Promise<void> {
+    try {
+      const token = extractToken(req);
+        if (!token) {
+            res.status(401).json('No authorization token provided');
+            return;
+        }
+
+      this.sponsorService.setToken(token as string);
+      const sponsors = await this.sponsorService.getSponsorsAll();
+      res.status(200).json(sponsors);
+    } catch (error) {
+      console.error('Error fetching sponsors:', error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
 
   async addSponsor(req: Request, res: Response) {
     try {
@@ -86,7 +103,7 @@ export class SponsorController {
 }
 
   // Get all sponsors
-  async getAllSponsors(req: Request, res: Response): Promise<void> {
+  async getSponsors(req: Request, res: Response): Promise<void> {
     try {
       const sponsors = await this.sponsorService.getAllSponsors();
       res.status(200).json(sponsors);
