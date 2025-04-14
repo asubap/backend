@@ -130,8 +130,8 @@ export class SponsorService {
   // Get all sponsors
   async getAllSponsors() {
     const { data, error } = await this.supabase
-      .from('sponsors_creds')
-      .select('sponsor, emails');
+      .from('sponsor_info')
+      .select('*');
 
     if (error) throw error;
     return data;
