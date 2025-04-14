@@ -54,12 +54,12 @@ export class SponsorController {
         // Ensure passcode is converted to string before hashing
         //hash passcode
         //"$2b$10$siwRx21fFrmlJeJDOR.Icesb6QYHdXtewWoBV9HUTilh6yQb2LBnG"
-        const hashedPasscode = await bcrypt.hash(passcode, 10);
+        // const hashedPasscode = await bcrypt.hash(passcode, 10);
         //check and compare with hashcode in database
         //const isMatch = await bcrypt.compare(passcode, "$2b$10$yeyihth2a3iJyIYoukurKujALO.r0rzZriWmYz4aYvVQhZnz67vJi");
 
         // Use the sponsor service
-        await this.sponsorService.addSponsor(sponsor_name, hashedPasscode, emailList);
+        await this.sponsorService.addSponsor(sponsor_name, passcode, emailList);
         
         // Send invitation emails to all recipients in emailList with the original passcode
         try {
