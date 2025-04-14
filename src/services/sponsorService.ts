@@ -97,6 +97,12 @@ export class SponsorService {
           company_name: sponsor,
           emails: emails,
       });
+
+      // add role to allowed_members table
+      const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
+        email: `${sponsor}@example.com`,
+        role: 'sponsor',
+      });
   
       if (dbError) {
           throw new Error(`Error adding user to database: ${dbError.message}`);
