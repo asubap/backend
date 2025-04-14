@@ -115,18 +115,23 @@ export class SponsorController {
 
   
 
-  async getSponsorByPasscode(req: Request, res: Response): Promise<void> {
+  async getSponsorByName(req: Request, res: Response): Promise<void> {
     try {
-      const { passcode } = req.body;
-      if (!passcode) {
-        res.status(400).json({ error: 'Passcode is required' });
+      const token = extractToken(req);
+        if (!token) {
+            res.status(401).json('No authorization token provided');
+            return;
+        }
+      const { sponsor_name } = req.body;
+      if (!sponsor_name) {
+        res.status(400).json({ error: 'Sponsor name is required' });
         return;
       }
       const sponsorService = new SponsorService();
 
-      const passcode_hash: string = await passcodeHash(passcode);
 
-      const sponsor = await sponsorService.getSponsorByPasscode(passcode_hash);
+
+      const sponsor = await sponsorService.getSponsorByName(sponsor_name);
       if (!sponsor) {
         res.status(404).json({ error: 'Sponsor not found' });
         return;
