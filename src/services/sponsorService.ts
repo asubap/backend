@@ -418,4 +418,20 @@ export class SponsorService {
   
     return data;
   }
+
+  async sponsorAuth(companyName: string, passcode: string) {
+    // get passcode_hash from sponsors_creds table
+    const { data: creds, error: credsError } = await this.supabase
+      .from('sponsors_creds')
+      .select('passcode_hash')
+      .eq('sponsor', companyName) // Convert companyName to lowercase for case-insensitive matching
+      .single();
+
+    if (credsError || !creds) {
+      throw new Error('Invalid company name or passcode');
+    }
+
+    // return passcode_hash
+    return creds.passcode_hash;
+  }
 } 

@@ -22,6 +22,7 @@ router
 // get sponsor names only
 .get("/names", controller.getSponsorNames.bind(controller))
 
+
 .post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters 
  // delete user-email
 .get("/", controller.getAllSponsors.bind(controller)) // get all sponsors
@@ -39,6 +40,11 @@ router
 
 // Profile Photo Management
 .post("/:companyName/pfp",verifySupabaseToken,upload.single("file"), controller.uploadSponsorProfilePhoto)
-.delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto);
+.delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto)
 
-export default router; 
+
+// Sponsor auth
+.post("/auth", controller.sponsorAuth.bind(controller)); // authenticate sponsor
+
+
+export default router;
