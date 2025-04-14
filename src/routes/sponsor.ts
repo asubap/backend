@@ -26,7 +26,7 @@ router
  // delete user-email
 .get("/", controller.getSponsors.bind(controller)) // get all sponsors for admin
 .get("/:companyName/resources", controller.getSponsorResources.bind(controller)) // get sponsor resources by company name
-
+.post("/get-one-sponsor-info", controller.getSponsorByName.bind(controller)) // get sponsor info by company name
 
 .get("/get-all-sponsor-info",controller.getAllSponsors.bind(controller)) // get sponsor all sponsor info for member search;
 

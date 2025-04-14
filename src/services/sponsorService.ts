@@ -86,22 +86,18 @@ export class SponsorService {
   }
 
   // Get sponsor info by passcode
-  async getSponsorByPasscode(passcode: string) {
-      const { data: creds, error } = await this.supabase
-        .from('sponsors_creds')
-        .select('sponsor, passcode_hash')
-        .eq('passcode_hash', passcode) // if plain, insecure
-        .single()
-    
-      if (error || !creds) return null
-    
-      const { data: info, error: infoError } = await this.supabase
+  async getSponsorByName(sponsor_name: string) {
+      const { data, error } = await this.supabase
         .from('sponsor_info')
         .select('*')
-        .eq('company_name', creds.sponsor)
+        .eq('company_name', sponsor_name) // if plain, insecure
         .single()
     
-      return info
+      if (error) return null
+    
+      
+    
+      return data;
   }
 
 
