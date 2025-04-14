@@ -31,7 +31,7 @@ router
 .get("/get-all-sponsor-info",controller.getAllSponsors.bind(controller)) // get sponsor all sponsor info for member search;
 
 // Sponsor Details Management
-.patch("/details", verifySupabaseToken, controller.updateSponsorDetails.bind(controller)) // update sponsor details
+.patch("/:companyName/details", verifySupabaseToken, controller.updateSponsorDetails.bind(controller))
 
 // Resource Management
 .post("/:companyName/resources", upload.single("file"), controller.addSponsorResource)

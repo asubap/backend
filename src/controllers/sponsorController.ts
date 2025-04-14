@@ -307,31 +307,67 @@ export class SponsorController {
   // Update sponsor details (about, links)
   async updateSponsorDetails(req: Request, res: Response): Promise<void> {
     try {
-      const { passcode, about, links} = req.body as {
-        passcode: string;
-        about?: string;
-        links?: string[] | string;
-      };
+      // Get companyName from URL parameters again
+      const { companyName } = req.params;
+      const updateData = req.body; // Get data to update from body ({ about?: string, links?: string[] })
 
-      if (!passcode) {
-        res.status(400).json({ error: 'Passcode is required' });
+      if (!companyName) {
+        // Updated error message
+        res.status(400).json({ error: "Company name is required in the URL path." });
         return;
       }
 
-      const passcode_hash = await passcodeHash(passcode);
-
-      const updateFields: { about?: string; links?: string[] } = {};
-      if (about && about.trim() !== '') {
-        updateFields.about = about;
-      }
-      if (links && Array.isArray(links) && links.length > 0) {
-        updateFields.links = links;
+      // Basic validation: Ensure body is an object and not empty
+      if (typeof updateData !== 'object' || updateData === null || Object.keys(updateData).length === 0) {
+          res.status(400).json({ error: 'Request body must contain data to update (e.g., {"about": "..."} or {"links": [...]}).' });
+          return;
       }
 
-      this.sponsorService.updateSponsorDetails(passcode_hash, updateFields)
-        .then(() => {
-          res.status(200).json({ message: 'Sponsor details updated successfully' });
-        })
+      // Filter updateData and perform type checking
+      const allowedUpdates: { about?: string; links?: string[] } = {};
+      if (updateData.hasOwnProperty('about')) {
+          if (typeof updateData.about === 'string') {
+              allowedUpdates.about = updateData.about;
+          } else {
+               res.status(400).json({ error: "The 'about' field must be a string." });
+               return;
+          }
+      }
+      if (updateData.hasOwnProperty('links')) {
+          if (Array.isArray(updateData.links)) {
+              if (updateData.links.every((link: unknown) => typeof link === 'string')) {
+                  allowedUpdates.links = updateData.links as string[];
+              } else {
+                  res.status(400).json({ error: "All items in the 'links' array must be strings." });
+                  return;
+              }
+          } else {
+               res.status(400).json({ error: "The 'links' field must be an array of strings." });
+              return;
+          }
+      }
+
+      if (Object.keys(allowedUpdates).length === 0) {
+          res.status(400).json({ error: "Request body must contain at least one valid field to update: 'about' (string) or 'links' (array of strings)." });
+          return;
+      }
+
+      const sponsorService = new SponsorService();
+
+      // Get token from request
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+
+      const token = authHeader.split(' ')[1];
+      sponsorService.setToken(token);
+
+      // Pass companyName from params to the service
+      const result = await sponsorService.updateSponsorDetails(companyName, allowedUpdates);
+      res.status(200).json(result);
+
     } catch (error) {
       console.error('Error updating sponsor details:', error);
       if (error instanceof Error) {

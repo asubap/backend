@@ -100,7 +100,7 @@ export class SponsorService {
 
       // add role to allowed_members table
       const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
-        email: `${sponsor.toLowerCase()}@example.com`
+        email: `${sponsor.toLowerCase()}@example.com`,
         role: 'sponsor',
       });
   
@@ -426,32 +426,62 @@ export class SponsorService {
     }
   }
 
-  async updateSponsorDetails(passcode_hash: string, updateData: Record<string, any>) {
-    // First, get the sponsor name from sponsors_creds table
-    const { data: creds, error: credsError } = await this.supabase
-      .from('sponsors_creds')
-      .select('sponsor')
-      .eq('passcode_hash', passcode_hash)
-      .single();
-  
-    if (credsError || !creds) {
-      console.error('Error finding sponsor credentials:', credsError);
-      throw new Error('Sponsor not found');
-    }
-  
-    // Then update the sponsor_info table using the company name
-    console.log(updateData);
-    const { data, error } = await this.supabase
-      .from('sponsor_info')
-      .update(updateData)
-      .eq('company_name', creds.sponsor);
-  
-    if (error) {
+  /**
+   * Update sponsor details (about, links)
+   * @param companyName - The company name to identify the sponsor (passed directly now)
+   * @param updateData - An object containing the fields to update (e.g., { about?: string, links?: string[] })
+   */
+  async updateSponsorDetails(companyName: string, updateData: { about?: string; links?: string[] }) {
+    try {
+      // Validation logic for updateData remains the same
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No update data provided.");
+      }
+      if (updateData.links !== undefined && !Array.isArray(updateData.links)) {
+        throw new Error("Links must be an array of strings.");
+      }
+      if (updateData.links?.some(link => typeof link !== 'string')) {
+           throw new Error("All items in the links array must be strings.");
+      }
+      if (updateData.about !== undefined && typeof updateData.about !== 'string') {
+          throw new Error("About must be a string.");
+      }
+
+      // Remove the lookup via passcode_hash
+      // const { data: creds, error: credsError } = await this.supabase
+      //   .from('sponsors_creds')
+      //   .select('sponsor')
+      //   .eq('passcode_hash', passcode_hash)
+      //   .single();
+      // if (credsError || !creds) {
+      //   console.error('Error finding sponsor credentials:', credsError);
+      //   throw new Error('Sponsor not found');
+      // }
+
+      // Update sponsor_info directly using the provided companyName
+      const { data, error } = await this.supabase
+        .from('sponsor_info')
+        .update(updateData)
+        .eq('company_name', companyName) // Use companyName directly
+        .select() 
+        .single();
+
+      if (error) {
+          if (error.code === 'PGRST116' && error.details.includes('0 rows')) {
+              throw new Error(`Sponsor with company name '${companyName}' not found.`);
+          }
+          throw error;
+      }
+
+      return {
+        success: true,
+        message: 'Sponsor details updated successfully.',
+        updatedSponsor: data
+      };
+    } catch (error) {
       console.error('Error updating sponsor details:', error);
       throw error;
     }
-  
-    return data;
   }
 
   // async sponsorAuth(companyName: string, passcode: string) {
