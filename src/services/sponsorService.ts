@@ -100,7 +100,7 @@ export class SponsorService {
 
       // add role to allowed_members table
       const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
-        email: `${sponsor.toLowerCase()}@example.com`,
+        email: `${sponsor.toLowerCase()}@example.com`
         role: 'sponsor',
       });
   
