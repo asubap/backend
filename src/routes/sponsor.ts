@@ -39,6 +39,11 @@ router
 
 // Profile Photo Management
 .post("/:companyName/pfp",verifySupabaseToken,upload.single("file"), controller.uploadSponsorProfilePhoto)
-.delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto);
+.delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto)
 
-export default router; 
+
+// Sponsor auth
+.post("/auth", controller.sponsorAuth.bind(controller)); // authenticate sponsor
+
+
+export default router;
