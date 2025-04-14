@@ -14,6 +14,15 @@ export class SponsorController {
 
   }
 
+  async getSponsorNames(req: Request, res: Response): Promise<void> {
+    try {
+      const names = await this.sponsorService.getSponsorNames();
+      res.status(200).json(names);
+    } catch (error) {
+      console.error('Error fetching sponsor names:', error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
 
 
   async addSponsor(req: Request, res: Response) {

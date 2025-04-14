@@ -17,6 +17,20 @@ export class SponsorService {
     this.supabase = createSupabaseClient(token);
   }
 
+  // get sponsor names
+  async getSponsorNames() {
+    try {
+      const { data, error } = await this.supabase
+        .from('sponsor_info')
+        .select('company_name');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching sponsor names:', error);
+      throw error;
+    }
+  }
+
   //sending Emails
   async sendSponsorInvitations(sponsorName: string, passcode: string, emailList: string[]): Promise<void> {
       try {
