@@ -24,11 +24,11 @@ router
 
 .post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters 
  // delete user-email
-.get("/", controller.getAllSponsors.bind(controller)) // get all sponsors
+.get("/", controller.getSponsors.bind(controller)) // get all sponsors for admin
 .get("/:companyName/resources", controller.getSponsorResources.bind(controller)) // get sponsor resources by company name
 
 
-.post("/get-sponsor-info",controller.getSponsorByPasscode.bind(controller)) // get sponsor info by company name;
+.get("/get-all-sponsor-info",controller.getAllSponsors.bind(controller)) // get sponsor all sponsor info for member search;
 
 // Sponsor Details Management
 .patch("/details", verifySupabaseToken, controller.updateSponsorDetails.bind(controller)) // update sponsor details

@@ -30,6 +30,19 @@ export class SponsorService {
       throw error;
     }
   }
+  //get all sponsors
+  async getSponsorsAll() {
+    try {
+      const { data, error } = await this.supabase
+        .from('sponsor_info')
+        .select('*');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching sponsors:', error);
+      throw error;
+    }
+  }
 
   //sending Emails
   async sendSponsorInvitations(sponsorName: string, passcode: string, emailList: string[]): Promise<void> {
