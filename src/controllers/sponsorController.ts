@@ -348,30 +348,30 @@ export class SponsorController {
   }; 
 
   // Sponsor auth
-  async sponsorAuth(req: Request, res: Response): Promise<void> {
-    try {
-      const { companyName, passcode } = req.body;
-      const sponsorService = new SponsorService();
-      const result = await sponsorService.sponsorAuth(companyName, passcode);
+  // async sponsorAuth(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { companyName, passcode } = req.body;
+  //     const sponsorService = new SponsorService();
+  //     const result = await sponsorService.sponsorAuth(companyName, passcode);
 
-      if (!result) {
-        res.status(401).json({ error: 'Invalid passcode' });
-        return;
-      }
+  //     if (!result) {
+  //       res.status(401).json({ error: 'Invalid passcode' });
+  //       return;
+  //     }
 
-      // check if passcode_hash is correct
-      const isMatch = await bcrypt.compare(passcode, result);
-      if (!isMatch) {
-        res.status(401).json({ error: 'Invalid passcode' });
-        return;
-      }
-      // generate token
-      const token = generateSupabaseToken(companyName);
-      res.status(200).json({ token });
-    } catch (error) {
-      console.error('Error authenticating sponsor:', error);
-      res.status(500).json({ error: (error as Error).message });
-    }
-  }
+  //     // check if passcode_hash is correct
+  //     const isMatch = await bcrypt.compare(passcode, result);
+  //     if (!isMatch) {
+  //       res.status(401).json({ error: 'Invalid passcode' });
+  //       return;
+  //     }
+  //     // generate token
+  //     const token = generateSupabaseToken(companyName);
+  //     res.status(200).json({ token });
+  //   } catch (error) {
+  //     console.error('Error authenticating sponsor:', error);
+  //     res.status(500).json({ error: (error as Error).message });
+  //   }
+  // }
   
 }
