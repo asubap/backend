@@ -64,10 +64,10 @@ export class announcementsController {
 
         this.announcementsService.setToken(token as string);
 
-        const { user_email, title, description} = req.body;
+        const { title, description} = req.body;
 
-        if (!user_email || !title || !description) {
-            res.status(400).json({ error: 'Missing required fields: user_email, title, and description' });
+        if (!title || !description) {
+            res.status(400).json({ error: 'Missing required fields: title, and description' });
             return;
         }
 
