@@ -64,18 +64,22 @@ export class announcementsController {
 
         this.announcementsService.setToken(token as string);
 
-        const { user_email, title, description} = req.body;
+        const { title, description} = req.body;
 
-        if (!user_email || !title || !description) {
-            res.status(400).json({ error: 'Missing required fields: user_email, title, and description' });
+        if (!title || !description) {
+            res.status(400).json({ error: 'Missing required fields: title, and description' });
             return;
         }
-
-
-        const user_id = "hi"
-
+        //logic of adding announcements and getting emails and then sending them 
         try {
-            const announcements = await this.announcementsService.addannouncements(user_id, title, description);
+            const announcements = await this.announcementsService.addannouncements(title, description);
+            const emailList = await this.announcementsService.getUsersEmails(title, description);
+            if (emailList.length === 0) {
+                res.status(404).json({ error: 'No users found' });
+            }
+            // Send email to users
+            await this.announcementsService.sendAnnouncments(emailList, title, description);
+
             res.json("Announcement added successfully");
         } catch (error) {
             res.status(500).json({ error: 'Failed to add announcements' });
