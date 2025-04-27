@@ -33,7 +33,7 @@ router
 .post(
   '/:categoryId/resources',
   verifySupabaseToken,
-  upload.single('file'), // Expect a file with field name 'file'
+  upload.single('file'), // Expect a file with a field name 'file'
   controller.addResource.bind(controller)
 )
 
