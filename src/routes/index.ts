@@ -2,7 +2,6 @@ import { Router, Request, Response } from "express";
 import userRoutes from "./user";
 import eventRoutes from "./events";
 import announcementsRoutes from "./announcements";
-import profilePhotoRoutes from './profilePhotoRoutes';
 import memberInfoRoutes from "./memberInfo";
 import sponsorRoutes from "./sponsor";
 const router = Router();
@@ -15,7 +14,6 @@ router.use("/member-info", memberInfoRoutes);
 router.use("/users", userRoutes);
 router.use("/events", eventRoutes);
 router.use("/announcements", announcementsRoutes);
-router.use('/profile-photo', profilePhotoRoutes);
 router.use('/sponsors', sponsorRoutes);
 
 export default router;

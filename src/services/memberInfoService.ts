@@ -129,4 +129,136 @@ export class MemberInfoService {
             return true; // Return true even if there's an error
         }
     }
+
+    /**
+     * Upload/Update profile photo for a member
+     * @param userEmail - The email of the member
+     * @param file - The file to upload
+     * @returns the public URL of the uploaded photo
+     */
+    async uploadProfilePhoto(userEmail: string, file: Express.Multer.File) {
+        try {
+            // First check if the member exists
+            const { data: memberData, error: memberError } = await this.supabase
+                .from('member_info')
+                .select('profile_photo_url')
+                .eq('user_email', userEmail)
+                .single();
+
+            if (memberError) {
+                throw new Error(`Member with email '${userEmail}' not found.`);
+            }
+
+            // Delete the old photo if it exists
+            const oldPhotoUrl = memberData?.profile_photo_url;
+            if (oldPhotoUrl) {
+                try {
+                    const urlParts = oldPhotoUrl.split('/');
+                    // Make sure we have enough parts to find the path and it's from the right bucket
+                    if (urlParts.length > 2) {
+                        const oldFilePath = urlParts.slice(-2).join('/'); // Gets the last two segments (userId/filename)
+                        await this.supabase.storage.from('profile-photos').remove([oldFilePath]);
+                    }
+                } catch (removeError) {
+                    console.error("Error removing old profile photo:", removeError);
+                    // Continue with upload even if deletion fails
+                }
+            }
+
+            // Generate a unique filename to avoid collisions
+            const userId = userEmail.replace(/[^a-zA-Z0-9]/g, ''); // Strip special chars for storage path
+            const timestamp = Date.now();
+            const filePath = `${userId}/${timestamp}_${file.originalname}`;
+
+            // Upload the new photo
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
+                .from('profile-photos')
+                .upload(filePath, file.buffer, {
+                    contentType: file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Generate the public URL for the uploaded file
+            const { data: publicUrlData } = this.supabase.storage
+                .from('profile-photos')
+                .getPublicUrl(filePath);
+
+            const publicUrl = publicUrlData.publicUrl;
+
+            // Update the member_info table with the new photo URL
+            const { error: updateError } = await this.supabase
+                .from('member_info')
+                .update({ profile_photo_url: publicUrl })
+                .eq('user_email', userEmail);
+
+            if (updateError) throw updateError;
+
+            return {
+                success: true,
+                photoUrl: publicUrl
+            };
+        } catch (error) {
+            console.error('Error uploading profile photo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete profile photo for a member
+     * @param userEmail - The email of the member
+     * @returns success message
+     */
+    async deleteProfilePhoto(userEmail: string) {
+        try {
+            // Get the current photo URL
+            const { data: memberData, error: memberError } = await this.supabase
+                .from('member_info')
+                .select('profile_photo_url')
+                .eq('user_email', userEmail)
+                .single();
+
+            if (memberError) {
+                throw new Error(`Member with email '${userEmail}' not found.`);
+            }
+
+            const photoUrl = memberData?.profile_photo_url;
+            if (photoUrl) {
+                try {
+                    const urlParts = photoUrl.split('/');
+                    // Make sure we have enough parts to find the path
+                    if (urlParts.length > 2) {
+                        const filePath = urlParts.slice(-2).join('/'); // Gets the last two segments (userId/filename)
+                        await this.supabase.storage.from('profile-photos').remove([filePath]);
+                    }
+                } catch (removeError) {
+                    console.error("Error removing profile photo from storage:", removeError);
+                    // Continue to clear the DB reference even if storage deletion fails
+                }
+
+                // Clear the photo URL in the database
+                const { error: updateError } = await this.supabase
+                    .from('member_info')
+                    .update({ profile_photo_url: null })
+                    .eq('user_email', userEmail);
+
+                if (updateError) throw updateError;
+
+                return {
+                    success: true,
+                    message: 'Profile photo deleted successfully.'
+                };
+            } else {
+                // No photo URL exists, nothing to delete
+                return {
+                    success: true,
+                    message: 'No profile photo found to delete.'
+                };
+            }
+        } catch (error) {
+            console.error('Error deleting profile photo:', error);
+            throw error;
+        }
+    }
 }

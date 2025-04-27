@@ -114,4 +114,71 @@ export class MemberInfoController {
             res.status(500).json({ error: 'Internal server error' });
         }
     }
+
+    /**
+     * Upload/Update profile photo for a member
+     * @param req - The request object
+     * @param res - The response object
+     */
+    async uploadProfilePhoto(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            // Get email from URL parameter
+            const { email } = req.params;
+            if (!email) {
+                res.status(400).json({ error: 'Email parameter is required' });
+                return;
+            }
+
+            // Get the uploaded file (handled by multer middleware)
+            const file = (req as any).file;
+            if (!file) {
+                res.status(400).json({ error: 'No file uploaded' });
+                return;
+            }
+
+            const result = await this.memberInfoService.uploadProfilePhoto(email, file);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error uploading profile photo:', error);
+            res.status(500).json({ error: (error as Error).message || 'Internal server error' });
+        }
+    }
+
+    /**
+     * Delete profile photo for a member
+     * @param req - The request object 
+     * @param res - The response object
+     */
+    async deleteProfilePhoto(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            // Get email from URL parameter
+            const { email } = req.params;
+            if (!email) {
+                res.status(400).json({ error: 'Email parameter is required' });
+                return;
+            }
+
+            const result = await this.memberInfoService.deleteProfilePhoto(email);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error deleting profile photo:', error);
+            res.status(500).json({ error: (error as Error).message || 'Internal server error' });
+        }
+    }
 }
