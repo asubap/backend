@@ -164,21 +164,32 @@ export class ResourceService {
    */
   async addResource(categoryId: string, name: string, description: string, file: Express.Multer.File) {
     try {
+      console.log(`DEBUG - addResource: Starting with categoryId=${categoryId}, name=${name}`);
+      console.log(`DEBUG - addResource: File info: name=${file.originalname}, size=${file.size}, type=${file.mimetype}`);
+      
       // Check if category exists
+      console.log(`DEBUG - addResource: Checking if category exists`);
       const { data: categoryCheck, error: categoryError } = await this.supabase
         .from('categories')
         .select('id')
         .eq('id', categoryId)
         .single();
 
-      if (categoryError) throw new Error(`Category with ID ${categoryId} not found`);
+      console.log(`DEBUG - addResource: Category check result:`, { data: categoryCheck, error: categoryError });
+      
+      if (categoryError) {
+        console.log(`DEBUG - addResource: Category not found`, categoryError);
+        throw new Error(`Category with ID ${categoryId} not found`);
+      }
 
       // Generate a unique file path
       const timestamp = Date.now();
       const fileExtension = file.originalname.split('.').pop();
       const fileName = `${categoryId}/${timestamp}_${file.originalname.replace(/\s+/g, '_')}`;
+      console.log(`DEBUG - addResource: Generated filename: ${fileName}`);
 
       // Upload file to storage
+      console.log(`DEBUG - addResource: Uploading file to storage bucket: ${this.BUCKET_NAME}`);
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from(this.BUCKET_NAME)
         .upload(fileName, file.buffer, {
@@ -186,36 +197,54 @@ export class ResourceService {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      console.log(`DEBUG - addResource: File upload result:`, { data: uploadData, error: uploadError });
+      
+      if (uploadError) {
+        console.log(`DEBUG - addResource: File upload failed`, uploadError);
+        throw uploadError;
+      }
 
       // Create resource record in database
+      console.log(`DEBUG - addResource: Creating resource record in database`);
+      const resourceData = {
+        category_id: categoryId,
+        name,
+        description,
+        file_key: fileName,
+        mime_type: file.mimetype
+      };
+      console.log(`DEBUG - addResource: Resource data to insert:`, resourceData);
+      
       const { data: resource, error: resourceError } = await this.supabase
         .from('resources')
-        .insert({
-          category_id: categoryId,
-          name,
-          description,
-          file_key: fileName,
-          mime_type: file.mimetype
-        })
+        .insert(resourceData)
         .select()
         .single();
 
+      console.log(`DEBUG - addResource: Resource insert result:`, { data: resource, error: resourceError });
+      
       if (resourceError) {
         // If resource creation fails, try to delete the uploaded file
+        console.log(`DEBUG - addResource: Resource creation failed, cleaning up uploaded file`);
         await this.supabase.storage.from(this.BUCKET_NAME).remove([fileName]);
         throw resourceError;
       }
 
       // Generate a signed URL for immediate use
-      const { data: urlData } = await this.supabase.storage
+      console.log(`DEBUG - addResource: Generating signed URL`);
+      const { data: urlData, error: urlError } = await this.supabase.storage
         .from(this.BUCKET_NAME)
         .createSignedUrl(fileName, 60 * 60); // 1 hour expiry
 
-      return {
+      console.log(`DEBUG - addResource: Signed URL result:`, { data: urlData, error: urlError });
+      
+      const result = {
         ...resource,
         signed_url: urlData?.signedUrl || null
       };
+      
+      console.log(`DEBUG - addResource: Successfully completed`);
+      return result;
     } catch (error) {
       console.error('Error adding resource:', error);
       throw error;
