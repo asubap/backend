@@ -124,41 +124,73 @@ export class ResourceController {
    */
   async addResource(req: Request, res: Response) {
     try {
+      console.log('DEBUG - Controller: Starting addResource');
       const token = extractToken(req);
       if (!token) {
+        console.log('DEBUG - Controller: No token found');
         res.status(401).json({ error: 'Authentication required' });
         return;
       }
+      console.log('DEBUG - Controller: Token found, setting in service');
       this.resourceService.setToken(token);
 
       const { categoryId } = req.params;
       const { name, description } = req.body;
       const file = (req as any).file;
 
+      console.log('DEBUG - Controller: Request params:', {
+        categoryId,
+        body: req.body,
+        fileExists: !!file
+      });
+
       if (!categoryId) {
+        console.log('DEBUG - Controller: Missing categoryId');
         res.status(400).json({ error: 'Category ID is required' });
         return;
       }
 
       if (!name || !description) {
+        console.log('DEBUG - Controller: Missing name or description');
         res.status(400).json({ error: 'Name and description are required' });
         return;
       }
 
       if (!file) {
+        console.log('DEBUG - Controller: Missing file');
         res.status(400).json({ error: 'File is required' });
         return;
       }
 
+      console.log('DEBUG - Controller: Calling resourceService.addResource()');
       const newResource = await this.resourceService.addResource(categoryId, name, description, file);
+      console.log('DEBUG - Controller: Resource created successfully');
       res.status(201).json(newResource);
     } catch (error) {
-      console.error('Error in addResource controller:', error);
-      if (error instanceof Error && error.message.includes('not found')) {
-        res.status(404).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to create resource' });
+      console.error('DEBUG - Controller: Error in addResource controller:', error);
+      
+      // Log the full error details
+      if (typeof error === 'object' && error !== null) {
+        console.error('DEBUG - Controller: Error details:', JSON.stringify(error, null, 2));
       }
+      
+      if (error instanceof Error) {
+        console.error('DEBUG - Controller: Error message:', error.message);
+        console.error('DEBUG - Controller: Error stack:', error.stack);
+        
+        if (error.message.includes('not found')) {
+          res.status(404).json({ 
+            error: error.message,
+            details: process.env.NODE_ENV !== 'production' ? error : undefined
+          });
+          return;
+        }
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to create resource',
+        details: process.env.NODE_ENV !== 'production' ? error : undefined
+      });
     }
   }
 
