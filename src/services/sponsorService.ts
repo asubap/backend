@@ -87,6 +87,10 @@ export class SponsorService {
         email: `${sponsor}@example.com`,
         password: passcode_hash,
       })
+
+      if (!data.user) {
+        throw new Error('User not found');
+      }
   
       if (error) {
           throw new Error(`Error creating user: ${error.message}`);
@@ -96,6 +100,13 @@ export class SponsorService {
       const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
         email: `${sponsor.toLowerCase()}@example.com`,
         role: 'sponsor',
+      });
+
+      // add sponsor to sponsor_info table
+      const { error: sponsorError } = await this.supabaseAdmin.from('sponsor_info').insert({
+        company_name: sponsor,
+        emails: emails,
+        uuid: data.user.id,
       });
   
       if (roleError) {
@@ -107,16 +118,24 @@ export class SponsorService {
 
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
+    // get uuid from sponsor_info table
+    const { data: uuidData, error: uuidError } = await this.supabaseAdmin.from('sponsor_info').select('uuid').eq('company_name', sponsor_name).single();
+    if (uuidError) throw new Error(`Error fetching uuid: ${uuidError.message}`);
+
     // delete user from auth.users
-    const { data: authData, error: authError } = await this.supabaseAdmin.auth.admin.deleteUser(sponsor_name.toLowerCase() + "@example.com");
+    const { data: authData, error: authError } = await this.supabaseAdmin.auth.admin.deleteUser(uuidData.uuid);
 
     if (authError) {
-        throw new Error(`Error deleting user: ${authError.message}`);
+        throw new Error(`Error deleting user: ${authError.message}, ${authError.code}, ${uuidData.uuid}`);
     }
+
+    // delete from allowed_members table
+    const { error: allowedError } = await this.supabaseAdmin.from('allowed_members').delete().eq('email', sponsor_name.toLowerCase() + "@example.com");
+    if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
 
     const { data, error } = await this.supabaseAdmin.from('sponsor_info').delete().eq('company_name', sponsor_name);
 
-    if (error) throw error;
+    if (error) throw new Error(`Error deleting sponsor: ${error.message}, ${uuidData.uuid}`);
     return data;
   }
 
