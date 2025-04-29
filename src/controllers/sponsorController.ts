@@ -102,6 +102,18 @@ export class SponsorController {
     }
 }
 
+  // delete a sponsor
+  async deleteSponsor(req: Request, res: Response): Promise<void> {
+    try {
+      const { sponsor_name } = req.body;
+      await this.sponsorService.deleteSponsor(sponsor_name);
+      res.status(200).json({ message: 'Sponsor deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting sponsor:', error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
   // Get all sponsors
   async getSponsors(req: Request, res: Response): Promise<void> {
     try {

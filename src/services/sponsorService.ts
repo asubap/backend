@@ -91,12 +91,6 @@ export class SponsorService {
       if (error) {
           throw new Error(`Error creating user: ${error.message}`);
       }
-  
-      // Add entry in public.sponsors_creds
-      const { error: dbError } = await this.supabaseAdmin.from('sponsor_info').insert({
-          company_name: sponsor,
-          emails: emails,
-      });
 
       // add role to allowed_members table
       const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
@@ -104,11 +98,26 @@ export class SponsorService {
         role: 'sponsor',
       });
   
-      if (dbError) {
-          throw new Error(`Error adding user to database: ${dbError.message}`);
+      if (roleError) {
+          throw new Error(`Error adding user to database: ${roleError.message}`);
       }
 
       return data;
+  }
+
+  // delete a sponsor
+  async deleteSponsor(sponsor_name: string) {
+    // delete user from auth.users
+    const { data: authData, error: authError } = await this.supabaseAdmin.auth.admin.deleteUser(sponsor_name.toLowerCase() + "@example.com");
+
+    if (authError) {
+        throw new Error(`Error deleting user: ${authError.message}`);
+    }
+
+    const { data, error } = await this.supabaseAdmin.from('sponsor_info').delete().eq('company_name', sponsor_name);
+
+    if (error) throw error;
+    return data;
   }
 
   // Get sponsor info by passcode
