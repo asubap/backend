@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface SponsorResource {
   url: string;
   label: string;
+  uploadDate: string; // ISO string format
 }
 
 export class SponsorService {
@@ -202,15 +203,20 @@ export class SponsorService {
           try {
             return JSON.parse(res) as SponsorResource;
           } catch (e) {
-            return { url: res, label: res };
+            return { 
+              url: res, 
+              label: res,
+              uploadDate: new Date().toISOString() // Add default date for legacy resources
+            };
           }
         });
       }
 
-      // Add the new resource
+      // Add the new resource with upload date
       const newResource: SponsorResource = {
         url: publicUrl,
-        label: resourceLabel
+        label: resourceLabel,
+        uploadDate: new Date().toISOString()
       };
 
       const updatedResources = [...currentResources, newResource];
@@ -253,9 +259,18 @@ export class SponsorService {
       // Parse the resources to get the URLs and labels
       const resources: SponsorResource[] = data.resources.map((res: string) => {
         try {
-          return JSON.parse(res) as SponsorResource;
+          const parsed = JSON.parse(res);
+          // Ensure uploadDate exists, use current date if missing
+          return {
+            ...parsed,
+            uploadDate: parsed.uploadDate || new Date().toISOString()
+          } as SponsorResource;
         } catch (e) {
-          return { url: res, label: res };
+          return { 
+            url: res, 
+            label: res,
+            uploadDate: new Date().toISOString() 
+          };
         }
       });
 
@@ -285,9 +300,17 @@ export class SponsorService {
       // Parse the resources
       const resources: SponsorResource[] = sponsorData.resources.map((res: string) => {
         try {
-          return JSON.parse(res) as SponsorResource;
+          const parsed = JSON.parse(res);
+          return {
+            ...parsed,
+            uploadDate: parsed.uploadDate || new Date().toISOString()
+          } as SponsorResource;
         } catch (e) {
-          return { url: res, label: res };
+          return { 
+            url: res, 
+            label: res,
+            uploadDate: new Date().toISOString() 
+          };
         }
       });
 
