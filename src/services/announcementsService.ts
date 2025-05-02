@@ -17,6 +17,7 @@ export class announcementsService {
         const { data, error } = await this.supabase
             .from('announcements')
             .select('*');
+        console.log(data)
 
         if (error) throw error;
         return data;
@@ -61,25 +62,27 @@ export class announcementsService {
 
     async getUsersEmails(title: string, description: string){
         try{
-                //getting allMemberEmails except for sponsors 
+            // Use individual filters instead of the combined not-in syntax
             const { data: allMemberEmails, error: eError } = await this.supabase
                 .from('allowed_members')
                 .select('email')
-                .neq('role', 'sponsor');
+                .neq('role', 'sponsor')  // Exclude sponsor
+                .neq('role', 'e-board'); // Exclude e-board
+            
             if (eError) throw eError;
             console.log("Member Emails:", allMemberEmails);
             //getting all sponsors emails
-            const { data: allSponsorEmails, error: sError } = await this.supabase
-                .from('sponsor_info')
-                .select('emails');
+            // const { data: allSponsorEmails, error: sError } = await this.supabase
+            //     .from('sponsor_info')
+            //     .select('emails');
                 
-            if (sError) throw sError;
-            console.log("Sponsor Emails:", allSponsorEmails);
+            // if (sError) throw sError;
+            // console.log("Sponsor Emails:", allSponsorEmails);
             //combining all emails to one unique list of emails 
             const emailsFromMembers = allMemberEmails.map(member => member.email);
-            const emailsFromSponsors = allSponsorEmails.flatMap(sponsor => sponsor.emails);
-            const combinedEmails = [...emailsFromMembers, ...emailsFromSponsors];
-            const uniqueEmails = [...new Set(combinedEmails)];
+            // const emailsFromSponsors = allSponsorEmails.flatMap(sponsor => sponsor.emails);
+            // const combinedEmails = [...emailsFromMembers, ...emailsFromSponsors];
+            const uniqueEmails = [...new Set(emailsFromMembers)];
             console.log("Unique Emails:", uniqueEmails);
             return uniqueEmails;
         }

@@ -110,7 +110,7 @@ export class announcementsController {
             updateFields.title = title;
         }
         if (description && description.trim() !== '') {
-            updateFields.body = description;
+            updateFields.description = description;
         }
         
         // If there's nothing to update, respond accordingly
