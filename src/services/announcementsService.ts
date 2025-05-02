@@ -34,9 +34,8 @@ export class announcementsService {
     }
 
     async addannouncements(title: string, description: string) {
-        //adding announcement to the announcements table
         try{
-            const { data: announcementData, error: aError } = await this.supabase
+            const { error: aError } = await this.supabase
                 .from('announcements')
                 .insert(
                     {
@@ -45,7 +44,12 @@ export class announcementsService {
                     });
                 if (aError) throw aError;
             
-            console.log(announcementData);
+                const emailList = await this.getUsersEmails(title, description);
+                if (!emailList || emailList.length === 0) {
+                    throw new Error('No users found');
+                }
+            // Send email to users
+            await this.sendAnnouncments(emailList, title, description);
             return ("Announcement added successfully");
          
             
@@ -54,10 +58,6 @@ export class announcementsService {
             console.error('Error adding announcement:', error);
             throw new Error('Failed to add announcement');
         }
-
-
-    
-      
     }
 
     async getUsersEmails(title: string, description: string){
@@ -66,29 +66,17 @@ export class announcementsService {
             const { data: allMemberEmails, error: eError } = await this.supabase
                 .from('allowed_members')
                 .select('email')
-                .neq('role', 'sponsor')  // Exclude sponsor
-                .neq('role', 'e-board'); // Exclude e-board
+                .neq('role', 'sponsor')
+                .neq('role', 'e-board'); 
             
             if (eError) throw eError;
-            console.log("Member Emails:", allMemberEmails);
-            //getting all sponsors emails
-            // const { data: allSponsorEmails, error: sError } = await this.supabase
-            //     .from('sponsor_info')
-            //     .select('emails');
-                
-            // if (sError) throw sError;
-            // console.log("Sponsor Emails:", allSponsorEmails);
+
             //combining all emails to one unique list of emails 
             const emailsFromMembers = allMemberEmails.map(member => member.email);
-            // const emailsFromSponsors = allSponsorEmails.flatMap(sponsor => sponsor.emails);
-            // const combinedEmails = [...emailsFromMembers, ...emailsFromSponsors];
-            const uniqueEmails = [...new Set(emailsFromMembers)];
-            console.log("Unique Emails:", uniqueEmails);
-            return uniqueEmails;
+            return emailsFromMembers;
         }
         catch (error) {
             console.error('Error fetching emails:', error);
-            throw new Error('Failed to fetch emails');
         }
     }
 
@@ -123,7 +111,7 @@ export class announcementsService {
         }
 
     async editannouncements(announcement_id: string, updateData: Record<string, string>) {
-        const { data, error } = await this.supabase
+        const { error } = await this.supabase
             .from('announcements')
             .update(updateData)
             .eq('id', announcement_id);
@@ -133,7 +121,7 @@ export class announcementsService {
     }
 
     async deleteannouncements(announcement_id: string) {
-        const { data, error } = await this.supabase
+        const { error } = await this.supabase
             .from('announcements')
             .delete()
             .eq('id', announcement_id);

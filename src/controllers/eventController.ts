@@ -159,6 +159,8 @@ export class EventController {
         if (event_hours_type && event_hours_type.trim() !== '') {
             updateFields.event_hours_type = event_hours_type;
         }
+
+        console.log("updateFields:", updateFields);
         
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {
@@ -213,11 +215,9 @@ export class EventController {
 
             const { eventId } = req.params;
             const { latitude, longitude, accuracy } = req.body;
-
-            console.log('Verifying attendance for:', { user, eventId, location: { latitude, longitude, accuracy } });
             
             if (!latitude || !longitude) {
-                console.error('Missing location data');
+                console.error('Missing user location data');
                 return res.status(422).json({ error: 'Location data is required' });
             }
 
@@ -234,7 +234,6 @@ export class EventController {
                 longitude
             );
             
-            console.log('Attendance verification result:', result);
             res.json({ message: result });
         } catch (error: any) {
             console.error('Check-in error:', error);
@@ -278,6 +277,32 @@ export class EventController {
             }
         } catch (error) {
             console.error('Error in rsvpForEvent controller:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
+    async unRsvpForEvent(req: Request, res: Response) {
+        try {
+            const user = (req as any).user;
+            if (!user?.id) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const { eventId } = req.params;
+            
+            try {
+                const result = await this.eventService.unRsvpForEvent(eventId, user.id);
+                res.status(200).json({ message: result });
+            } catch (error) {
+                if (error instanceof Error && error.message === 'You have not RSVP\'d for this event') {
+                    res.status(400).json({ error: error.message });
+                } else {
+                    console.error('Error processing un-RSVP:', error);
+                    res.status(500).json({ error: 'Failed to process RSVP' });
+                }
+            }
+        } catch (error) {
+            console.error('Error in unRsvpForEvent controller:', error);
             res.status(500).json({ error: 'Internal server error' });
         }
     }

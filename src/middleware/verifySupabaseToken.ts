@@ -19,7 +19,6 @@ export interface SupabaseJwtPayload {
 }
 
 export const verifySupabaseToken = (req: Request, res: Response, next: NextFunction) => {
-  
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     res.status(401).json({ error: 'Missing Authorization header' });
