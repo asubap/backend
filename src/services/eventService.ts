@@ -1,9 +1,10 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
-import extractEmail from "../utils/extractEmail";
 import { getDistance } from "geolib";
+import { Event } from "../types/event";
 
 export class EventService {
+
   private supabase: SupabaseClient;
 
   constructor() {
@@ -22,7 +23,6 @@ export class EventService {
     return data;
   }
 
-
   async getEventsByName(name: string) {
     const { data, error } = await this.supabase
       .from("events")
@@ -31,7 +31,6 @@ export class EventService {
     if (error) throw error;
     return data;
   }
-
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[]) {
         const { data, error } = await this.supabase
@@ -103,112 +102,29 @@ export class EventService {
     return { before: beforeData, after: afterData };
   }
 
-  async verifyLocationAttendance(
-    eventId: string,
-    userId: string,
-    userLat: number,
-    userLong: number
-  ) {
+  async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
     try {
-      console.log('Looking up event:', eventId);
-      const { data: event, error } = await this.supabase
-        .from("events")
-        .select("id, location, location_lat, location_long, attending_users")
-        .eq("id", eventId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching event:', error);
-        throw new Error(`Failed to find event: ${error.message}`);
-      }
-
-      if (!event) {
-        console.error('Event not found:', eventId);
-        throw new Error("Event not found");
-      }
-
-      console.log('Event found:', event);
+      
+      const eventIdNumber = parseInt(eventId);
+      const event: Event = (await this.getEventID(eventIdNumber))[0];
 
       // Check if user is already in attendance
-      if (event.attending_users && event.attending_users.includes(userId)) {
+      if (event.event_attending && event.event_attending.includes(userId)) {
         throw new Error("You have already checked in to this event");
       }
 
-      let { location_lat, location_long } = event;
-
-      // Lazy geocode if coordinates are missing
-      if (!location_lat || !location_long) {
-        console.log('Geocoding address:', event.location);
-        try {
-          const coords = await this.geocodeAddress(event.location);
-          location_lat = coords.lat;
-          location_long = coords.lon;
-
-          // Update event with coordinates
-          const { error: updateError } = await this.supabase
-            .from("events")
-            .update({ location_lat, location_long })
-            .eq("id", eventId);
-
-          if (updateError) {
-            console.error('Error updating event coordinates:', updateError);
-          }
-        } catch (geocodeError) {
-          console.error('Geocoding error:', geocodeError);
-          throw new Error("Could not determine event location coordinates");
-        }
-      }
-
-      console.log('Calculating distance between:', 
-        { user: { lat: userLat, long: userLong }, 
-          event: { lat: location_lat, long: location_long }
-        }
-      );
-
       const distance = getDistance(
         { latitude: userLat, longitude: userLong },
-        { latitude: location_lat, longitude: location_long }
+        { latitude: event.event_lat, longitude: event.event_long }
       );
-
-      console.log('Distance to event:', distance, 'meters');
 
       if (distance > 5000) {
         throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`);
       }
+      
+      // update the event with the new rsvped array
+      await this.editEvent(eventId, { event_attending: event.event_attending });
 
-      // Get current attending_users array
-      const { data: currentEvent, error: fetchError } = await this.supabase
-        .from("events")
-        .select("attending_users")
-        .eq("id", eventId)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching current attendance:', fetchError);
-        throw new Error('Failed to fetch current attendance');
-      }
-
-      // Create new array with user added
-      const currentAttendees = currentEvent?.attending_users || [];
-      if (!currentAttendees.includes(userId)) {
-        currentAttendees.push(userId);
-      }
-
-      // Update the event with new array
-      const { error: attendanceError } = await this.supabase
-        .from("events")
-        .update({
-          attending_users: currentAttendees
-        })
-        .eq("id", eventId);
-
-      if (attendanceError) {
-        console.error('Error recording attendance:', attendanceError);
-        throw new Error(`Failed to record attendance: ${attendanceError.message}`);
-      }
-
-      console.log('Attendance recorded successfully for user:', userId);
-      console.log('Updated attending_users:', currentAttendees);
       return "Check-in confirmed!";
     } catch (error) {
       console.error('verifyLocationAttendance error:', error);
@@ -216,26 +132,7 @@ export class EventService {
     }
   }
 
-  private async geocodeAddress(address: string): Promise<{ lat: number; lon: number }> {
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      address
-    )}&key=${apiKey}`;
-
-
-    const res = await fetch(url);
-    const data = await res.json() as { status: string; results: { geometry: { location: { lat: number; lng: number } } }[] };
-
-    if (data.status === "OK") {
-      const loc = data.results[0].geometry.location;
-      return { lat: loc.lat, lon: loc.lng };
-    } else {
-      throw new Error("Failed to geocode event address");
-    }
-  }
-
   async getPublicEvents() {
-    console.log('EventService: Getting public events from Supabase...');
     const { data, error } = await this.supabase
       .from("events")
       .select("id, event_name, event_description, event_date")
@@ -252,47 +149,56 @@ export class EventService {
 
   async rsvpForEvent(eventId: string, userId: string) {
     try {
-      console.log('Processing RSVP for event:', eventId, 'user:', userId);
+      const eventIdNumber = parseInt(eventId);
+      const event: Event = (await this.getEventID(eventIdNumber))[0];
+      console.log("event:", event);
 
-      // Get current rsvp_users array
-      const { data: event, error: fetchError } = await this.supabase
-        .from("events")
-        .select("rsvp_users")
-        .eq("id", eventId)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching event RSVPs:', fetchError);
-        throw new Error('Failed to fetch event RSVPs');
-      }
-
-      // Create new array with user added
-      const currentRsvps = event?.rsvp_users || [];
+      // Initialize event_rsvped if it doesn't exist
+      let currentRsvps: string[] = event.event_rsvped || [];
+      
+      // Check if user is already RSVP'd
       if (currentRsvps.includes(userId)) {
-        throw new Error('You have already RSVP\'d for this event');
+        throw new Error("You have already RSVP'd for this event");
       }
 
+      // Add user to RSVPs
       currentRsvps.push(userId);
+      
+      await this.editEvent(eventId, { event_rsvped: currentRsvps.map(id => id.toString())});
 
-      // Update the event with new array
-      const { error: rsvpError } = await this.supabase
-        .from("events")
-        .update({
-          rsvp_users: currentRsvps
-        })
-        .eq("id", eventId);
-
-      if (rsvpError) {
-        console.error('Error recording RSVP:', rsvpError);
-        throw new Error(`Failed to record RSVP: ${rsvpError.message}`);
-      }
-
-      console.log('RSVP recorded successfully for user:', userId);
       return "RSVP confirmed!";
     } catch (error) {
       console.error('rsvpForEvent error:', error);
       throw error;
     }
   }
+
+  async unRsvpForEvent(eventId: string, userId: string) {
+    try {
+      // Convert eventId to number for proper comparison
+      const numericEventId = parseInt(eventId);
+      const event: Event = (await this.getEventID(numericEventId))[0];
+
+      // Initialize event_rsvped if it doesn't exist
+      let currentRsvps: string[] = event.event_rsvped || [];
+      
+      // Check if user is already RSVP'd
+      if (!currentRsvps.includes(userId)) {
+        throw new Error("You have not RSVP'd for this event");
+      }
+
+      // Remove user from the array
+      const updatedRsvps = currentRsvps.filter(id => id !== userId);
+
+      await this.editEvent(eventId, { event_rsvped: updatedRsvps.map(id => id.toString())});
+
+      return "RSVP removed!";
+    } catch (error) {
+      console.error('unRsvpForEvent error:', error);
+      throw error;
+    }
+  }
 }
+
+
 

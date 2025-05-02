@@ -1,17 +1,15 @@
 import { Request, Response } from "express";
 import extractToken from "../utils/extractToken";
-import UserRoleService from "../services/userService";
 import { announcementsService } from "../services/announcementsService";
 
 export class announcementsController {
     private announcementsService: announcementsService;
-    private userRoleService: UserRoleService;
 
     constructor() {
         this.announcementsService = new announcementsService();
-        this.userRoleService = new UserRoleService();
     }
 
+    //get all announcements
     async getannouncements(req: Request, res: Response) {
         const token = extractToken(req);
 
@@ -31,6 +29,7 @@ export class announcementsController {
         }
     }
 
+    //get announcement by id
     async getannouncementByID(req: Request, res: Response) {
         const token = extractToken(req);
 
@@ -70,16 +69,9 @@ export class announcementsController {
             res.status(400).json({ error: 'Missing required fields: title, and description' });
             return;
         }
-        //logic of adding announcements and getting emails and then sending them 
+        
         try {
-            const announcements = await this.announcementsService.addannouncements(title, description);
-            const emailList = await this.announcementsService.getUsersEmails(title, description);
-            if (emailList.length === 0) {
-                res.status(404).json({ error: 'No users found' });
-            }
-            // Send email to users
-            await this.announcementsService.sendAnnouncments(emailList, title, description);
-
+            await this.announcementsService.addannouncements(title, description);
             res.json("Announcement added successfully");
         } catch (error) {
             res.status(500).json({ error: 'Failed to add announcements' });
@@ -141,7 +133,7 @@ export class announcementsController {
 
         const { announcement_id } = req.body;
         try {
-            const announcement = await this.announcementsService.deleteannouncements(announcement_id);
+            await this.announcementsService.deleteannouncements(announcement_id);
             res.json("Announcement deleted successfully");
         } catch (error) {
             if (error instanceof Error && error.message.includes('No announcements found')) {
