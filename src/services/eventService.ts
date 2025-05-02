@@ -123,11 +123,17 @@ export class EventService {
     try {
       console.log('Processing RSVP for event:', eventId, 'user:', userId);
 
-      // Get current rsvp_users array
+      // Convert eventId to number for proper comparison
+      const numericEventId = parseInt(eventId, 10);
+      if (isNaN(numericEventId)) {
+        throw new Error('Invalid event ID');
+      }
+
+      // Get current event_rsvped array
       const { data: event, error: fetchError } = await this.supabase
         .from("events")
-        .select("rsvp_users")
-        .eq("id", eventId)
+        .select("id, event_rsvped")
+        .eq("id", numericEventId)
         .single();
 
       if (fetchError) {
@@ -135,21 +141,33 @@ export class EventService {
         throw new Error('Failed to fetch event RSVPs');
       }
 
-      // Create new array with user added
-      const currentRsvps = event?.rsvp_users || [];
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      console.log('Current event data:', event);
+      console.log('Current event_rsvped:', event.event_rsvped);
+
+      // Ensure event_rsvped is an array, initialize as empty array if null
+      const currentRsvps: string[] = Array.isArray(event.event_rsvped) ? event.event_rsvped : [];
+      console.log('Initialized currentRsvps:', currentRsvps);
+      
+      // Check if user is already in the array
       if (currentRsvps.includes(userId)) {
         throw new Error('You have already RSVP\'d for this event');
       }
 
+      // Add user to the array
       currentRsvps.push(userId);
+      console.log('Updated currentRsvps:', currentRsvps);
 
       // Update the event with new array
       const { error: rsvpError } = await this.supabase
         .from("events")
         .update({
-          rsvp_users: currentRsvps
+          event_rsvped: currentRsvps
         })
-        .eq("id", eventId);
+        .eq("id", numericEventId);
 
       if (rsvpError) {
         console.error('Error recording RSVP:', rsvpError);
@@ -162,6 +180,77 @@ export class EventService {
       console.error('rsvpForEvent error:', error);
       throw error;
     }
+  }
+
+  async unRsvpForEvent(eventId: string, userId: string) {
+    try {
+      console.log('Processing un-RSVP for event:', eventId, 'user:', userId);
+
+      // Convert eventId to number for proper comparison
+      const numericEventId = parseInt(eventId, 10);
+      if (isNaN(numericEventId)) {
+        throw new Error('Invalid event ID');
+      }
+
+      // Get current event_rsvped array
+      const { data: event, error: fetchError } = await this.supabase
+        .from("events")
+        .select("id, event_rsvped")
+        .eq("id", numericEventId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching event RSVPs:', fetchError);
+        throw new Error('Failed to fetch event RSVPs');
+      }
+
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      console.log('Current event data:', event);
+      console.log('Current event_rsvped:', event.event_rsvped);
+
+      // Ensure event_rsvped is an array, initialize as empty array if null
+      const currentRsvps: string[] = Array.isArray(event.event_rsvped) ? event.event_rsvped : [];
+      console.log('Initialized currentRsvps:', currentRsvps);
+      
+      // Check if user is in the array
+      if (!currentRsvps.includes(userId)) {
+        throw new Error('You have not RSVP\'d for this event');
+      }
+
+      // Remove user from the array
+      const updatedRsvps = currentRsvps.filter(id => id !== userId);
+      console.log('Updated currentRsvps:', updatedRsvps);
+
+      // Update the event with new array
+      const { error: rsvpError } = await this.supabase
+        .from("events")
+        .update({
+          event_rsvped: updatedRsvps
+        })
+        .eq("id", numericEventId);
+
+      if (rsvpError) {
+        console.error('Error removing RSVP:', rsvpError);
+        throw new Error(`Failed to remove RSVP: ${rsvpError.message}`);
+      }
+
+      console.log('RSVP removed successfully for user:', userId);
+      return "RSVP removed!";
+    } catch (error) {
+      console.error('unRsvpForEvent error:', error);
+      throw error;
+    }
+  }
+
+  async getUserFromToken(token: string) {
+    const { data: { user }, error } = await this.supabase.auth.getUser(token);
+    if (error || !user) {
+      throw new Error('Invalid token');
+    }
+    return user;
   }
 }
 

@@ -13,8 +13,9 @@ eventRoutes
 
 .post('/', controller.getEventByID.bind(controller)) // get events by id
 
-// rsvp route
+// rsvp routes
 .post('/rsvp/:eventId', controller.rsvpForEvent.bind(controller) as RequestHandler)
+.post('/unrsvp/:eventId', controller.unRsvpForEvent.bind(controller) as RequestHandler)
 
 // admin routes
 .post('/add-event', controller.addEvent.bind(controller)) // add an event

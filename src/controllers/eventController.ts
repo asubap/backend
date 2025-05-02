@@ -206,19 +206,34 @@ export class EventController {
 
     async rsvpForEvent(req: Request, res: Response) {
         try {
-            const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
+            const token = extractToken(req);
+            if (!token) {
+                return res.status(401).json({ error: 'No authorization token provided' });
             }
 
+            // Set the token in the service
+            this.eventService.setToken(token);
+
             const { eventId } = req.params;
-            
+            if (!eventId) {
+                return res.status(400).json({ error: 'Event ID is required' });
+            }
+
             try {
+                // Get user from token
+                const user = await this.eventService.getUserFromToken(token);
                 const result = await this.eventService.rsvpForEvent(eventId, user.id);
                 res.status(200).json({ message: result });
             } catch (error) {
-                if (error instanceof Error && error.message === 'You have already RSVP\'d for this event') {
-                    res.status(400).json({ error: error.message });
+                if (error instanceof Error) {
+                    if (error.message === 'You have already RSVP\'d for this event') {
+                        res.status(400).json({ error: error.message });
+                    } else if (error.message === 'Invalid token') {
+                        res.status(401).json({ error: error.message });
+                    } else {
+                        console.error('Error processing RSVP:', error);
+                        res.status(500).json({ error: 'Failed to process RSVP' });
+                    }
                 } else {
                     console.error('Error processing RSVP:', error);
                     res.status(500).json({ error: 'Failed to process RSVP' });
@@ -246,5 +261,45 @@ export class EventController {
         }
     }
 
+    async unRsvpForEvent(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                return res.status(401).json({ error: 'No authorization token provided' });
+            }
+
+            // Set the token in the service
+            this.eventService.setToken(token);
+
+            const { eventId } = req.params;
+            if (!eventId) {
+                return res.status(400).json({ error: 'Event ID is required' });
+            }
+
+            try {
+                // Get user from token
+                const user = await this.eventService.getUserFromToken(token);
+                const result = await this.eventService.unRsvpForEvent(eventId, user.id);
+                res.status(200).json({ message: result });
+            } catch (error) {
+                if (error instanceof Error) {
+                    if (error.message === 'You have not RSVP\'d for this event') {
+                        res.status(400).json({ error: error.message });
+                    } else if (error.message === 'Invalid token') {
+                        res.status(401).json({ error: error.message });
+                    } else {
+                        console.error('Error processing un-RSVP:', error);
+                        res.status(500).json({ error: 'Failed to process un-RSVP' });
+                    }
+                } else {
+                    console.error('Error processing un-RSVP:', error);
+                    res.status(500).json({ error: 'Failed to process un-RSVP' });
+                }
+            }
+        } catch (error) {
+            console.error('Error in unRsvpForEvent controller:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
 
 }
