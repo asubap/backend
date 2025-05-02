@@ -104,7 +104,6 @@ export class EventService {
 
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
     try {
-      
       const eventIdNumber = parseInt(eventId);
       const event: Event = (await this.getEventID(eventIdNumber))[0];
 
@@ -122,8 +121,22 @@ export class EventService {
         throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`);
       }
       
-      // update the event with the new rsvped array
-      await this.editEvent(eventId, { event_attending: event.event_attending });
+      // Initialize event_attending if it doesn't exist
+      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
+      
+      // Add user to the array
+      currentAttending.push(userId);
+
+      // Update the event with the new attending array
+      const { error: updateError } = await this.supabase
+        .from("events")
+        .update({ event_attending: currentAttending })
+        .eq("id", eventIdNumber);
+
+      if (updateError) {
+        console.error('Error updating attendance:', updateError);
+        throw new Error('Failed to update attendance');
+      }
 
       return "Check-in confirmed!";
     } catch (error) {
