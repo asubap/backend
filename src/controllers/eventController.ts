@@ -204,58 +204,6 @@ export class EventController {
         }
     }
 
-    async verifyAttendance(req: Request, res: Response) {
-        try {
-            const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
-
-            const { eventId } = req.params;
-            const { latitude, longitude, accuracy } = req.body;
-
-            console.log('Verifying attendance for:', { user, eventId, location: { latitude, longitude, accuracy } });
-            
-            if (!latitude || !longitude) {
-                console.error('Missing location data');
-                return res.status(422).json({ error: 'Location data is required' });
-            }
-
-            if (accuracy > 100) {
-                console.warn('Low accuracy location data:', { accuracy });
-            }
-
-            this.eventService.setToken(extractToken(req) as string);
-            
-            const result = await this.eventService.verifyLocationAttendance(
-                eventId,
-                user.id,
-                latitude,
-                longitude
-            );
-            
-            console.log('Attendance verification result:', result);
-            res.json({ message: result });
-        } catch (error: any) {
-            console.error('Check-in error:', error);
-            
-            if (error.message?.includes('too far')) {
-                return res.status(422).json({ error: error.message });
-            }
-            if (error.message?.includes('already checked in')) {
-                return res.status(409).json({ error: error.message });
-            }
-            if (error.message?.includes('Event not found')) {
-                return res.status(404).json({ error: error.message });
-            }
-            
-            res.status(500).json({ 
-                error: error.message || 'Server error',
-                details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
-            });
-        }
-    }
-
     async rsvpForEvent(req: Request, res: Response) {
         try {
             const user = (req as any).user;
