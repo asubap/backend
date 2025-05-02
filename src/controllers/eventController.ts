@@ -1,17 +1,14 @@
 import { Request, Response } from "express";
-import { MemberInfoService } from "../services/memberInfoService";
 import extractToken from "../utils/extractToken";
-import UserRoleService from "../services/userService";
 import { EventService } from "../services/eventService";
 import { geocodeAddress } from "../utils/geocoding";
 
 export class EventController {
     private eventService: EventService;
-    private userRoleService: UserRoleService;
 
     constructor() {
         this.eventService = new EventService();
-        this.userRoleService = new UserRoleService();
+
     }
 
     /**

@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import { SponsorService } from '../services/sponsorService';
 import extractToken from "../utils/extractToken";  
-import { passcodeHash } from '../utils/passcode'; 
-import bcrypt from 'bcryptjs';
 import sgMail from '@sendgrid/mail';
-import { generateSupabaseToken } from '../services/jwtService';
 export class SponsorController {
   private sponsorService: SponsorService;
   private sendgridApiKey: string = process.env.SENDGRID_API_KEY || '';
