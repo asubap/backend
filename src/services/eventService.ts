@@ -120,6 +120,11 @@ export class EventService {
       if (distance > 5000) {
         throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`);
       }
+
+      // check if user is rsvped
+      if (event.event_rsvped && !event.event_rsvped.includes(userId)) {
+        throw new Error("You have not RSVP'd for this event");
+      }
       
       // Initialize event_attending if it doesn't exist
       const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
@@ -127,16 +132,7 @@ export class EventService {
       // Add user to the array
       currentAttending.push(userId);
 
-      // Update the event with the new attending array
-      const { error: updateError } = await this.supabase
-        .from("events")
-        .update({ event_attending: currentAttending })
-        .eq("id", eventIdNumber);
-
-      if (updateError) {
-        console.error('Error updating attendance:', updateError);
-        throw new Error('Failed to update attendance');
-      }
+      await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
 
       return "Check-in confirmed!";
     } catch (error) {
@@ -212,6 +208,3 @@ export class EventService {
     }
   }
 }
-
-
-

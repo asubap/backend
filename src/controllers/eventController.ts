@@ -244,6 +244,10 @@ export class EventController {
             if (error.message?.includes('Event not found')) {
                 return res.status(404).json({ error: error.message });
             }
+
+            if (error.message?.includes('You have not RSVP\'d for this event')) {
+                return res.status(400).json({ error: error.message });
+            }
             
             res.status(500).json({ 
                 error: error.message || 'Server error',
