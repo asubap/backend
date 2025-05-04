@@ -79,6 +79,7 @@ export class MemberInfoService {
     }
 
     async editMemberInfo(user_email: string, updateFields: Record<string, string>) {
+        console.log("inside edit memeber info", updateFields);
         const { data, error } = await this.supabase
             .from('member_info')
             .update(updateFields)
@@ -86,6 +87,9 @@ export class MemberInfoService {
             .select()
 
         if (error) throw error;
+
+        const member_after_update = await this.getMemberInfo(user_email);
+        console.log("member_after_update", member_after_update);
         return data;
     }
 

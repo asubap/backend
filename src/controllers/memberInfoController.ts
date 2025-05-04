@@ -62,6 +62,7 @@ export class MemberInfoController {
      * @returns the updated member info
      */
     async editMemberInfo(req: Request, res: Response) {
+        console.log("editMemberInfo");
         const { user_email, name, major, about, graduating_year, links } = req.body;
 
         const token = extractToken(req);
@@ -88,7 +89,7 @@ export class MemberInfoController {
         if (about && about.trim() !== '') {
             updateFields.about = about;
         }
-        if (graduating_year && graduating_year.trim() !== '') {
+        if (graduating_year && String(graduating_year).trim() !== '') {
             updateFields.graduating_year = graduating_year;
         }
         if (links) {
@@ -100,6 +101,7 @@ export class MemberInfoController {
             res.status(400).json({ error: 'No valid update fields provided.' });
             return;
         }
+
 
         try {
             // edit member info

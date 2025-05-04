@@ -156,8 +156,6 @@ export class EventController {
         if (event_hours_type && event_hours_type.trim() !== '') {
             updateFields.event_hours_type = event_hours_type;
         }
-
-        console.log("updateFields:", updateFields);
         
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {

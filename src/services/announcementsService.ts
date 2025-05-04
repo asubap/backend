@@ -17,7 +17,6 @@ export class announcementsService {
         const { data, error } = await this.supabase
             .from('announcements')
             .select('*');
-        console.log(data)
 
         if (error) throw error;
         return data;

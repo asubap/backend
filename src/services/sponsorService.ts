@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface SponsorResource {
   url: string;
   label: string;
-  uploadDate: string; // ISO string format
+  uploadDate: string; // ISO string format 
 }
 
 export class SponsorService {
@@ -33,19 +33,6 @@ export class SponsorService {
       return data;
     } catch (error) {
       console.error('Error fetching sponsor names:', error);
-      throw error;
-    }
-  }
-  //get all sponsors
-  async getSponsorsAll() {
-    try {
-      const { data, error } = await this.supabase
-        .from('sponsor_info')
-        .select('*');
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching sponsors:', error);
       throw error;
     }
   }
@@ -119,25 +106,15 @@ export class SponsorService {
 
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
-    // get uuid from sponsor_info table
-    const { data: uuidData, error: uuidError } = await this.supabaseAdmin.from('sponsor_info').select('uuid').eq('company_name', sponsor_name).single();
-    if (uuidError) throw new Error(`Error fetching uuid: ${uuidError.message}`);
-
-    // delete user from auth.users
-    const { data: authData, error: authError } = await this.supabaseAdmin.auth.admin.deleteUser(uuidData.uuid);
-
-    if (authError) {
-        throw new Error(`Error deleting user: ${authError.message}, ${authError.code}, ${uuidData.uuid}`);
-    }
-
     // delete from allowed_members table
-    const { error: allowedError } = await this.supabaseAdmin.from('allowed_members').delete().eq('email', sponsor_name.toLowerCase() + "@example.com");
+    const { error: allowedError } = await this.supabase
+    .from('allowed_members')
+    .delete()
+    .eq('email', sponsor_name.toLowerCase() + "@example.com");
+
     if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
-
-    const { data, error } = await this.supabaseAdmin.from('sponsor_info').delete().eq('company_name', sponsor_name);
-
-    if (error) throw new Error(`Error deleting sponsor: ${error.message}, ${uuidData.uuid}`);
-    return data;
+    
+    return "Sponsor deleted successfully";
   }
 
   // Get sponsor info by passcode
@@ -149,8 +126,6 @@ export class SponsorService {
         .single()
     
       if (error) return null
-    
-      
     
       return data;
   }
@@ -498,17 +473,6 @@ export class SponsorService {
           throw new Error("About must be a string.");
       }
 
-      // Remove the lookup via passcode_hash
-      // const { data: creds, error: credsError } = await this.supabase
-      //   .from('sponsors_creds')
-      //   .select('sponsor')
-      //   .eq('passcode_hash', passcode_hash)
-      //   .single();
-      // if (credsError || !creds) {
-      //   console.error('Error finding sponsor credentials:', credsError);
-      //   throw new Error('Sponsor not found');
-      // }
-
       // Update sponsor_info directly using the provided companyName
       const { data, error } = await this.supabase
         .from('sponsor_info')
@@ -534,20 +498,4 @@ export class SponsorService {
       throw error;
     }
   }
-
-  // async sponsorAuth(companyName: string, passcode: string) {
-  //   // get passcode_hash from sponsors_creds table
-  //   const { data: creds, error: credsError } = await this.supabase
-  //     .from('sponsors_creds')
-  //     .select('passcode_hash')
-  //     .eq('sponsor', companyName) // Convert companyName to lowercase for case-insensitive matching
-  //     .single();
-
-  //   if (credsError || !creds) {
-  //     throw new Error('Invalid company name or passcode');
-  //   }
-
-  //   // return passcode_hash
-  //   return creds.passcode_hash;
-  // }
 } 

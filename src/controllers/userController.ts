@@ -71,7 +71,7 @@ export default class UserController {
         }
 
         try {
-            const newUser = await this.userService.addUser(user_email, role);
+            await this.userService.addUser(user_email, role);
             res.status(200).json('User added successfully');
         } catch (error) {
             console.error('Error adding user:', error);

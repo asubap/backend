@@ -31,7 +31,7 @@ export class SponsorController {
         }
 
       this.sponsorService.setToken(token as string);
-      const sponsors = await this.sponsorService.getSponsorsAll();
+      const sponsors = await this.sponsorService.getAllSponsors();
       res.status(200).json(sponsors);
     } catch (error) {
       console.error('Error fetching sponsors:', error);
@@ -103,7 +103,15 @@ export class SponsorController {
   async deleteSponsor(req: Request, res: Response): Promise<void> {
     try {
       const { sponsor_name } = req.body;
+      const token = extractToken(req);
+      if (!token) {
+          res.status(401).json('No authorization token provided');
+          return;
+      }
+      this.sponsorService.setToken(token as string);
+
       await this.sponsorService.deleteSponsor(sponsor_name);
+
       res.status(200).json({ message: 'Sponsor deleted successfully' });
     } catch (error) {
       console.error('Error deleting sponsor:', error);
