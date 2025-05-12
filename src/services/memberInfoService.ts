@@ -5,7 +5,6 @@ import e from "express";
 
 interface MemberInfo {
     user_id: string;
-    // Add other properties as needed
 }
 
 export class MemberInfoService {

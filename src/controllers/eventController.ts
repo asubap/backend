@@ -81,15 +81,18 @@ export class EventController {
 
         const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending} = req.body;
 
+
+        console.log(req.body);
         if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-        const { lat, lon } = await geocodeAddress(event_location);
+        // const { lat, lon } = await geocodeAddress(event_location);
+        // console.log("lat, lon", lat, lon);
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, lat, lon, event_time, event_hours, event_hours_type, sponsors_attending);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -104,7 +107,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, event_rsvped, event_attending} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending} = req.body;
 
         const token = extractToken(req);
         
@@ -123,26 +126,31 @@ export class EventController {
         
         // Build an update object only with non-empty fields
         const updateFields: Record<string, any> = {};
-        if (event_name && event_name.trim() !== '') {
-            updateFields.event_name = event_name;
+        if (name && name.trim() !== '') {
+            updateFields.event_name = name;
         }
-        if (event_date && event_date.trim() !== '') {
-            updateFields.event_date = event_date;
+        if (date && date.trim() !== '') {
+            updateFields.event_date = date;
         }
-        if (event_location && event_location.trim() !== '') {
-            updateFields.event_location = event_location;
-            const { lat, lon } = await geocodeAddress(event_location);
-            updateFields.event_location_lat = lat;
-            updateFields.event_location_long = lon;
+        if (location) {
+            if (location.name && location.name.trim() !== '') {
+                updateFields.event_location = location.name;
+            }
+            if (typeof location.latitude === 'number') {
+                updateFields.event_lat = location.latitude;
+            }
+            if (typeof location.longitude === 'number') {
+                updateFields.event_long = location.longitude;
+            }
         }
-        if (event_description && event_description.trim() !== '') {
-            updateFields.event_description = event_description;
+        if (description && description.trim() !== '') {
+            updateFields.event_description = description;
         }
-        if (event_time && event_time.trim() !== '') {
-            updateFields.event_time = event_time;
+        if (time && time.trim() !== '') {
+            updateFields.event_time = time;
         }
-        if (sponsors_attending && sponsors_attending.length > 0) {
-            updateFields.sponsors_attending = sponsors_attending;
+        if (sponsors && sponsors.length > 0) {
+            updateFields.sponsors_attending = sponsors;
         }
         if (event_rsvped && event_rsvped.length > 0) {
             updateFields.event_rsvped = event_rsvped;
@@ -150,7 +158,7 @@ export class EventController {
         if (event_attending && event_attending.length > 0) {
             updateFields.event_attending = event_attending;
         }
-        if (event_hours && event_hours.trim() !== '') {
+        if (event_hours) {
             updateFields.event_hours = event_hours;
         }
         if (event_hours_type && event_hours_type.trim() !== '') {
@@ -210,6 +218,7 @@ export class EventController {
 
             const { eventId } = req.params;
             const { latitude, longitude, accuracy } = req.body;
+            console.log("latitude, longitude, accuracy", latitude, longitude, accuracy);
             
             if (!latitude || !longitude) {
                 console.error('Missing user location data');

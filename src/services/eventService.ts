@@ -2,17 +2,20 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import { getDistance } from "geolib";
 import { Event } from "../types/event";
-
+import UserRoleService from "./userService";
 export class EventService {
 
   private supabase: SupabaseClient;
-
+  private userService: UserRoleService;
+  
   constructor() {
     this.supabase = createSupabaseClient();
+    this.userService = new UserRoleService();
   }
 
   setToken(token: string) {
     this.supabase = createSupabaseClient(token);
+    this.userService.setToken(token);
   }
 
   async getEvents() {
@@ -43,8 +46,8 @@ export class EventService {
                     event_name: name,
                     event_date: date,
                     event_location: location,
-                    event_location_lat: lat,
-                    event_location_long: long,
+                    event_lat: lat,
+                    event_long: long,
                     event_description: description,
                     sponsors_attending: sponsors
                 });
@@ -133,6 +136,15 @@ export class EventService {
       currentAttending.push(userId);
 
       await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
+
+      // update user hours to the new total
+      // first get user email
+      const userEmail = await this.userService.getUserEmail(userId);
+      // then update user hours
+      const { data: userData, error: userError } = await this.supabase
+        .from("member_info")
+        .update({ user_hours: event.event_hours + -10000})
+        .eq("user_email", userEmail);
 
       return "Check-in confirmed!";
     } catch (error) {

@@ -1,8 +1,8 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import { createSupabaseClient } from '../config/db';
 
-dotenv.config();
+config();
 
 interface UserRole {
     role_id: number;
@@ -73,5 +73,17 @@ export default class UserRoleService {
 
         if (error) throw error;
         return data;
+    }
+
+    // get user email by user id
+    async getUserEmail(user_id: string) {
+        const { data, error } = await this.supabase
+            .from('users')
+            .select('email')
+            .eq('id', user_id)
+            .single();
+
+        if (error) throw error;
+        return data.email;
     }
 }
