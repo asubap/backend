@@ -81,15 +81,11 @@ export class EventController {
 
         const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending} = req.body;
 
-
-        console.log(req.body);
         if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-        // const { lat, lon } = await geocodeAddress(event_location);
-        // console.log("lat, lon", lat, lon);
 
         try {
             await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending);
@@ -218,7 +214,6 @@ export class EventController {
 
             const { eventId } = req.params;
             const { latitude, longitude, accuracy } = req.body;
-            console.log("latitude, longitude, accuracy", latitude, longitude, accuracy);
             
             if (!latitude || !longitude) {
                 console.error('Missing user location data');

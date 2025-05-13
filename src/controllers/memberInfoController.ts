@@ -62,7 +62,6 @@ export class MemberInfoController {
      * @returns the updated member info
      */
     async editMemberInfo(req: Request, res: Response) {
-        console.log("editMemberInfo");
         const { user_email, name, major, about, graduating_year, links } = req.body;
 
         const token = extractToken(req);

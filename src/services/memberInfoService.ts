@@ -30,9 +30,14 @@ export class MemberInfoService {
      */
     async getMemberInfo(user_email: string) {
         const { data: members, error } = await this.supabase.from('member_info').select('*').eq('user_email', user_email);
-        
-        if (error) throw error;
 
+        if (error && error.code === '42703') {
+            throw new Error("Member not found: " + user_email);
+        }
+
+        if (!members) {
+            throw new Error("Member not found: " + user_email);
+        }
         // Get roles for each member
         const membersWithRoles = await Promise.all(members.map(async (member) => {
             const { data: roleData, error: roleError } = await this.supabase
@@ -78,7 +83,6 @@ export class MemberInfoService {
     }
 
     async editMemberInfo(user_email: string, updateFields: Record<string, string>) {
-        console.log("inside edit memeber info", updateFields);
         const { data, error } = await this.supabase
             .from('member_info')
             .update(updateFields)
@@ -87,8 +91,6 @@ export class MemberInfoService {
 
         if (error) throw error;
 
-        const member_after_update = await this.getMemberInfo(user_email);
-        console.log("member_after_update", member_after_update);
         return data;
     }
 

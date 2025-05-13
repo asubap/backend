@@ -75,15 +75,14 @@ export default class UserRoleService {
         return data;
     }
 
-    // get user email by user id
     async getUserEmail(user_id: string) {
-        const { data, error } = await this.supabase
-            .from('users')
-            .select('email')
-            .eq('id', user_id)
-            .single();
-
+        // Use service role client for admin API
+        const adminClient = createSupabaseClient(undefined, true); // useServiceRole = true
+        const { data, error } = await adminClient.auth.admin.getUserById(user_id);
+    
         if (error) throw error;
-        return data.email;
+        return data.user.email;
     }
+    
+
 }

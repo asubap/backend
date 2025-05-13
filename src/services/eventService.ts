@@ -2,7 +2,11 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import { getDistance } from "geolib";
 import { Event } from "../types/event";
+import { Member } from "../types/member";
+import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
+import { MemberInfoService } from "./memberInfoService";
+
 export class EventService {
 
   private supabase: SupabaseClient;
@@ -23,15 +27,6 @@ export class EventService {
     if (error) {
         throw error;
     }
-    return data;
-  }
-
-  async getEventsByName(name: string) {
-    const { data, error } = await this.supabase
-      .from("events")
-      .select("*")
-      .ilike("name", `%${name}%`);
-    if (error) throw error;
     return data;
   }
 
@@ -87,65 +82,45 @@ export class EventService {
     return data;
   }
 
-  async getEventsByDate(date: string) {
-    const { data: beforeData, error: beforeError } = await this.supabase
-      .from("events")
-      .select("*")
-      .lt("date", date)
-      .order("date", { ascending: false });
-    if (beforeError) throw beforeError;
-
-    const { data: afterData, error: afterError } = await this.supabase
-      .from("events")
-      .select("*")
-      .gt("date", date)
-      .order("date", { ascending: true });
-    if (afterError) throw afterError;
-
-    return { before: beforeData, after: afterData };
-  }
-
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
     try {
+
       const eventIdNumber = parseInt(eventId);
       const event: Event = (await this.getEventID(eventIdNumber))[0];
 
-      // Check if user is already in attendance
-      if (event.event_attending && event.event_attending.includes(userId)) {
-        throw new Error("You have already checked in to this event");
+      if (event.event_rsvped && !event.event_rsvped.includes(userId)) {
+        throw new Error("You have not RSVP'd for this event");
       }
 
       const distance = getDistance(
         { latitude: userLat, longitude: userLong },
         { latitude: event.event_lat, longitude: event.event_long }
-      );
+      ) ?? (() => { throw new Error("Failed to calculate distance") })();
 
-      if (distance > 5000) {
-        throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`);
+      distance <= 5000 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`) })();
+
+      if (event.event_attending && event.event_attending.includes(userId)) {
+        throw new Error("You have already checked in to this event");
       }
 
-      // check if user is rsvped
-      if (event.event_rsvped && !event.event_rsvped.includes(userId)) {
-        throw new Error("You have not RSVP'd for this event");
-      }
-      
-      // Initialize event_attending if it doesn't exist
       const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
-      
-      // Add user to the array
       currentAttending.push(userId);
 
       await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
 
-      // update user hours to the new total
-      // first get user email
-      const userEmail = await this.userService.getUserEmail(userId);
-      // then update user hours
-      const { data: userData, error: userError } = await this.supabase
-        .from("member_info")
-        .update({ user_hours: event.event_hours + -10000})
-        .eq("user_email", userEmail);
+      const userEmail = await this.userService.getUserEmail(userId) ?? (() => { throw new Error("User email not found") })();
 
+      const memberInfoService = new MemberInfoService();
+      const user: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
+
+      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
+      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
+      
+      const currentHours = Number(user[hoursKey]) || 0;
+      const newHours = currentHours + event.event_hours;
+
+      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
+      
       return "Check-in confirmed!";
     } catch (error) {
       console.error('verifyLocationAttendance error:', error);
@@ -172,7 +147,6 @@ export class EventService {
     try {
       const eventIdNumber = parseInt(eventId);
       const event: Event = (await this.getEventID(eventIdNumber))[0];
-      console.log("event:", event);
 
       // Initialize event_rsvped if it doesn't exist
       let currentRsvps: string[] = event.event_rsvped || [];
