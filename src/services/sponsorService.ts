@@ -114,6 +114,30 @@ export class SponsorService {
 
     if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
     
+    // delete from categories table
+    const { error: categoryError } = await this.supabase
+    .from('categories')
+    .delete()
+    .eq('name', sponsor_name);
+    if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
+
+    // Delete all files in the sponsor's folder - first list all files
+    const { data: fileList, error: listError } = await this.supabase.storage
+      .from('resources')
+      .list(sponsor_name);
+    
+    if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
+    
+    // If there are files, delete them
+    if (fileList && fileList.length > 0) {
+      const filePaths = fileList.map(file => `${sponsor_name}/${file.name}`);
+      const { error: removeError } = await this.supabase.storage
+        .from('resources')
+        .remove(filePaths);
+        
+      if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
+    }
+    
     return "Sponsor deleted successfully";
   }
 
