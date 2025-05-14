@@ -288,65 +288,104 @@ export class SponsorService {
   // Delete a sponsor resource
   async deleteSponsorResource(companyName: string, resourceUrl: string) {
     try {
-      // Get current resources
-      const { data: sponsorData, error: fetchError } = await this.supabase
-        .from('sponsor_info')
-        .select('resources')
-        .eq('company_name', companyName)
+      // Get current category ID for the company 
+      const { data: categoryData, error } = await this.supabase
+        .from('categories')
+        .select('id')
+        .eq('name', companyName)
         .single();
+      console.log(categoryData)
+      if (error) throw error;
 
-      if (fetchError) throw fetchError;
-
-      if (!sponsorData || !Array.isArray(sponsorData.resources)) {
-        throw new Error('Sponsor resources not found');
+      if (!categoryData ) {
+        throw new Error('Sponsor category not found');
       }
-
-      // Parse the resources
-      const resources: SponsorResource[] = sponsorData.resources.map((res: string) => {
-        try {
-          const parsed = JSON.parse(res);
-          return {
-            ...parsed,
-            uploadDate: parsed.uploadDate || new Date().toISOString()
-          } as SponsorResource;
-        } catch (e) {
-          return { 
-            url: res, 
-            label: res,
-            uploadDate: new Date().toISOString() 
-          };
-        }
-      });
-
-      // Find the resource to delete
-      const resourceToDelete = resources.find(res => res.url === resourceUrl);
+      //get all entries that match the category id
+      const { data: resourceData, error: fetchError } = await this.supabase
+        .from('resources')
+        .select('*')
+        .eq('category_id', categoryData.id);
+      if (fetchError) throw fetchError;
+      console.log("Resource data", resourceData)
+      if (!resourceData) {
+        return [];
+      }
+      const urlParts = resourceUrl.split('/');
+      const filePath = urlParts.slice(-2).join('/');
+      console.log(filePath)
+      console.log(urlParts)
+      // Find the resource to delete based on the resourceUrl 
+      // Decode the URL-encoded filePath to handle spaces (%20)
+      const resourceToDelete = resourceData.find(res => res.file_key === decodeURIComponent(filePath));
+      console.log("The Resource to delete", resourceToDelete)
       if (!resourceToDelete) {
         throw new Error('Resource not found');
       }
-
       // Extract the path from the URL to delete from storage
-      const urlParts = resourceUrl.split('/');
-      const filePath = urlParts.slice(-2).join('/');
-
+     
       // Delete from storage bucket
       const { error: storageError } = await this.supabase.storage
-        .from('sponsor-resources')
-        .remove([filePath]);
-
+        .from('resources')
+        .remove([resourceToDelete.file_key]);
       if (storageError) throw storageError;
+      //delete from resources table
+      const { error: deleteError } = await this.supabase
+        .from('resources')
+        .delete()
+        .eq('file_key', resourceToDelete.file_key);
+      if (deleteError) throw deleteError;
+     
 
-      // Update the resources array without the deleted resource
-      const updatedResources = resources.filter(res => res.url !== resourceUrl);
 
-      // Update the sponsor_info table
-      const { error: updateError } = await this.supabase
-        .from('sponsor_info')
-        .update({
-          resources: updatedResources.map(resource => JSON.stringify(resource))
-        })
-        .eq('company_name', companyName);
+   
 
-      if (updateError) throw updateError;
+
+      // Parse the resources
+      // const resources: SponsorResource[] = sponsorData.resources.map((res: string) => {
+      //   try {
+      //     const parsed = JSON.parse(res);
+      //     return {
+      //       ...parsed,
+      //       uploadDate: parsed.uploadDate || new Date().toISOString()
+      //     } as SponsorResource;
+      //   } catch (e) {
+      //     return { 
+      //       url: res, 
+      //       label: res,
+      //       uploadDate: new Date().toISOString() 
+      //     };
+      //   }
+      // });
+
+      // // Find the resource to delete
+      // const resourceToDelete = resources.find(res => res.url === resourceUrl);
+      // if (!resourceToDelete) {
+      //   throw new Error('Resource not found');
+      // }
+
+      // Extract the path from the URL to delete from storage
+      // const urlParts = resourceUrl.split('/');
+      // const filePath = urlParts.slice(-2).join('/');
+
+      // // Delete from storage bucket
+      // const { error: storageError } = await this.supabase.storage
+      //   .from('sponsor-resources')
+      //   .remove([filePath]);
+
+      // if (storageError) throw storageError;
+
+      // // Update the resources array without the deleted resource
+      // const updatedResources = resources.filter(res => res.url !== resourceUrl);
+
+      // // Update the sponsor_info table
+      // const { error: updateError } = await this.supabase
+      //   .from('sponsor_info')
+      //   .update({
+      //     resources: updatedResources.map(resource => JSON.stringify(resource))
+      //   })
+      //   .eq('company_name', companyName);
+
+      // if (updateError) throw updateError;
 
       return {
         success: true,
@@ -527,4 +566,4 @@ export class SponsorService {
       throw error;
     }
   }
-} 
+}
