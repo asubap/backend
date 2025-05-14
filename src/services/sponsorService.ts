@@ -146,70 +146,65 @@ export class SponsorService {
     try {
       // First upload the file to the storage bucket
       const filePath = `${companyName}/${Date.now()}_${file.originalname}`;
+      //Adding Company as a category 
+      const { data, error } = await this.supabase
+        .from('categories')
+        .insert({ name: companyName, description: `These are all the resources for ${companyName}` })
+        .select()
+        .single();
+      //ISSUE 
+      const { data: categoryData, error: categoryError } = await this.supabase
+      .from('categories')
+      .select('id')
+      .eq('name', companyName)
+      .single();
+
       const { data: uploadData, error: uploadError } = await this.supabase.storage
-        .from('sponsor-resources')
+        .from('resources')
         .upload(filePath, file.buffer, {
           contentType: file.mimetype,
           upsert: false
         });
 
       if (uploadError) throw uploadError;
-
-      // Generate the public URL for the uploaded file
-      const { data: publicUrlData } = await this.supabase.storage
-        .from('sponsor-resources')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
-
-      // Get current resources array
-      const { data: sponsorData, error: fetchError } = await this.supabase
-        .from('sponsor_info')
-        .select('resources')
-        .eq('company_name', companyName)
+      console.log(uploadData);
+      console.log(categoryData);
+      const { data: resource, error: resourceError } = await this.supabase
+        .from('resources')
+        .insert({
+          category_id: categoryData?.id,
+          name: resourceLabel,
+          description: ``,
+          file_key: filePath,
+          mime_type: file.mimetype,
+        })
+        .select()
         .single();
 
-      if (fetchError) throw fetchError;
-
-      // Parse the current resources
-      let currentResources: SponsorResource[] = [];
-      if (sponsorData && Array.isArray(sponsorData.resources)) {
-        currentResources = sponsorData.resources.map((res: string) => {
-          try {
-            return JSON.parse(res) as SponsorResource;
-          } catch (e) {
-            return { 
-              url: res, 
-              label: res,
-              uploadDate: new Date().toISOString() // Add default date for legacy resources
-            };
-          }
-        });
+      
+      
+      if (resourceError) {
+        // If resource creation fails, try to delete the uploaded file
+        console.log(`DEBUG - addResource: Resource creation failed, cleaning up uploaded file`);
+        await this.supabase.storage.from('resources').remove([filePath]);
+        throw resourceError;
       }
 
-      // Add the new resource with upload date
-      const newResource: SponsorResource = {
-        url: publicUrl,
-        label: resourceLabel,
-        uploadDate: new Date().toISOString()
+      // Generate a signed URL for immediate use
+    
+      const { data: urlData, error: urlError } = await this.supabase.storage
+        .from("resources")
+        .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+
+      console.log(`DEBUG - addResource: Signed URL result:`, { data: urlData, error: urlError });
+      
+      const result = {
+        ...resource,
+        signed_url: urlData?.signedUrl || null
       };
-
-      const updatedResources = [...currentResources, newResource];
-
-      // Update the sponsor_info table with the new resources array
-      const { data: updateData, error: updateError } = await this.supabase
-        .from('sponsor_info')
-        .update({
-          resources: updatedResources.map(resource => JSON.stringify(resource))
-        })
-        .eq('company_name', companyName);
-
-      if (updateError) throw updateError;
-
-      return {
-        success: true,
-        resource: newResource
-      };
+      
+      console.log(`DEBUG - addResource: Successfully completed`);
+      return result;
     } catch (error) {
       console.error('Error adding sponsor resource:', error);
       throw error;
@@ -219,37 +214,71 @@ export class SponsorService {
   // Get all resources for a sponsor with parsed labels
   async getSponsorResources(companyName: string) {
     try {
-      const { data, error } = await this.supabase
-        .from('sponsor_info')
-        .select('resources')
-        .eq('company_name', companyName)
+      const { data: categoryData, error } = await this.supabase
+        .from('categories')
+        .select('id')
+        .eq('name', companyName)
         .single();
-
+      console.log(categoryData)
       if (error) throw error;
 
-      if (!data || !Array.isArray(data.resources)) {
+      if (!categoryData) {
         return [];
       }
+      // Fetch resources for the given category
+      const { data: resourceData, error: fetchError } = await this.supabase
+        .from('resources')
+        .select('*')
+        .eq('category_id', categoryData.id);
+      if (fetchError) throw fetchError;
+      console.log(resourceData)
+      if (!resourceData) {
+        return [];
+      }
+      // Map the resources to include the signed URL
+      const resourcesWithUrls = await Promise.all(
+        resourceData.map(async (resource) => {
+          const { data: urlData } = await this.supabase.storage
+            .from('resources')
+            .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
 
-      // Parse the resources to get the URLs and labels
-      const resources: SponsorResource[] = data.resources.map((res: string) => {
-        try {
-          const parsed = JSON.parse(res);
-          // Ensure uploadDate exists, use current date if missing
           return {
-            ...parsed,
-            uploadDate: parsed.uploadDate || new Date().toISOString()
-          } as SponsorResource;
-        } catch (e) {
-          return { 
-            url: res, 
-            label: res,
-            uploadDate: new Date().toISOString() 
+            ...resource,
+            signed_url: urlData?.signedUrl || null
           };
-        }
-      });
+        })
+      );
+      //return all results 
+      const results = resourcesWithUrls.map((res) => {
+        return {
+          url: res.signed_url,
+          label: res.name,
+          uploadDate: res.created_at
+        } as SponsorResource;
+      })
+      return results;
 
-      return resources;
+    
+      //ISSUE BECAUSE OF MESSY CODE 
+      // Parse the resources to get the URLs and labels
+      // const resources: SponsorResource[] = data.resources.map((res: string) => {
+      //   try {
+      //     const parsed = JSON.parse(res);
+      //     // Ensure uploadDate exists, use current date if missing
+      //     return {
+      //       ...parsed,
+      //       uploadDate: parsed.uploadDate || new Date().toISOString()
+      //     } as SponsorResource;
+      //   } catch (e) {
+      //     return { 
+      //       url: res, 
+      //       label: res,
+      //       uploadDate: new Date().toISOString() 
+      //     };
+      //   }
+      // });
+
+      // return resources;
     } catch (error) {
       console.error('Error getting sponsor resources:', error);
       throw error;
