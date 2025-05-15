@@ -207,7 +207,7 @@ export class ResourceService {
       // Generate a unique file path
       const timestamp = Date.now();
       const fileExtension = file.originalname.split('.').pop();
-      const fileName = `${categoryCheck.name}/${Date.now()}_${file.originalname}`;
+      const fileName = `${categoryCheck.id}/${Date.now()}_${file.originalname}`;
       console.log(`DEBUG - addResource: Generated filename: ${fileName}`);
 
       // Upload file to storage
@@ -315,7 +315,7 @@ export class ResourceService {
       if (file) {
         // Generate a new file path
         const timestamp = Date.now();
-        const newFileName = `${category.name}/${Date.now()}_${file.originalname}`;
+        const newFileName = `${category.id}/${Date.now()}_${file.originalname}`;
 
         // Upload new file
         const { error: uploadError } = await this.supabase.storage

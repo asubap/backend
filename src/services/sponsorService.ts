@@ -120,11 +120,18 @@ export class SponsorService {
     .delete()
     .eq('name', sponsor_name);
     if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
+    // get category id 
+    const { data: categoryData, error: fetchError } = await this.supabase
+    .from('categories')
+    .select('id')
+    .eq('name', sponsor_name)
+    .single();
+    if (fetchError) throw new Error(`Error fetching category ID: ${fetchError.message}`);
 
     // Delete all files in the sponsor's folder - first list all files
     const { data: fileList, error: listError } = await this.supabase.storage
       .from('resources')
-      .list(sponsor_name);
+      .list(categoryData.id.toString());
     
     if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
     
@@ -169,7 +176,7 @@ export class SponsorService {
   async addSponsorResource(companyName: string, resourceLabel: string, file: Express.Multer.File) {
     try {
       // First upload the file to the storage bucket
-      const filePath = `${companyName}/${Date.now()}_${file.originalname}`;
+   
       //Adding Company as a category 
       const { data, error } = await this.supabase
         .from('categories')
@@ -182,6 +189,7 @@ export class SponsorService {
       .select('id')
       .eq('name', companyName)
       .single();
+      const filePath = `${categoryData?.id}/${Date.now()}_${file.originalname}`;
 
       const { data: uploadData, error: uploadError } = await this.supabase.storage
         .from('resources')
