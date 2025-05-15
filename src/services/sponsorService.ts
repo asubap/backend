@@ -147,6 +147,12 @@ export class SponsorService {
         
       if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
     }
+    //delete sponsorProfile photo using method 
+    this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
+      console.log("Sponsor profile photo deleted successfully");
+    }).catch((error) => {
+      console.error("Error deleting sponsor profile photo:", error);
+    });
     // delete from categories table
     const { error: categoryError } = await this.supabase
     .from('categories')
@@ -301,26 +307,7 @@ export class SponsorService {
       return results;
 
     
-      //ISSUE BECAUSE OF MESSY CODE 
-      // Parse the resources to get the URLs and labels
-      // const resources: SponsorResource[] = data.resources.map((res: string) => {
-      //   try {
-      //     const parsed = JSON.parse(res);
-      //     // Ensure uploadDate exists, use current date if missing
-      //     return {
-      //       ...parsed,
-      //       uploadDate: parsed.uploadDate || new Date().toISOString()
-      //     } as SponsorResource;
-      //   } catch (e) {
-      //     return { 
-      //       url: res, 
-      //       label: res,
-      //       uploadDate: new Date().toISOString() 
-      //     };
-      //   }
-      // });
-
-      // return resources;
+      
     } catch (error) {
       console.error('Error getting sponsor resources:', error);
       throw error;
@@ -383,55 +370,6 @@ export class SponsorService {
      
 
 
-   
-
-
-      // Parse the resources
-      // const resources: SponsorResource[] = sponsorData.resources.map((res: string) => {
-      //   try {
-      //     const parsed = JSON.parse(res);
-      //     return {
-      //       ...parsed,
-      //       uploadDate: parsed.uploadDate || new Date().toISOString()
-      //     } as SponsorResource;
-      //   } catch (e) {
-      //     return { 
-      //       url: res, 
-      //       label: res,
-      //       uploadDate: new Date().toISOString() 
-      //     };
-      //   }
-      // });
-
-      // // Find the resource to delete
-      // const resourceToDelete = resources.find(res => res.url === resourceUrl);
-      // if (!resourceToDelete) {
-      //   throw new Error('Resource not found');
-      // }
-
-      // Extract the path from the URL to delete from storage
-      // const urlParts = resourceUrl.split('/');
-      // const filePath = urlParts.slice(-2).join('/');
-
-      // // Delete from storage bucket
-      // const { error: storageError } = await this.supabase.storage
-      //   .from('sponsor-resources')
-      //   .remove([filePath]);
-
-      // if (storageError) throw storageError;
-
-      // // Update the resources array without the deleted resource
-      // const updatedResources = resources.filter(res => res.url !== resourceUrl);
-
-      // // Update the sponsor_info table
-      // const { error: updateError } = await this.supabase
-      //   .from('sponsor_info')
-      //   .update({
-      //     resources: updatedResources.map(resource => JSON.stringify(resource))
-      //   })
-      //   .eq('company_name', companyName);
-
-      // if (updateError) throw updateError;
 
       return {
         success: true,
@@ -529,37 +467,44 @@ export class SponsorService {
       if (photoUrl) {
         try {
             const urlParts = photoUrl.split('/');
-             // Ensure we have enough parts and check the base structure
-            if (urlParts.length > 7 && urlParts[6] === 'sponsors') {
-                const filePath = urlParts.slice(6).join('/'); // Path like 'sponsors/companyName/filename'
-                await this.supabase.storage.from('profile-photos').remove([filePath]);
+            // Find the index of profile-photos bucket in the URL
+            const bucketIndex = urlParts.indexOf('profile-photos');
+            if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+                // Everything after 'profile-photos' is our file path
+                const filePath = urlParts.slice(bucketIndex + 1).join('/');
+                console.log(`Attempting to delete file: ${filePath}`);
+                
+                // The remove function expects an array of paths
+                const { error: pfpError } = await this.supabase.storage
+                  .from('profile-photos')
+                  .remove([filePath]); // Pass as array, not single string
+                
+                if (pfpError) {
+                  console.error("Error deleting profile photo:", pfpError);
+                  throw pfpError;
+                }
+                console.log("Successfully deleted profile photo from storage");
             } else {
               console.warn("Could not parse profile photo path for deletion:", photoUrl);
             }
         } catch (removeError) {
             console.error("Error removing profile photo from storage:", removeError);
-             // Still attempt to clear the DB link
+            // Continue to update the database even if file deletion fails
         }
-
-        // Clear the photo URL in the database
-        const { error: updateError } = await this.supabase
-          .from('sponsor_info')
-          .update({ pfp_url: null })
-          .eq('company_name', companyName);
-
-        if (updateError) throw updateError;
-
-        return {
-            success: true,
-            message: 'Profile photo deleted successfully.'
-        };
-      } else {
-        // No photo URL exists, nothing to delete
-        return {
-          success: true,
-          message: 'No profile photo found to delete.'
-        };
       }
+
+      // Clear the photo URL in the database - moved after file deletion attempt
+      const { error: updateError } = await this.supabase
+        .from('sponsor_info')
+        .update({ pfp_url: null })
+        .eq('company_name', companyName);
+
+      if (updateError) throw updateError;
+     
+      return {
+          success: true,
+          message: photoUrl ? 'Profile photo deleted successfully.' : 'No profile photo found to delete.'
+      };
     } catch (error) {
       console.error('Error deleting sponsor profile photo:', error);
       throw error;
