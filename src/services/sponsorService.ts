@@ -137,7 +137,7 @@ export class SponsorService {
     
     // If there are files, delete them
     if (fileList && fileList.length > 0) {
-      const filePaths = fileList.map(file => `${sponsor_name}/${file.name}`);
+      const filePaths = fileList.map(file => `${categoryData.id}/${file.name}`);
       const { error: removeError } = await this.supabase.storage
         .from('resources')
         .remove(filePaths);
