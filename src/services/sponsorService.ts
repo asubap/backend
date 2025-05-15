@@ -113,13 +113,6 @@ export class SponsorService {
     .eq('email', sponsor_name.toLowerCase() + "@example.com");
 
     if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
-    
-    // delete from categories table
-    const { error: categoryError } = await this.supabase
-    .from('categories')
-    .delete()
-    .eq('name', sponsor_name);
-    if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
     // get category id 
     const { data: categoryData, error: fetchError } = await this.supabase
     .from('categories')
@@ -134,16 +127,33 @@ export class SponsorService {
       .list(categoryData.id.toString());
     
     if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
-    
+    console.log("Files to delete:", fileList);
+    // If no files found, return early
+    if (!fileList || fileList.length === 0) {
+      console.log("No files found to delete.");
+      throw new Error("No files found to delete.");
+    }
     // If there are files, delete them
     if (fileList && fileList.length > 0) {
       const filePaths = fileList.map(file => `${categoryData.id}/${file.name}`);
+      console.log("File paths to delete:", filePaths);
+      if (filePaths.length === 0) {
+        console.log("No files to delete.");
+        throw new Error("No files to delete.");
+      }
       const { error: removeError } = await this.supabase.storage
         .from('resources')
         .remove(filePaths);
         
       if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
     }
+    // delete from categories table
+    const { error: categoryError } = await this.supabase
+    .from('categories')
+    .delete()
+    .eq('name', sponsor_name);
+    if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
+    
     
     return "Sponsor deleted successfully";
   }
