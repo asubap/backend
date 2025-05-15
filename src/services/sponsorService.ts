@@ -335,7 +335,11 @@ export class SponsorService {
         return [];
       }
       const urlParts = resourceUrl.split('/');
-      const filePath = urlParts.slice(-2).join('/');
+      let filePath = urlParts.slice(-2).join('/');
+      
+      // Remove any query parameters (everything after '?')
+      filePath = filePath.split('?')[0];
+      
       console.log(filePath)
       console.log(urlParts)
       // Find the resource to delete based on the resourceUrl 

@@ -96,6 +96,28 @@ export class ResourceService {
    */
   async updateCategory(categoryId: string, updateData: { name?: string; description?: string }) {
     try {
+      //checking if it matches a sponsor name from sponsor-info table if so then dont let it succeed
+      const { data: categoryCheck, error: categoryError } = await this.supabase
+        .from('categories')
+        .select('id, name')
+        .eq('id', categoryId)
+        .single();
+      if (categoryError) {
+        console.log(`DEBUG - updateCategory: Category not found`, categoryError);
+        throw new Error(`Category with ID ${categoryId} not found`);
+      }
+      const { data: sponsorCheck, error: sponsorError } = await this.supabase
+        .from('sponsor_info')
+        .select('id, company_name')
+        .eq('company_name', categoryCheck.name)
+        .single();
+      //basically if sponsorCheck is not null then it means that the category name is a sponsor name and we dont want to update it
+      // so we will throw an error
+      if (sponsorCheck) {
+        console.log(`DEBUG - updateCategory: Category name matches a sponsor name`, sponsorError);
+        throw new Error(`Category name matches a sponsor name`);
+      }
+
       const { data, error } = await this.supabase
         .from('categories')
         .update(updateData)
@@ -171,7 +193,7 @@ export class ResourceService {
       console.log(`DEBUG - addResource: Checking if category exists`);
       const { data: categoryCheck, error: categoryError } = await this.supabase
         .from('categories')
-        .select('id')
+        .select('id, name')
         .eq('id', categoryId)
         .single();
 
@@ -185,7 +207,7 @@ export class ResourceService {
       // Generate a unique file path
       const timestamp = Date.now();
       const fileExtension = file.originalname.split('.').pop();
-      const fileName = `${categoryId}/${timestamp}_${file.originalname.replace(/\s+/g, '_')}`;
+      const fileName = `${categoryCheck.name}/${Date.now()}_${file.originalname}`;
       console.log(`DEBUG - addResource: Generated filename: ${fileName}`);
 
       // Upload file to storage
@@ -273,6 +295,16 @@ export class ResourceService {
         .eq('id', resourceId)
         .eq('category_id', categoryId)
         .single();
+      
+      const {data: category, error: categoryError} = await this.supabase
+        .from('categories')
+        .select('id, name')
+        .eq('id', categoryId)
+        .single();
+      if (categoryError) {
+        console.log(`DEBUG - updateResource: Category not found`, categoryError);
+        throw new Error(`Category with ID ${categoryId} not found`);
+      }
 
       if (fetchError) throw new Error('Resource not found or does not belong to the specified category');
 
@@ -283,7 +315,7 @@ export class ResourceService {
       if (file) {
         // Generate a new file path
         const timestamp = Date.now();
-        const newFileName = `${categoryId}/${timestamp}_${file.originalname.replace(/\s+/g, '_')}`;
+        const newFileName = `${category.name}/${Date.now()}_${file.originalname}`;
 
         // Upload new file
         const { error: uploadError } = await this.supabase.storage
