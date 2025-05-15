@@ -106,6 +106,12 @@ export class SponsorService {
 
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
+     //delete sponsorProfile photo using method 
+    this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
+      console.log("Sponsor profile photo deleted successfully");
+    }).catch((error) => {
+      console.error("Error deleting sponsor profile photo:", error);
+    });
     // delete from allowed_members table
     const { error: allowedError } = await this.supabase
     .from('allowed_members')
@@ -147,12 +153,7 @@ export class SponsorService {
         
       if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
     }
-    //delete sponsorProfile photo using method 
-    this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
-      console.log("Sponsor profile photo deleted successfully");
-    }).catch((error) => {
-      console.error("Error deleting sponsor profile photo:", error);
-    });
+   
     // delete from categories table
     const { error: categoryError } = await this.supabase
     .from('categories')
