@@ -131,7 +131,7 @@ export class SponsorService {
     // Delete all files in the sponsor's folder - first list all files
     const { data: fileList, error: listError } = await this.supabase.storage
       .from('resources')
-      .list(categoryData.id.toString());
+      .list(categoryData.id);
     
     if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
     
