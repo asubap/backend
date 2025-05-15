@@ -126,7 +126,7 @@ export class SponsorService {
     .eq('name', sponsor_name)
     .single();
     console.log(categoryData);
-    if(categoryData.id){
+    if(categoryData){
 
       // Delete all files in the sponsor's folder - first list all files
       const { data: fileList, error: listError } = await this.supabase.storage
