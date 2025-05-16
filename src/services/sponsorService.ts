@@ -69,7 +69,7 @@ export class SponsorService {
     }
 
   // add a sponsor
-  async addSponsor(sponsor: string, passcode_hash: string, emails: string[]) {
+  async addSponsor(sponsor: string, tier: string, passcode_hash: string, emails: string[]) {
       // Create user in auth.users
       const { data, error } = await this.supabaseAdmin.auth.signUp({
         email: `${sponsor}@example.com`,
@@ -95,6 +95,7 @@ export class SponsorService {
         company_name: sponsor,
         emails: emails,
         uuid: data.user.id,
+        tier: tier,
       });
   
       if (roleError) {
