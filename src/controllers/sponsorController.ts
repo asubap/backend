@@ -77,7 +77,7 @@ export class SponsorController {
         
         // Send invitation emails to all recipients in emailList with the original passcode
         try {
-          await this.sponsorService.sendSponsorInvitations(sponsor_name, passcode, emailList);
+          await this.sponsorService.sendSponsorInvitations(sponsor_name, tier, passcode, emailList);
         } catch (emailError) {
           console.error('Failed to send some invitation emails:', emailError);
           // Continue with the response even if some emails fail
