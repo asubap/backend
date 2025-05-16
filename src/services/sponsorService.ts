@@ -38,7 +38,7 @@ export class SponsorService {
   }
 
   //sending Emails
-  async sendSponsorInvitations(sponsorName: string, passcode: string, emailList: string[]): Promise<void> {
+  async sendSponsorInvitations(sponsorName: string, tier: string, passcode: string, emailList: string[]): Promise<void> {
       try {
         // Create email messages for each recipient
         const messages = emailList.map(email => ({
