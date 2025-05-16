@@ -209,7 +209,7 @@ export class SponsorService {
   }
 
   // Add a new resource for a sponsor
-  async addSponsorResource(companyName: string, resourceLabel: string, file: Express.Multer.File) {
+  async addSponsorResource(companyName: string, resourceLabel: string, description:string, file: Express.Multer.File) {
     try {
       // First upload the file to the storage bucket
    
@@ -242,7 +242,7 @@ export class SponsorService {
         .insert({
           category_id: categoryData?.id,
           name: resourceLabel,
-          description: ``,
+          description: description,
           file_key: filePath,
           mime_type: file.mimetype,
         })
@@ -321,6 +321,7 @@ export class SponsorService {
         return {
           url: res.signed_url,
           label: res.name,
+          description: res.description,
           uploadDate: res.created_at
         } as SponsorResource;
       })

@@ -211,10 +211,10 @@ export class SponsorController {
   async addSponsorResource(req: Request, res: Response): Promise<void> {
     try {
       const { companyName } = req.params;
-      const { resourceLabel } = req.body;
+      const { resourceLabel, description } = req.body;
       const file = (req as any).file;
       
-      if (!companyName || !resourceLabel) {
+      if (!companyName || !resourceLabel || !description) {
         res.status(400).json({ error: 'Company name (in URL) and resource label (in body) are required' });
         return;
       }
@@ -236,7 +236,7 @@ export class SponsorController {
       const token = authHeader.split(' ')[1];
       sponsorService.setToken(token);
       
-      const result = await sponsorService.addSponsorResource(companyName, resourceLabel, file);
+      const result = await sponsorService.addSponsorResource(companyName, resourceLabel,description, file);
       res.status(201).json(result);
     } catch (error) {
       console.error('Error adding sponsor resource:', error);
