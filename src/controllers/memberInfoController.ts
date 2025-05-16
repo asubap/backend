@@ -62,7 +62,23 @@ export class MemberInfoController {
      * @returns the updated member info
      */
     async editMemberInfo(req: Request, res: Response) {
-        const { user_email, name, major, about, graduating_year,phone, member_status, member_rank } = req.body;
+        // id,
+        // user_email,
+        // development_hours,
+        // professional_hours,
+        // service_hours,
+        // social_hours,
+        // links,
+        // name,
+        // major,
+        // about,
+        // graduating_year,
+        // profile_photo_url,
+        // total_hours,
+        // rank,
+        // member_status,
+        // phone
+        const { user_email, name, major, about, graduating_year,phone, member_status, member_rank, development_hours, professional_hours, service_hours, social_hours, links } = req.body;
 
         const token = extractToken(req);
         if (!token) {
@@ -100,8 +116,21 @@ export class MemberInfoController {
         if (member_rank && member_rank.trim() !== '') {
             updateFields.rank = member_rank;
         }
-       
-        
+        if (development_hours && String(development_hours).trim() !== '') {
+            updateFields.development_hours = development_hours;
+        }
+        if (professional_hours && String(professional_hours).trim() !== '') {
+            updateFields.professional_hours = professional_hours;
+        }   
+        if (service_hours && String(service_hours).trim() !== '') {
+            updateFields.service_hours = service_hours;
+        }
+        if (social_hours && String(social_hours).trim() !== '') {
+            updateFields.social_hours = social_hours;
+        }
+        if (links && links.length > 0) {
+            updateFields.links = links;
+        }
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {
             res.status(400).json({ error: 'No valid update fields provided.' });
