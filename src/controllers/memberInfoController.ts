@@ -62,7 +62,7 @@ export class MemberInfoController {
      * @returns the updated member info
      */
     async editMemberInfo(req: Request, res: Response) {
-        const { user_email, name, major, about, graduating_year, links } = req.body;
+        const { user_email, name, major, about, graduating_year,phone, member_status, member_rank } = req.body;
 
         const token = extractToken(req);
         if (!token) {
@@ -91,9 +91,16 @@ export class MemberInfoController {
         if (graduating_year && String(graduating_year).trim() !== '') {
             updateFields.graduating_year = graduating_year;
         }
-        if (links) {
-            updateFields.links = links;
+        if (phone && phone.trim() !== '') {
+            updateFields.phone = phone;
         }
+        if (member_status && member_status.trim() !== '') {
+            updateFields.member_status = member_status;
+        }
+        if (member_rank && member_rank.trim() !== '') {
+            updateFields.rank = member_rank;
+        }
+       
         
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {
@@ -115,6 +122,7 @@ export class MemberInfoController {
             res.status(500).json({ error: 'Internal server error' });
         }
     }
+
 
     /**
      * Upload/Update profile photo for a member
