@@ -23,9 +23,11 @@ router
 .get("/names", controller.getSponsorNames.bind(controller))
 
 .post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters 
- // delete user-email
 
- .post("/delete-sponsor", verifySupabaseToken, controller.deleteSponsor.bind(controller)) // delete sponsor and user-email
+.post("/change-sponsor-tier", verifySupabaseToken, controller.changeSponsorTier.bind(controller)) // change sponsor tier
+
+// delete user-email
+.post("/delete-sponsor", verifySupabaseToken, controller.deleteSponsor.bind(controller)) // delete sponsor and user-email
 
 .get("/", controller.getSponsors.bind(controller)) // get all sponsors for admin
 .get("/:companyName/resources", controller.getSponsorResources.bind(controller)) // get sponsor resources by company name

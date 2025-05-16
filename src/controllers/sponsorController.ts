@@ -99,6 +99,26 @@ export class SponsorController {
     }
 }
 
+  // change sponsor tier
+  async changeSponsorTier(req: Request, res: Response): Promise<void> {
+    try {
+      const { sponsor_name, tier } = req.body;
+      const token = extractToken(req);
+      if (!token) {
+        res.status(401).json('No authorization token provided');
+        return;
+      }
+      this.sponsorService.setToken(token as string);
+
+      await this.sponsorService.changeSponsorTier(sponsor_name, tier);
+
+      res.status(200).json({ message: 'Sponsor tier changed successfully' });
+    } catch (error) {
+      console.error('Error changing sponsor tier:', error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+  
   // delete a sponsor
   async deleteSponsor(req: Request, res: Response): Promise<void> {
     try {
