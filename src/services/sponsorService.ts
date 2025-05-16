@@ -105,6 +105,21 @@ export class SponsorService {
       return data;
   }
 
+  // change sponsor tier
+  async changeSponsorTier(sponsor_name: string, tier: string) {
+    const { error: updateError } = await this.supabase
+      .from('sponsor_info')
+      .update({ tier: tier })
+      .eq('company_name', sponsor_name);
+
+    if (updateError) throw new Error(`Error changing sponsor tier: ${updateError.message}`);
+
+    return {
+      success: true,
+      message: 'Sponsor tier changed successfully'
+    }
+  }
+
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
      //delete sponsorProfile photo using method 
