@@ -50,10 +50,10 @@ export class SponsorController {
 
         this.sponsorService.setToken(token as string);
 
-        const { sponsor_name, passcode, emailList } = req.body;
+        const { sponsor_name, tier, passcode, emailList } = req.body;
 
-        if (!sponsor_name || !passcode || !emailList) {
-            res.status(400).json('Sponsor name, passcode and email list are required');
+        if (!sponsor_name || !tier || !passcode || !emailList) {
+            res.status(400).json('Sponsor name, tier, passcode and email list are required');
             return;
         }
         if (!Array.isArray(emailList)) {
@@ -73,7 +73,7 @@ export class SponsorController {
         //const isMatch = await bcrypt.compare(passcode, "$2b$10$yeyihth2a3iJyIYoukurKujALO.r0rzZriWmYz4aYvVQhZnz67vJi");
 
         // Use the sponsor service
-        await this.sponsorService.addSponsor(sponsor_name, passcode, emailList);
+        await this.sponsorService.addSponsor(sponsor_name, tier, passcode, emailList);
         
         // Send invitation emails to all recipients in emailList with the original passcode
         try {
