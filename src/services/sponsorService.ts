@@ -107,6 +107,7 @@ export class SponsorService {
 
   // change sponsor tier
   async changeSponsorTier(sponsor_name: string, tier: string) {
+    console.log(sponsor_name, tier)
     const { error: updateError } = await this.supabase
       .from('sponsor_info')
       .update({ tier: tier })
