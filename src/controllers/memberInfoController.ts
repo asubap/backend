@@ -139,11 +139,11 @@ export class MemberInfoController {
 
         // Numeric fields validation
         if (graduating_year !== undefined) {
-            if (graduating_year !== null && (typeof graduating_year !== 'number' && isNaN(Number(graduating_year)))) {
-                validationErrors.push('Graduating year must be a number or null');
+            if (typeof graduating_year !== 'number' && isNaN(Number(graduating_year))) {
+                validationErrors.push('Graduating year must be a number');
             } else {
-                const year = graduating_year === null ? null : Number(graduating_year);
-                if (year === null || !isNaN(year)) {
+                const year = Number(graduating_year);
+                if (!isNaN(year)) {
                     updateFields.graduating_year = year;
                 }
             }
