@@ -97,7 +97,7 @@ export class EventService {
         { latitude: event.event_lat, longitude: event.event_long }
       ) ?? (() => { throw new Error("Failed to calculate distance") })();
 
-      distance <= 5 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is 5m)`) })();
+      distance <= 50 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is 5m)`) })();
 
       if (event.event_attending && event.event_attending.includes(userId)) {
         throw new Error("You have already checked in to this event");
