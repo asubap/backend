@@ -83,15 +83,15 @@ export class announcementsService {
           try {
             // Create email messages for each recipient
             const messages = emailList.map(email => ({
-              to: email,
-              from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
-              subject: `New Announcement: ${title}`,
-              text: `Hello,\n\nA new announcement has been made:\n\nTitle: ${title}\nDescription: ${description}\n\nBest regards,\nThe Team`,
+                to: email,
+                from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
+                subject: `${title}`,
+                text: `Hello,\n\nA new announcement has been made:\n\nTitle: ${title}\n${description}\n\nSincerely,\nBAP E-Board`,
                 html: `<p>Hello,</p>
                         <p>A new announcement has been made:</p>
                         <p><strong>Title:</strong> ${title}</p>
-                        <p><strong>Description:</strong> ${description}</p>
-                        <p>Best regards,<br>The Team</p>`
+                        <p>${description}</p>
+                        <p>Sincerely,<br>BAP E-Board</p>`
              
             }));
       
