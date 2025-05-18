@@ -79,16 +79,16 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window} = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -103,7 +103,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window} = req.body;
 
         const token = extractToken(req);
         
@@ -160,6 +160,10 @@ export class EventController {
         if (event_hours_type && event_hours_type.trim() !== '') {
             updateFields.event_hours_type = event_hours_type;
         }
+
+        if (check_in_window && typeof check_in_window === 'number') {
+            updateFields.check_in_window = check_in_window;
+        }
         
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {
@@ -213,7 +217,7 @@ export class EventController {
             }
 
             const { eventId } = req.params;
-            const { latitude, longitude, accuracy } = req.body;
+            const { latitude, longitude, accuracy} = req.body;
             
             if (!latitude || !longitude) {
                 console.error('Missing user location data');

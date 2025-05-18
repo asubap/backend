@@ -30,7 +30,7 @@ export class EventService {
     return data;
   }
 
-  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[]) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number) {
         const { data, error } = await this.supabase
             .from('events')
             .insert(
@@ -44,7 +44,8 @@ export class EventService {
                     event_lat: lat,
                     event_long: long,
                     event_description: description,
-                    sponsors_attending: sponsors
+                    sponsors_attending: sponsors,
+                    check_in_window: check_in_window
                 });
 
         if (error) console.log(error);
