@@ -62,7 +62,38 @@ export class EventController {
             res.status(500).json({ error: 'Failed to fetch event' });
         }
     }
+    /**
+     * Send event to all members
+     * @param req 
+     * @param res 
+     * @returns 
+     */
+    async sendEvent(req: Request, res: Response) {
+        const token = extractToken(req);
 
+        if (!token) {
+            res.status(401).json({ error: 'No authorization token provided' });
+            return;
+        }
+
+        this.eventService.setToken(token as string);
+
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window} = req.body;
+
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
+            res.status(400).json({ error: 'Missing required fields' });
+            return;
+        }
+
+
+        try {
+            await this.eventService.sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending);
+            res.json("Event send successfully");
+            return;
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to add event' });
+        }
+    }
     /**
      * Add an event
      * @param req 
