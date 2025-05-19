@@ -6,7 +6,7 @@ import { Member } from "../types/member";
 import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
 import { MemberInfoService } from "./memberInfoService";
-
+import { eventEmailTemplate } from "templates/eventEmail";
 export class EventService {
 
   private supabase: SupabaseClient;
@@ -81,6 +81,42 @@ export class EventService {
       throw new Error(`No event found with id: ${event_id}`);
     }
     return data;
+  }
+
+  async sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending){
+    try {
+      const { data: allMemberEmails, error: eError } = await this.supabase
+                .from('allowed_members')
+                .select('email')
+                .neq('role', 'sponsor')
+                .neq('role', 'e-board'); 
+            
+      if (eError) throw eError;
+
+      //combining all emails to one unique list of emails 
+      const emailsFromMembers = allMemberEmails.map(member => member.email);
+      // Create email messages for each recipient
+      const messages = emailsFromMembers.map(email => ({
+          to: email,
+          from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
+          subject: `${event_name}`,
+          html: eventEmailTemplate(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending)
+      }));
+   
+
+      // Send all emails in parallel
+      const promises = messages.map(msg => sgMail.send(msg));
+      await Promise.all(promises);
+      
+      console.log(`Successfully sent invitation emails to ${emailList.length} recipients`);
+
+      
+    } catch (error) {
+      console.error('Error sending event:', error);
+      throw error;
+      
+    }
+    
   }
 
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {

@@ -21,6 +21,7 @@ eventRoutes
 .post('/unrsvp/:eventId', verifySupabaseToken, controller.unRsvpForEvent.bind(controller) as RequestHandler)
 
 // admin routes
+.post('/send-event', controller.sendEvent.bind(controller)) // sends event to all members immediately
 .post('/add-event', controller.addEvent.bind(controller)) // add an event
 .post('/edit-event', controller.editEvent.bind(controller)) // edit an event
 .post('/delete-event', controller.deleteEvent.bind(controller)) // delete an event

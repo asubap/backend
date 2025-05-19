@@ -2,6 +2,8 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
+import { announcementEmailTemplate } from '../templates/announcementEmail';
+
 export class announcementsService {
     private supabase: SupabaseClient;
 
@@ -86,13 +88,7 @@ export class announcementsService {
                 to: email,
                 from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
                 subject: `${title}`,
-                text: `Hello,\n\nA new announcement has been made:\n\nTitle: ${title}\n${description}\n\nSincerely,\nBAP E-Board`,
-                html: `<p>Hello,</p>
-                        <p>A new announcement has been made:</p>
-                        <p><strong>Title:</strong> ${title}</p>
-                        <p>${description}</p>
-                        <p>Sincerely,<br>BAP E-Board</p>`
-             
+                html: announcementEmailTemplate(title, description)
             }));
       
             // Send all emails in parallel
