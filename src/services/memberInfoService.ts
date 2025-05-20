@@ -1,11 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
-import extractEmail from "../utils/extractEmail";
-import e from "express";
-
-interface MemberInfo {
-    user_id: string;
-}
 
 export class MemberInfoService {
     private supabase: SupabaseClient;
@@ -95,7 +89,7 @@ export class MemberInfoService {
         return memberData;
     }
 
-    async editMemberInfo(user_email: string, updateFields: Record<string, string>) {
+    async editMemberInfo(user_email: string, updateFields: Record<string, any>) {
         const { data, error } = await this.supabase
             .from('member_info')
             .update(updateFields)

@@ -113,7 +113,7 @@ export class ResourceService {
         .single();
       //basically if sponsorCheck is not null then it means that the category name is a sponsor name and we dont want to update it
       // so we will throw an error
-      if (sponsorCheck) {
+      if (sponsorCheck && updateData.name != categoryCheck.name) {
         console.log(`DEBUG - updateCategory: Category name matches a sponsor name`, sponsorError);
         throw new Error(`Category name matches a sponsor name`);
       }

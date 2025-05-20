@@ -30,7 +30,7 @@ export class EventService {
     return data;
   }
 
-  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[]) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number) {
         const { data, error } = await this.supabase
             .from('events')
             .insert(
@@ -44,7 +44,8 @@ export class EventService {
                     event_lat: lat,
                     event_long: long,
                     event_description: description,
-                    sponsors_attending: sponsors
+                    sponsors_attending: sponsors,
+                    check_in_window: check_in_window
                 });
 
         if (error) console.log(error);
@@ -97,7 +98,7 @@ export class EventService {
         { latitude: event.event_lat, longitude: event.event_long }
       ) ?? (() => { throw new Error("Failed to calculate distance") })();
 
-      distance <= 5000 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance/1000)}km away, maximum distance is 5 km)`) })();
+      distance <= 50 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is 5m)`) })();
 
       if (event.event_attending && event.event_attending.includes(userId)) {
         throw new Error("You have already checked in to this event");
@@ -131,15 +132,13 @@ export class EventService {
   async getPublicEvents() {
     const { data, error } = await this.supabase
       .from("events")
-      .select("id, event_name, event_description, event_date")
+      .select("id, event_name, event_date")
       .order('event_date', { ascending: true });
     
     if (error) {
       console.error('EventService: Error fetching public events:', error);
       throw error;
     }
-
-    console.log('EventService: Public events fetched successfully:', data);
     return data;
   }
 
