@@ -46,6 +46,29 @@ export default class UserRoleService {
         return data[0].role;
     }
 
+    async getUsersByIds(user_ids: string[]) {
+        // get emails of users by ids
+        console.log("Getting emails of users by ids:", user_ids);
+        const emails = [];
+        for (const user_id of user_ids) {
+            const email = await this.getUserEmail(user_id);
+            emails.push(email);
+        }
+
+        console.log("Emails:", emails);
+
+        // get users by emails from allowed_members table
+        const { data, error } = await this.supabase
+            .from('allowed_members')
+            .select('*')
+            .in('email', emails);
+
+        console.log("Users:", data);
+
+        if (error) throw error;
+        return data;
+    }
+
     async addUser(user_email: string, role: string) {
         const { data, error } = await this.supabase
             .from('allowed_members')
