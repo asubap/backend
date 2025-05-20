@@ -55,31 +55,6 @@ export class MemberInfoController {
         }
     }
 
-    async getMembersInfoByIds(req: Request, res: Response) {
-        try {
-            const token = extractToken(req);
-            if (!token) {
-                res.status(401).json({ error: 'No authorization token provided' });
-                return;
-            }
-
-            this.memberInfoService.setToken(token);
-
-            const { user_ids } = req.body;
-
-            if (!user_ids) {
-                res.status(400).json({ error: 'User IDs are required' });
-                return;
-            }
-
-            const memberInfo = await this.memberInfoService.getMembersInfoByIds(user_ids);
-
-            res.status(200).json(memberInfo);
-        } catch (error) {
-            res.status(500).json({ error: 'Internal server error' });
-        }
-    }
-
     /**
      * Edit member info
      * @param req 

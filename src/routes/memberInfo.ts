@@ -18,7 +18,6 @@ memberInfoRoutes
 // general routes
 .get('/', controller.getAllMemberInfo.bind(controller)) // get all members info and their roles
 .post('/', controller.getMemberInfoByEmail.bind(controller)) // get member info by email
-.post('/get-members-info-by-ids', controller.getMembersInfoByIds.bind(controller)) // get members info by list of ids
 
 // admin routes
 .post('/edit-member-info', controller.editMemberInfo.bind(controller)) // edit member info by email

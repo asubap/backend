@@ -76,44 +76,6 @@ export class MemberInfoService {
         return membersWithRoles;
     }
 
-    async getMembersInfoByIds(user_ids: string[]): Promise<(any | null)[]> { // Replace YourMemberType with the actual type
-        console.log("Fetching members for IDs:", user_ids);
-    
-        if (!user_ids || user_ids.length === 0) {
-            return []; // Handle empty or null input gracefully
-        }
-    
-        // 1. Fetch all matching members in a single query
-        const { data: foundMembers, error: fetchError } = await this.supabase
-            .from('member_info')
-            .select('*') // Select all columns, or specify columns: 'uid, name, email'
-            .in('uid', user_ids); // Use the .in() filter to match any uid in the user_ids array
-    
-        if (fetchError) {
-            console.error("Error fetching members by IDs:", fetchError);
-            throw fetchError; // Or handle more gracefully depending on your application's needs
-        }
-    
-        // `foundMembers` is an array of member objects that were found.
-        // It will only contain entries for user_ids that existed in the database.
-        // It will not be in the same order as user_ids, and will not contain nulls for not-found IDs.
-    
-        // 2. (Optional) Map results to preserve original order and include nulls for not-found IDs
-        // Create a map for quick lookups of found members
-        const membersMap = new Map<string, any>();
-        if (foundMembers) {
-            for (const member of foundMembers) {
-                membersMap.set(member.uid, member); // Assuming 'uid' is the correct field name in the returned member object
-            }
-        }
-    
-        // Construct the final array in the same order as user_ids, with null for not-found ones
-        const membersInfo = user_ids.map(id => membersMap.get(id) || null);
-    
-        console.log("Final members info (ordered, with nulls for not-found):", membersInfo);
-        return membersInfo;
-    }
-
     async editMemberInfo(user_email: string, updateFields: Record<string, any>) {
         const { data, error } = await this.supabase
             .from('member_info')
