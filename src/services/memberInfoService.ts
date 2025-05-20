@@ -78,13 +78,17 @@ export class MemberInfoService {
 
     async getMemberInfoById(user_id: string) {
         // match user_id with uid in public.member_info and return the member info
+        console.log(user_id);
+
         const { data: memberData, error: memberError } = await this.supabase
             .from('member_info')
             .select('*')
             .eq('uid', user_id)
-            .single();
+            .maybeSingle();
 
         if (memberError) throw memberError;
+
+        console.log(memberData);
 
         return memberData;
     }
