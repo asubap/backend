@@ -76,6 +76,19 @@ export class MemberInfoService {
         return membersWithRoles;
     }
 
+    async getMemberInfoById(user_id: string) {
+        // match user_id with uid in public.member_info and return the member info
+        const { data: memberData, error: memberError } = await this.supabase
+            .from('member_info')
+            .select('*')
+            .eq('uid', user_id)
+            .single();
+
+        if (memberError) throw memberError;
+
+        return memberData;
+    }
+
     async editMemberInfo(user_email: string, updateFields: Record<string, any>) {
         const { data, error } = await this.supabase
             .from('member_info')
