@@ -73,6 +73,8 @@ export class MemberInfoController {
             }
 
             const memberInfo = await this.memberInfoService.getMemberInfoById(user_id);
+
+            res.status(200).json(memberInfo);
         } catch (error) {
             res.status(500).json({ error: 'Internal server error' });
         }
