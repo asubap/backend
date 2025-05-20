@@ -55,7 +55,7 @@ export class MemberInfoController {
         }
     }
 
-    async getMemberInfoById(req: Request, res: Response) {
+    async getMembersInfoByIds(req: Request, res: Response) {
         try {
             const token = extractToken(req);
             if (!token) {
@@ -65,14 +65,14 @@ export class MemberInfoController {
 
             this.memberInfoService.setToken(token);
 
-            const { user_id } = req.body;
+            const { user_ids } = req.body;
 
-            if (!user_id) {
-                res.status(400).json({ error: 'User ID is required' });
+            if (!user_ids) {
+                res.status(400).json({ error: 'User IDs are required' });
                 return;
             }
 
-            const memberInfo = await this.memberInfoService.getMemberInfoById(user_id);
+            const memberInfo = await this.memberInfoService.getMembersInfoByIds(user_ids);
 
             res.status(200).json(memberInfo);
         } catch (error) {
