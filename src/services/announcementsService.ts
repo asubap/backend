@@ -90,12 +90,13 @@ export class announcementsService {
                 subject: `${title}`,
                 html: announcementEmailTemplate(title, description)
             }));
-      
-            // Send all emails in parallel
+     
+                  
+            //Send all emails in parallel
             const promises = messages.map(msg => sgMail.send(msg));
             await Promise.all(promises);
-            
-            console.log(`Successfully sent invitation emails to ${emailList.length} recipients`);
+       
+           console.log(`Successfully sent invitation emails to ${emailList.length} recipients`);
           } catch (error) {
             console.error('Error sending invitation emails:', error);
             if (error) {
