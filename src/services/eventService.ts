@@ -7,6 +7,7 @@ import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
 import { MemberInfoService } from "./memberInfoService";
 import { eventEmailTemplate } from "templates/eventEmail";
+import sgMail from '@sendgrid/mail';
 export class EventService {
 
   private supabase: SupabaseClient;
@@ -83,8 +84,63 @@ export class EventService {
     return data;
   }
 
-  async sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending){
+  async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string){
     try {
+      // Format the date from YYYY-MM-DD to Month Day, Year (with ordinal suffix)
+      const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr);
+        const month = date.toLocaleString('default', { month: 'long' });
+        const day = date.getDate();
+        const year = date.getFullYear();
+        
+        // Add ordinal suffix to day
+        const ordinalSuffix = (day: number): string => {
+          if (day > 3 && day < 21) return `${day}th`;
+          switch (day % 10) {
+            case 1: return `${day}st`;
+            case 2: return `${day}nd`;
+            case 3: return `${day}rd`;
+            default: return `${day}th`;
+          }
+        };
+        
+        return `${month} ${ordinalSuffix(day)}, ${year}`;
+      };
+      
+      // Format the time from 24-hour format (HH:MM:SS) to 12-hour format (H:MMam/pm)
+      const formatTime = (timeStr: string): string => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const period = hours >= 12 ? 'pm' : 'am';
+        const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+        return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`;
+      };
+      
+      // Format sponsors array to string
+      const formatSponsors = (sponsors: string): string => {
+        if (!sponsors) return "No sponsors";
+        
+        try {
+          const sponsorsArray = typeof sponsors === 'string' ? JSON.parse(sponsors) : sponsors;
+          if (!Array.isArray(sponsorsArray) || sponsorsArray.length === 0) return "No sponsors";
+          return sponsorsArray.join(", ");
+        } catch (e) {
+          console.error("Error parsing sponsors:", e);
+          return sponsors.toString();
+        }
+      };
+
+      // Format hours type to capitalize first letter
+      const formatHoursType = (hoursType: string): string => {
+        if (!hoursType) return "";
+        return hoursType.charAt(0).toUpperCase() + hoursType.slice(1).toLowerCase();
+      };
+      
+      // Format the values
+      const formattedDate = formatDate(event_date);
+      const formattedTime = formatTime(event_time);
+      const formattedSponsors = formatSponsors(sponsors_attending);
+      const formattedHoursType = formatHoursType(event_hours_type);
+
       const { data: allMemberEmails, error: eError } = await this.supabase
                 .from('allowed_members')
                 .select('email')
@@ -100,23 +156,19 @@ export class EventService {
           to: email,
           from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
           subject: `${event_name}`,
-          html: eventEmailTemplate(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending)
+          html: eventEmailTemplate(event_name, formattedDate, event_location, event_description, formattedTime, event_hours, formattedHoursType, formattedSponsors)
       }));
-   
-
-      // Send all emails in parallel
+      
+  
+      
       const promises = messages.map(msg => sgMail.send(msg));
       await Promise.all(promises);
-      
-      console.log(`Successfully sent invitation emails to ${emailList.length} recipients`);
 
-      
+      console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} recipients`);
     } catch (error) {
       console.error('Error sending event:', error);
       throw error;
-      
     }
-    
   }
 
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
