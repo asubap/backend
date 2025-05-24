@@ -72,14 +72,20 @@ export class ResourceService {
    * @param description Category description
    * @returns The newly created category
    */
-  async addCategory(name: string, description: string) {
+  async addCategory(name: string, description: string, resourceType: string) {
     try {
       const { data, error } = await this.supabase
         .from('categories')
-        .insert({ name, description })
+        .insert([
+          {
+            name: name,
+            description: description,
+            resource_type: resourceType 
+          }
+        ])
         .select()
         .single();
-
+  
       if (error) throw error;
       return data;
     } catch (error) {
@@ -87,6 +93,7 @@ export class ResourceService {
       throw error;
     }
   }
+  
 
   /**
    * Update an existing category
@@ -94,7 +101,7 @@ export class ResourceService {
    * @param updateData Object containing name and/or description
    * @returns The updated category
    */
-  async updateCategory(categoryId: string, updateData: { name?: string; description?: string }) {
+  async updateCategory(categoryId: string, updateData: { name?: string; description?: string, resourceType?: string }) {
     try {
       //checking if it matches a sponsor name from sponsor-info table if so then dont let it succeed
       const { data: categoryCheck, error: categoryError } = await this.supabase
@@ -103,9 +110,10 @@ export class ResourceService {
         .eq('id', categoryId)
         .single();
       if (categoryError) {
-        console.log(`DEBUG - updateCategory: Category not found`, categoryError);
         throw new Error(`Category with ID ${categoryId} not found`);
       }
+
+      
       const { data: sponsorCheck, error: sponsorError } = await this.supabase
         .from('sponsor_info')
         .select('id, company_name')
@@ -118,9 +126,15 @@ export class ResourceService {
         throw new Error(`Category name matches a sponsor name`);
       }
 
+      console.log(updateData.resourceType)
+
       const { data, error } = await this.supabase
         .from('categories')
-        .update(updateData)
+        .update({
+          name: updateData.name,
+          description: updateData.description,
+          resource_type: updateData.resourceType
+        })
         .eq('id', categoryId)
         .select()
         .single();

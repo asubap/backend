@@ -58,7 +58,6 @@ export class SponsorService {
         const promises = messages.map(msg => sgMail.send(msg));
         await Promise.all(promises);
         
-        console.log(`Successfully sent invitation emails to ${emailList.length} recipients`);
       } catch (error) {
         console.error('Error sending invitation emails:', error);
         if (error) {
@@ -107,7 +106,6 @@ export class SponsorService {
 
   // change sponsor tier
   async changeSponsorTier(sponsor_name: string, tier: string) {
-    console.log(sponsor_name, tier)
     const { error: updateError } = await this.supabase
       .from('sponsor_info')
       .update({ tier: tier })
@@ -125,7 +123,6 @@ export class SponsorService {
   async deleteSponsor(sponsor_name: string) {
      //delete sponsorProfile photo using method 
     this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
-      console.log("Sponsor profile photo deleted successfully");
     }).catch((error) => {
       console.error("Error deleting sponsor profile photo:", error);
     });
@@ -142,7 +139,6 @@ export class SponsorService {
     .select('id')
     .eq('name', sponsor_name)
     .single();
-    console.log(categoryData);
     if(categoryData){
 
       // Delete all files in the sponsor's folder - first list all files
@@ -151,7 +147,6 @@ export class SponsorService {
         .list(categoryData.id);
       
       if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
-      console.log("Files to delete:", fileList);
       // If no files found, return early
       if (!fileList || fileList.length === 0) {
         console.log("No files found to delete.");
@@ -160,7 +155,6 @@ export class SponsorService {
       // If there are files, delete them
       if (fileList && fileList.length > 0) {
         const filePaths = fileList.map(file => `${categoryData.id}/${file.name}`);
-        console.log("File paths to delete:", filePaths);
         if (filePaths.length === 0) {
           console.log("No files to delete.");
           throw new Error("No files to delete.");
@@ -235,8 +229,6 @@ export class SponsorService {
         });
 
       if (uploadError) throw uploadError;
-      console.log(uploadData);
-      console.log(categoryData);
       const { data: resource, error: resourceError } = await this.supabase
         .from('resources')
         .insert({
@@ -264,14 +256,12 @@ export class SponsorService {
         .from("resources")
         .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
 
-      console.log(`DEBUG - addResource: Signed URL result:`, { data: urlData, error: urlError });
       
       const result = {
         ...resource,
         signed_url: urlData?.signedUrl || null
       };
       
-      console.log(`DEBUG - addResource: Successfully completed`);
       return result;
     } catch (error) {
       console.error('Error adding sponsor resource:', error);
@@ -287,7 +277,6 @@ export class SponsorService {
         .select('id')
         .eq('name', companyName)
         .single();
-      console.log(categoryData)
       if (error) throw error;
 
       if (!categoryData) {
@@ -299,7 +288,6 @@ export class SponsorService {
         .select('*')
         .eq('category_id', categoryData.id);
       if (fetchError) throw fetchError;
-      console.log(resourceData)
       if (!resourceData) {
         return [];
       }
@@ -344,7 +332,6 @@ export class SponsorService {
         .select('id')
         .eq('name', companyName)
         .single();
-      console.log(categoryData)
       if (error) throw error;
 
       if (!categoryData ) {
@@ -356,7 +343,6 @@ export class SponsorService {
         .select('*')
         .eq('category_id', categoryData.id);
       if (fetchError) throw fetchError;
-      console.log("Resource data", resourceData)
       if (!resourceData) {
         return [];
       }
@@ -366,12 +352,9 @@ export class SponsorService {
       // Remove any query parameters (everything after '?')
       filePath = filePath.split('?')[0];
       
-      console.log(filePath)
-      console.log(urlParts)
       // Find the resource to delete based on the resourceUrl 
       // Decode the URL-encoded filePath to handle spaces (%20)
       const resourceToDelete = resourceData.find(res => res.file_key === decodeURIComponent(filePath));
-      console.log("The Resource to delete", resourceToDelete)
       if (!resourceToDelete) {
         throw new Error('Resource not found');
       }
@@ -493,7 +476,6 @@ export class SponsorService {
             if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
                 // Everything after 'profile-photos' is our file path
                 const filePath = urlParts.slice(bucketIndex + 1).join('/');
-                console.log(`Attempting to delete file: ${filePath}`);
                 
                 // The remove function expects an array of paths
                 const { error: pfpError } = await this.supabase.storage
@@ -504,7 +486,6 @@ export class SponsorService {
                   console.error("Error deleting profile photo:", pfpError);
                   throw pfpError;
                 }
-                console.log("Successfully deleted profile photo from storage");
             } else {
               console.warn("Could not parse profile photo path for deletion:", photoUrl);
             }

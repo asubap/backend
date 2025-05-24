@@ -39,14 +39,15 @@ export class ResourceController {
       }
       this.resourceService.setToken(token);
 
-      const { name, description } = req.body;
+      // type = firm vs. sponsor
+      const { name, description, resourceType} = req.body;
 
       if (!name || !description) {
         res.status(400).json({ error: 'Name and description are required' });
         return;
       }
 
-      const newCategory = await this.resourceService.addCategory(name, description);
+      const newCategory = await this.resourceService.addCategory(name, description, resourceType);
       res.status(201).json(newCategory);
     } catch (error) {
       console.error('Error in addCategory controller:', error);
@@ -67,7 +68,7 @@ export class ResourceController {
       this.resourceService.setToken(token);
 
       const { categoryId } = req.params;
-      const { name, description } = req.body;
+      const { name, description, resourceType } = req.body;
 
       if (!categoryId) {
         res.status(400).json({ error: 'Category ID is required' });
@@ -80,9 +81,10 @@ export class ResourceController {
         return;
       }
 
-      const updateData: { name?: string; description?: string } = {};
+      const updateData: { name?: string; description?: string, resourceType?: string } = {};
       if (name) updateData.name = name;
       if (description) updateData.description = description;
+      if (resourceType) updateData.resourceType = resourceType;
 
       const updatedCategory = await this.resourceService.updateCategory(categoryId, updateData);
       res.status(200).json(updatedCategory);
@@ -124,47 +126,33 @@ export class ResourceController {
    */
   async addResource(req: Request, res: Response) {
     try {
-      console.log('DEBUG - Controller: Starting addResource');
       const token = extractToken(req);
       if (!token) {
-        console.log('DEBUG - Controller: No token found');
         res.status(401).json({ error: 'Authentication required' });
         return;
       }
-      console.log('DEBUG - Controller: Token found, setting in service');
       this.resourceService.setToken(token);
 
       const { categoryId } = req.params;
       const { name, description } = req.body;
       const file = (req as any).file;
 
-      console.log('DEBUG - Controller: Request params:', {
-        categoryId,
-        body: req.body,
-        fileExists: !!file
-      });
-
       if (!categoryId) {
-        console.log('DEBUG - Controller: Missing categoryId');
         res.status(400).json({ error: 'Category ID is required' });
         return;
       }
 
       if (!name || !description) {
-        console.log('DEBUG - Controller: Missing name or description');
         res.status(400).json({ error: 'Name and description are required' });
         return;
       }
 
       if (!file) {
-        console.log('DEBUG - Controller: Missing file');
         res.status(400).json({ error: 'File is required' });
         return;
       }
 
-      console.log('DEBUG - Controller: Calling resourceService.addResource()');
       const newResource = await this.resourceService.addResource(categoryId, name, description, file);
-      console.log('DEBUG - Controller: Resource created successfully');
       res.status(201).json(newResource);
     } catch (error) {
       console.error('DEBUG - Controller: Error in addResource controller:', error);
