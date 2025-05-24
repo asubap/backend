@@ -6,7 +6,7 @@ import { Member } from "../types/member";
 import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
 import { MemberInfoService } from "./memberInfoService";
-import { eventEmailTemplate } from "templates/eventEmail";
+import { eventEmailTemplate } from "../templates/eventEmail";
 import sgMail from '@sendgrid/mail';
 export class EventService {
 
