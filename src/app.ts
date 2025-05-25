@@ -12,8 +12,8 @@ const app = express();
 app.use(cors({
     origin: [
         "https://frontend-iota-gules-58.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "https://www.asubap.com
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
