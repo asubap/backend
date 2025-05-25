@@ -13,7 +13,7 @@ app.use(cors({
     origin: [
         "https://frontend-iota-gules-58.vercel.app",
         "http://localhost:5173",
-        "https://www.asubap.com
+        "https://www.asubap.com"
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
