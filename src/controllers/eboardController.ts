@@ -13,14 +13,6 @@ export default class EboardController {
 
     async getEboard(req: Request, res: Response) {
         try {
-            const token = extractToken(req);
-            if (!token) {
-                res.status(401).json('No authorization token provided');
-                return;
-            }
-
-            this.eboardService.setToken(token as string);
-
             const users = await this.eboardService.getEboard();
             res.json(users);
         } catch (error) {
@@ -40,14 +32,14 @@ export default class EboardController {
 
             this.eboardService.setToken(token as string);
 
-            const { name, role, email, major, location } = req.body;
+            const { image, name, role, email, major, location } = req.body;
             
-            if (!name || !role || !email || !major || !location) {
+            if (!image || !name || !role || !email || !major || !location) {
                 res.status(400).json('Missing required fields');
                 return;
             }
 
-            const eboard = await this.eboardService.addEboard(name, role, email, major, location);
+            const eboard = await this.eboardService.addEboard(image, name, role, email, major, location);
             res.json(eboard);
         } catch (error) {
             console.error('Error adding eboard:', error);
