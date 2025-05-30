@@ -42,10 +42,11 @@ export default class EboardService {
         return data;
     }
 
-    async addEboard(name: string, role: string, email: string, major: string, location: string) {
+    async addEboard(image: string, name: string, role: string, email: string, major: string, location: string) {
         const { data, error } = await this.supabase
             .from('eboard')
             .insert({
+                image,
                 name,
                 role,
                 email,

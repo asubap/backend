@@ -6,6 +6,6 @@ const eboardRoutes = Router();
 const controller = new EboardController();
 eboardRoutes
 .get('/', controller.getEboard.bind(controller)) // get all users and their roles
-.post('/', controller.addEboard.bind(controller)) // add eboard
+.post('/add', controller.addEboard.bind(controller)) // add eboard
 
 export default eboardRoutes;
