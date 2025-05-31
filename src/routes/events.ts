@@ -25,5 +25,7 @@ eventRoutes
 .post('/add-event', controller.addEvent.bind(controller)) // add an event
 .post('/edit-event', controller.editEvent.bind(controller)) // edit an event
 .post('/delete-event', controller.deleteEvent.bind(controller)) // delete an event
+.post('/add-member-attending', verifySupabaseToken, controller.addMemberAttending.bind(controller) as RequestHandler) // add member to event without location check
+.post('/delete-member-attending', verifySupabaseToken, controller.deleteMemberAttending.bind(controller) as RequestHandler) // remove member from event and update hours
 
 export default eventRoutes;

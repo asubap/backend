@@ -5,6 +5,8 @@ import announcementsRoutes from "./announcements";
 import memberInfoRoutes from "./memberInfo";
 import sponsorRoutes from "./sponsor";
 import resourceRoutes from "./resources";
+import eboardRoutes from "./eboard";
+
 const router = Router();
 
 router.get("/", (req: Request, res: Response) => {
@@ -17,5 +19,6 @@ router.use("/events", eventRoutes);
 router.use("/announcements", announcementsRoutes);
 router.use('/sponsors', sponsorRoutes);
 router.use('/resources', resourceRoutes);
+router.use('/eboard', eboardRoutes);
 
 export default router;

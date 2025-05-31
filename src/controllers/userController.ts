@@ -55,31 +55,6 @@ export default class UserController {
         }
     }
 
-    async getUsersByIds(req: Request, res: Response) {
-        try {
-            const token = extractToken(req);
-            if (!token) {
-                res.status(401).json('No authorization token provided');
-            return;
-        }
-
-        this.userService.setToken(token as string);
-        const { user_ids } = req.body;
-
-        if (!user_ids) {
-            res.status(400).json('User IDs are required');
-            return;
-        }
-
-        const users = await this.userService.getUsersByIds(user_ids);
-        res.json(users);
-    } catch (error) {
-        console.error('Error getting users by IDs:', error);
-            res.status(500).json('Failed to get users by IDs');
-            return;
-        }
-    }
-
     async addUser(req: Request, res: Response) {
         const token = extractToken(req);
         if (!token) {

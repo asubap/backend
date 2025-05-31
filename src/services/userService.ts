@@ -46,24 +46,6 @@ export default class UserRoleService {
         return data[0].role;
     }
 
-    async getUsersByIds(user_ids: string[]) {
-        // get emails of users by ids
-        const emails = [];
-        for (const user_id of user_ids) {
-            const email = await this.getUserEmail(user_id);
-            emails.push(email);
-        }
-
-        // get users by emails from allowed_members table
-        const { data, error } = await this.supabase
-            .from('allowed_members')
-            .select('*')
-            .in('email', emails);
-
-        if (error) throw error;
-        return data;
-    }
-
     async addUser(user_email: string, role: string) {
         const { data, error } = await this.supabase
             .from('allowed_members')
@@ -101,6 +83,18 @@ export default class UserRoleService {
         if (error) throw error;
         return data.user.email;
     }
-    
 
+    async getUserIdByEmail(user_email: string) {
+        // Use service role client for admin API
+        const adminClient = createSupabaseClient(undefined, true);
+        const { data: userData, error: userError } = await adminClient.auth.admin.listUsers();
+        if (userError) throw userError;
+
+        const user = userData.users.find(u => u.email === user_email);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return user.id;
+    }
 }
