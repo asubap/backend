@@ -2,12 +2,15 @@ import { Request, Response } from "express";
 import extractToken from "../utils/extractToken";
 import { EventService } from "../services/eventService";
 import { geocodeAddress } from "../utils/geocoding";
+import UserService from "../services/userService";
 
 export class EventController {
     private eventService: EventService;
+    private userService: UserService;
 
     constructor() {
         this.eventService = new EventService();
+        this.userService = new UserService();
 
     }
 
@@ -25,7 +28,6 @@ export class EventController {
                 res.status(401).json({ error: 'No authorization token provided' });
                 return;
             }
-
             this.eventService.setToken(token as string);
 
             const events = await this.eventService.getEvents();
@@ -301,9 +303,17 @@ export class EventController {
             }
 
             const { eventId } = req.params;
+            const { user_email } = req.body;
+
+            // find user_id if the user_email is provided
+            let user_id = user.id;
+            if (user_email) {
+                console.log("user_email", user_email);
+                user_id = await this.userService.getUserIdByEmail(user_email);
+            }
             
             try {
-                const result = await this.eventService.rsvpForEvent(eventId, user.id);
+                const result = await this.eventService.rsvpForEvent(eventId, user_id);
                 res.status(200).json({ message: result });
             } catch (error) {
                 if (error instanceof Error && error.message === 'You have already RSVP\'d for this event') {
@@ -327,9 +337,17 @@ export class EventController {
             }
 
             const { eventId } = req.params;
+            const { user_email } = req.body;
+
+            // find user_id if the user_email is provided
+            let user_id = user.id;
+            if (user_email) {
+                console.log("user_email", user_email);
+                user_id = await this.userService.getUserIdByEmail(user_email);
+            }
             
             try {
-                const result = await this.eventService.unRsvpForEvent(eventId, user.id);
+                const result = await this.eventService.unRsvpForEvent(eventId, user_id);
                 res.status(200).json({ message: result });
             } catch (error) {
                 if (error instanceof Error && error.message === 'You have not RSVP\'d for this event') {
@@ -361,5 +379,78 @@ export class EventController {
         }
     }
 
+    async addMemberAttending(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.eventService.setToken(token as string);
+
+            const { eventId, userEmail } = req.body;
+
+            if (!eventId || !userEmail) {
+                res.status(400).json({ error: 'Missing required fields: eventId and userEmail' });
+                return;
+            }
+
+            const result = await this.eventService.addMemberAttending(eventId, userEmail);
+            res.json({ message: result });
+        } catch (error: any) {
+            console.error('Error adding member to event:', error);
+            
+            if (error.message?.includes('User not found')) {
+                return res.status(404).json({ error: error.message });
+            }
+            if (error.message?.includes('already attending')) {
+                return res.status(409).json({ error: error.message });
+            }
+            
+            res.status(500).json({ 
+                error: error.message || 'Server error',
+                details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+            });
+        }
+    }
+
+    async deleteMemberAttending(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.eventService.setToken(token as string);
+
+            const { eventId, userEmail } = req.body;
+
+            if (!eventId || !userEmail) {
+                res.status(400).json({ error: 'Missing required fields: eventId and userEmail' });
+                return;
+            }
+
+            const result = await this.eventService.deleteMemberAttending(eventId, userEmail);
+            res.json({ message: result });
+        } catch (error: any) {
+            console.error('Error removing member from event:', error);
+            
+            if (error.message?.includes('User not found')) {
+                return res.status(404).json({ error: error.message });
+            }
+            if (error.message?.includes('not attending')) {
+                return res.status(409).json({ error: error.message });
+            }
+            
+            res.status(500).json({ 
+                error: error.message || 'Server error',
+                details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+            });
+        }
+    }
 
 }

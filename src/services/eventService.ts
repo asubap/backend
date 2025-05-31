@@ -8,6 +8,14 @@ import UserRoleService from "./userService";
 import { MemberInfoService } from "./memberInfoService";
 import { eventEmailTemplate } from "../templates/eventEmail";
 import sgMail from '@sendgrid/mail';
+
+interface UserDetails {
+  id: string;
+  email: string;
+  role: string;
+  [key: string]: any;
+}
+
 export class EventService {
 
   private supabase: SupabaseClient;
@@ -22,13 +30,84 @@ export class EventService {
     this.supabase = createSupabaseClient(token);
     this.userService.setToken(token);
   }
+  
+  async getUsersByIds(user_ids: string[]) {
+    if (!user_ids || user_ids.length === 0) return [];
+    
+    // Use service role client for admin API
+    const adminClient = createSupabaseClient(undefined, true);
+    
+    // Get all users in a single query
+    const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
+    if (authError) throw authError;
+
+    // Create a map of auth user IDs to their emails
+    const authUserMap = new Map(authUsers.users.map(user => [user.id, user.email]));
+
+    // Get the emails for our user IDs
+    const userEmails = user_ids
+      .map(id => authUserMap.get(id))
+      .filter((email): email is string => email !== undefined);
+
+    if (userEmails.length === 0) return [];
+
+    // Get user details from allowed_members in a single query
+    const { data: memberData, error: memberError } = await this.supabase
+      .from('allowed_members')
+      .select('*')
+      .in('email', userEmails);
+
+    if (memberError) throw memberError;
+
+    // Create a map of emails to auth user IDs
+    const emailToIdMap = new Map(authUsers.users.map(user => [user.email, user.id]));
+
+    // Enrich member data with auth user IDs
+    const enrichedMemberData = memberData.map(member => ({
+      ...member,
+      id: emailToIdMap.get(member.email) // Add the auth user ID
+    }));
+
+    return enrichedMemberData;
+  }
 
   async getEvents() {
     const { data, error } = await this.supabase.from("events").select("*");
     if (error) {
         throw error;
     }
-    return data;
+
+    // Process each event to include user information
+    const processedEvents = await Promise.all(data.map(async (event) => {
+      // Get all unique user IDs from both RSVPs and attendees
+      const allUserIds = [
+        ...(event.event_rsvped || []),
+        ...(event.event_attending || [])
+      ];
+
+      // Get user details in a single batch
+      const userDetails = await this.getUsersByIds(allUserIds);
+
+      // Create a map for quick lookup
+      const userMap = new Map(userDetails.map((user: UserDetails) => [user.id, user]));
+
+      // Separate users into RSVPs and attendees
+      const rsvpedUsers = (event.event_rsvped || [])
+        .map((id: string) => userMap.get(id))
+        .filter(Boolean);
+
+      const attendingUsers = (event.event_attending || [])
+        .map((id: string) => userMap.get(id))
+        .filter(Boolean);
+
+      return {
+        ...event,
+        rsvped_users: rsvpedUsers,
+        attending_users: attendingUsers
+      };
+    }));
+
+    return processedEvents;
   }
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number) {
@@ -81,7 +160,35 @@ export class EventService {
     if (!data || data.length === 0) {
       throw new Error(`No event found with id: ${event_id}`);
     }
-    return data;
+
+    const event = data[0];
+    
+    // Get all unique user IDs from both RSVPs and attendees
+    const allUserIds = [
+      ...(event.event_rsvped || []),
+      ...(event.event_attending || [])
+    ];
+
+    // Get user details in a single batch
+    const userDetails = await this.getUsersByIds(allUserIds);
+
+    // Create a map for quick lookup
+    const userMap = new Map(userDetails.map((user: UserDetails) => [user.id, user]));
+
+    // Separate users into RSVPs and attendees
+    const rsvpedUsers = (event.event_rsvped || [])
+      .map((id: string) => userMap.get(id))
+      .filter(Boolean);
+
+    const attendingUsers = (event.event_attending || [])
+      .map((id: string) => userMap.get(id))
+      .filter(Boolean);
+
+    return [{
+      ...event,
+      rsvped_users: rsvpedUsers,
+      attending_users: attendingUsers
+    }];
   }
 
   async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string){
@@ -277,6 +384,82 @@ export class EventService {
       return "RSVP removed!";
     } catch (error) {
       console.error('unRsvpForEvent error:', error);
+      throw error;
+    }
+  }
+
+  async addMemberAttending(eventId: string, userEmail: string) {
+    try {
+      const eventIdNumber = parseInt(eventId);
+      const event: Event = (await this.getEventID(eventIdNumber))[0];
+
+      // Get user ID using the userService
+      const userId = await this.userService.getUserIdByEmail(userEmail);
+
+      // Check if user is already attending
+      if (event.event_attending && event.event_attending.includes(userId)) {
+        throw new Error("User is already attending this event");
+      }
+
+      // Add user to attending list
+      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
+      currentAttending.push(userId);
+
+      await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
+
+      // Update user's hours
+      const memberInfoService = new MemberInfoService();
+      const userInfo: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
+
+      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
+      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
+      
+      const currentHours = Number(userInfo[hoursKey]) || 0;
+      const newHours = currentHours + event.event_hours;
+
+      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
+      
+      return "Member successfully added to event and hours updated!";
+    } catch (error) {
+      console.error('addMemberAttending error:', error);
+      throw error;
+    }
+  }
+
+  async deleteMemberAttending(eventId: string, userEmail: string) {
+    try {
+      const eventIdNumber = parseInt(eventId);
+      const event: Event = (await this.getEventID(eventIdNumber))[0];
+
+      // Get user ID using the userService
+      const userId = await this.userService.getUserIdByEmail(userEmail);
+
+      // Check if user is attending
+      if (!event.event_attending || !event.event_attending.includes(userId)) {
+        throw new Error("User is not attending this event");
+      }
+
+      // Remove user from attending list
+      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
+      const updatedAttending = currentAttending.filter(id => id !== userId);
+
+      await this.editEvent(eventId, { event_attending: updatedAttending.map(id => id.toString()) });
+
+      // Update user's hours
+      const memberInfoService = new MemberInfoService();
+      const userInfo: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
+
+      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
+      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
+      
+      const currentHours = Number(userInfo[hoursKey]) || 0;
+      const newHours = Math.max(0, currentHours - event.event_hours); // Ensure hours don't go below 0
+
+      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
+      
+      return "Member successfully removed from event and hours updated!";
+    } catch (error) {
+      console.error('deleteMemberAttending error:', error);
       throw error;
     }
   }
