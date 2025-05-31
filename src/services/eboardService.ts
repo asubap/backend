@@ -35,27 +35,43 @@ export default class EboardService {
 
     async getEboard() {
         const { data, error } = await this.supabase
-            .from('eboard')
+            .from('eboard_faculty')
             .select('*');
 
         if (error) throw error;
         return data;
     }
 
-    async addEboard(image: string, name: string, role: string, email: string, major: string, location: string) {
+    async addRole(role: string, role_email: string, email: string) {
+        // Update the user's role
         const { data, error } = await this.supabase
-            .from('eboard')
-            .insert({
-                image,
-                name,
-                role,
-                email,
-                major,
-                location
-            });
+            .from('eboard_faculty')
+            .insert({ role: role, email: email, role_email: role_email });
 
         if (error) throw error;
         return data;
     }
-        
+
+    async editRole(role_email: string, updateFields: Record<string, any>) {
+        // Proceed with update
+        const { data: updatedRecord, error } = await this.supabase
+            .from('eboard_faculty')
+            .update(updateFields)
+            .eq('role_email', role_email)
+            .select();
+
+        if (error) throw error;
+        return updatedRecord;
+    }
+
+    async deleteRole(role_email: string) {
+        const { data, error } = await this.supabase
+            .from('eboard_faculty')
+            .delete()
+            .eq('role_email', role_email)
+            .select();
+
+        if (error) throw error;
+        return data;
+    }
 }
