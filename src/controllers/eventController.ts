@@ -80,16 +80,15 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, rsvped_users } = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !rsvped_users) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
-
         try {
-            await this.eventService.sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending);
+            await this.eventService.sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending, rsvped_users);
             res.json("Event send successfully");
             return;
         } catch (error) {

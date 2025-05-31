@@ -6,8 +6,8 @@ import { Member } from "../types/member";
 import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
 import { MemberInfoService } from "./memberInfoService";
-import { eventEmailTemplate } from "../templates/eventEmail";
 import sgMail from '@sendgrid/mail';
+
 
 interface UserDetails {
   id: string;
@@ -15,6 +15,7 @@ interface UserDetails {
   role: string;
   [key: string]: any;
 }
+
 
 export class EventService {
 
@@ -191,14 +192,14 @@ export class EventService {
     }];
   }
 
-  async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string){
+  async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string, rsvped_users: any[]){
     try {
       // Format the date from YYYY-MM-DD to Month Day, Year (with ordinal suffix)
       const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr);
-        const month = date.toLocaleString('default', { month: 'long' });
-        const day = date.getDate();
-        const year = date.getFullYear();
+        // Use the date string directly without creating a Date object to avoid timezone issues
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day); // month is 0-indexed
+        const monthName = date.toLocaleString('default', { month: 'long' });
         
         // Add ordinal suffix to day
         const ordinalSuffix = (day: number): string => {
@@ -211,7 +212,7 @@ export class EventService {
           }
         };
         
-        return `${month} ${ordinalSuffix(day)}, ${year}`;
+        return `${monthName} ${ordinalSuffix(day)}, ${year}`;
       };
       
       // Format the time from 24-hour format (HH:MM:SS) to 12-hour format (H:MMam/pm)
@@ -220,6 +221,14 @@ export class EventService {
         const period = hours >= 12 ? 'pm' : 'am';
         const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
         return `${displayHours}:${minutes.toString().padStart(2, '0')}${period}`;
+      };
+      
+      // Process location to extract display name and create Google Maps link
+      const processLocation = (location: string): { display: string, mapsLink: string } => {
+        const parts = location.split(',');
+        const displayLocation = parts.slice(0, 3).join(',').trim();
+        const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+        return { display: displayLocation, mapsLink };
       };
       
       // Format sponsors array to string
@@ -245,33 +254,37 @@ export class EventService {
       // Format the values
       const formattedDate = formatDate(event_date);
       const formattedTime = formatTime(event_time);
+      const locationData = processLocation(event_location);
       const formattedSponsors = formatSponsors(sponsors_attending);
       const formattedHoursType = formatHoursType(event_hours_type);
 
-      const { data: allMemberEmails, error: eError } = await this.supabase
-                .from('allowed_members')
-                .select('email')
-                .neq('role', 'sponsor')
-                .neq('role', 'e-board'); 
-            
-      if (eError) throw eError;
-
-      //combining all emails to one unique list of emails 
-      const emailsFromMembers = allMemberEmails.map(member => member.email);
-      // Create email messages for each recipient
+      // Extract emails from rsvped_users instead of querying database
+      const emailsFromMembers = rsvped_users.map(user => user.email);
+      
+      // Create email messages for each recipient using dynamic template
       const messages = emailsFromMembers.map(email => ({
           to: email,
-          from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com', // Use a verified sender
-          subject: `${event_name}`,
-          html: eventEmailTemplate(event_name, formattedDate, event_location, event_description, formattedTime, event_hours, formattedHoursType, formattedSponsors)
-      }));
-      
-  
-      
+          from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
+          templateId: process.env.SENDGRID_TEMPLATE_ID, // Your dynamic template ID
+          dynamicTemplateData: {
+            name: event_name,
+            date: formattedDate,
+            location_display: locationData.display,
+            location_link: locationData.mapsLink,
+            description: event_description,
+            time: formattedTime,
+            hours: event_hours,
+            hours_type: formattedHoursType,
+            sponsors_attending: formattedSponsors,
+            email_type: "event" // To distinguish from announcements in template
+          }
+      }as sgMail.MailDataRequired));
+
+    
       const promises = messages.map(msg => sgMail.send(msg));
       await Promise.all(promises);
 
-      console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} recipients`);
+      console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} users.`);
     } catch (error) {
       console.error('Error sending event:', error);
       throw error;
