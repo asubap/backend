@@ -50,7 +50,7 @@ export class SponsorService {
                 <p>You have been added as an authorized user for <strong>${sponsorName}'s</strong> sponsor portal.</p>
                 <p>You can now access the portal using your email and the following passcode:</p>
                 <p style="font-size: 16px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;"><strong>Passcode: ${passcode}</strong></p>
-                <p>Please keep this passcode secure as it grants access to your sponsor portal.</p>
+                <p>IMPORTANT!! Please keep this passcode secure as it grants access to your sponsor portal !!</p>
                 <p>Best regards,<br>The Team</p>`
         }));
   
