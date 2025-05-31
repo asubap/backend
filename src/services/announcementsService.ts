@@ -35,14 +35,14 @@ export class announcementsService {
 
     async addannouncements(title: string, description: string) {
         try{
-            // const { error: aError } = await this.supabase
-            //     .from('announcements')
-            //     .insert(
-            //         {
-            //             title: title,
-            //             description: description
-            //         });
-            //     if (aError) throw aError;
+            const { error: aError } = await this.supabase
+                .from('announcements')
+                .insert(
+                    {
+                        title: title,
+                        description: description
+                    });
+                if (aError) throw aError;
             
                 const emailList = await this.getUsersEmails(title, description);
                 if (!emailList || emailList.length === 0) {
