@@ -286,7 +286,7 @@ export class EventService {
 
       console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} users.`);
     } catch (error) {
-      console.error('Error sending event:', error.response.body);
+      console.error('Error sending event:', error);
       throw error;
     }
   }

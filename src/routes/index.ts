@@ -6,6 +6,7 @@ import memberInfoRoutes from "./memberInfo";
 import sponsorRoutes from "./sponsor";
 import resourceRoutes from "./resources";
 import eboardRoutes from "./eboard";
+import linksRoutes from "./links";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/announcements", announcementsRoutes);
 router.use('/sponsors', sponsorRoutes);
 router.use('/resources', resourceRoutes);
 router.use('/eboard', eboardRoutes);
+router.use("/links", linksRoutes);
 
 export default router;
