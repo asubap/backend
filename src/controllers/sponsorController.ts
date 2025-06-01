@@ -76,25 +76,21 @@ export class SponsorController {
         await this.sponsorService.addSponsor(sponsor_name, tier, passcode, emailList);
         
         // Send invitation emails to all recipients in emailList with the original passcode
-        try {
-          await this.sponsorService.sendSponsorInvitations(sponsor_name, tier, passcode, emailList);
-        } catch (emailError) {
-          console.error('Failed to send some invitation emails:', emailError);
-          // Continue with the response even if some emails fail
-        }
+        await this.sponsorService.sendSponsorInvitations(sponsor_name, tier, passcode, emailList);
+      
         
         const sponsors = {sponsor_name, emailList};
         
         // Send success response
         res.status(200).json({ 
-          message: 'Sponsors added successfully', 
+          message: 'Sponsors added and sent emails to successfully', 
           sponsors,
           emailsSent: true
         });
         
     } catch (error) {
-        console.error('Error adding sponsor:', error);
-        res.status(500).json('Failed to add sponsor');
+        console.error('Error adding sponsor or sending emails:', error);
+        res.status(500).json({ error: (error as Error).message });
         return;
     }
 }

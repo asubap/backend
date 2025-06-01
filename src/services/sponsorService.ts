@@ -51,7 +51,7 @@ export class SponsorService {
                 <p>You can now access the portal using your email and the following passcode:</p>
                 <p style="font-size: 16px; background-color: #f0f0f0; padding: 10px; border-radius: 5px;"><strong>Passcode: ${passcode}</strong></p>
                 <p>IMPORTANT!! Please keep this passcode secure as it grants access to your sponsor portal !!</p>
-                <p>Best regards,<br>The Team</p>`
+                <p>Best regards,<br>The ASU BAP Team</p>`
         }));
   
         // Send all emails in parallel
