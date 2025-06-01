@@ -281,12 +281,19 @@ export class EventService {
       }as sgMail.MailDataRequired));
 
     
-      const promises = messages.map(msg => sgMail.send(msg));
+      const promises = messages.map(msg => sgMail
+  .send(msg)
+  .then(() => {
+    console.log('Email sent')
+  })
+  .catch((error) => {
+    console.error(error)
+  }));
       await Promise.all(promises);
 
       console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} users.`);
     } catch (error) {
-      console.error('Error sending event:', error);
+      console.error('Error sending event:', error?.response?.body?.errors);
       throw error;
     }
   }
