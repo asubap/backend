@@ -50,13 +50,13 @@ export class announcementsService {
                 }
             // Send email to users
             await this.sendAnnouncments(emailList, title, description);
-            return ("Announcement added successfully");
+            return ("Announcement added and sent successfully");
          
             
         }
         catch (error) {
-            console.error('Error adding announcement:', error);
-            throw new Error('Failed to add announcement');
+            console.error('Error adding or sending announcement:', error);
+            throw new Error('Failed to add or send announcement');
         }
     }
 
