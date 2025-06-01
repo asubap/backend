@@ -4,16 +4,6 @@ import { createSupabaseClient } from '../config/db';
 
 config();
 
-interface Entity {
-    id: string;
-    image: string;
-    name: string;
-    role: string;
-    email: string;
-    major: string;
-    location: string;
-}
-
 export default class EboardService {
     private supabase: SupabaseClient;
 
@@ -42,11 +32,11 @@ export default class EboardService {
         return data;
     }
 
-    async addRole(role: string, role_email: string, email: string) {
+    async addRole(role: string, role_email: string, email: string, rank: number) {
         // Update the user's role
         const { data, error } = await this.supabase
             .from('eboard_faculty')
-            .insert({ role: role, email: email, role_email: role_email });
+            .insert({ role: role, email: email, role_email: role_email, rank: rank });
 
         if (error) throw error;
         return data;

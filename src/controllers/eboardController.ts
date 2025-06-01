@@ -32,14 +32,14 @@ export default class EboardController {
 
             this.eboardService.setToken(token as string);
 
-            const { role, role_email, email } = req.body;
+            const { role, role_email, email, rank} = req.body;
             
-            if (!role || !role_email || !email) {
+            if (!role || !role_email || !email || !rank) {
                 res.status(400).json('Missing required fields');
                 return;
             }
 
-            const result = await this.eboardService.addRole(role, role_email, email);
+            const result = await this.eboardService.addRole(role, role_email, email, rank);
             res.json(result);
         } catch (error) {
             console.error('Error adding role:', error);
@@ -49,7 +49,7 @@ export default class EboardController {
     }
 
     async editRole(req: Request, res: Response) {
-        const { role_email, role, email } = req.body;
+        const { role_email, role, email, rank } = req.body;
         
         if (!role_email) {
             res.status(400).json({ error: 'Role email is required' });
@@ -92,6 +92,14 @@ export default class EboardController {
             }
         }
 
+        // Rank validation -> int type
+        if (rank !== undefined) {
+            if (typeof rank !== 'number') {
+                validationErrors.push('Rank must be a number');
+            } else {
+                updateFields.rank = rank;
+            }
+        }
         // If there are validation errors, return them
         if (validationErrors.length > 0) {
             res.status(400).json({ 
