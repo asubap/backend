@@ -287,7 +287,7 @@ export class EventService {
     console.log('Email sent')
   })
   .catch((error) => {
-    console.error(error)
+    console.error(error?.response?.body?.errors)
   }));
       await Promise.all(promises);
 
