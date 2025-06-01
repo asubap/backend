@@ -25,10 +25,6 @@ export class EventService {
   constructor() {
     this.supabase = createSupabaseClient();
     this.userService = new UserRoleService();
-    if (!process.env.SENDGRID_API_KEY) {
-      throw new Error("SENDGRID_API_KEY is not defined in environment variables.");
-    }
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   }
 
   setToken(token: string) {
