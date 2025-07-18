@@ -70,8 +70,13 @@ export class SponsorService {
   // add a sponsor
   async addSponsor(sponsor: string, tier: string, passcode_hash: string, emails: string[]) {
       // Create user in auth.users
+      let sponsor_email = sponsor;
+      if (sponsor.split(' ').length > 1) {
+        sponsor_email = sponsor.split(' ').join('-');
+      }
+
       const { data, error } = await this.supabaseAdmin.auth.signUp({
-        email: `${sponsor}@example.com`,
+        email: `${sponsor_email}@example.com`,
         password: passcode_hash,
       })
 
@@ -85,7 +90,7 @@ export class SponsorService {
 
       // add role to allowed_members table
       const { error: roleError } = await this.supabaseAdmin.from('allowed_members').insert({
-        email: `${sponsor.toLowerCase()}@example.com`,
+        email: `${sponsor_email.toLowerCase()}@example.com`,
         role: 'sponsor',
       });
 
