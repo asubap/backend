@@ -50,7 +50,7 @@ export class SponsorController {
 
         this.sponsorService.setToken(token as string);
 
-        const { sponsor_name, tier, passcode, emailList } = req.body;
+        let { sponsor_name, tier, passcode, emailList } = req.body;
 
         if (!sponsor_name || !tier || !passcode || !emailList) {
             res.status(400).json('Sponsor name, tier, passcode and email list are required');
@@ -72,6 +72,11 @@ export class SponsorController {
         //check and compare with hashcode in database
         //const isMatch = await bcrypt.compare(passcode, "$2b$10$yeyihth2a3iJyIYoukurKujALO.r0rzZriWmYz4aYvVQhZnz67vJi");
 
+
+        // if sponsor name is more than 1 word, concat with dashes
+        if (sponsor_name.split(' ').length > 1) {
+          sponsor_name = sponsor_name.split(' ').join('-');
+        }
         // Use the sponsor service
         await this.sponsorService.addSponsor(sponsor_name, tier, passcode, emailList);
         
