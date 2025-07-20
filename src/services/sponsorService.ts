@@ -126,64 +126,74 @@ export class SponsorService {
 
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
-
-    // replace spaces with - and add a @example.com to the email
-    const email = sponsor_name.replace(/\s+/g, '-') + "@example.com";
-     //delete sponsorProfile photo using method 
-    this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
-      }).catch((error) => {
+    try {
+      // replace spaces with - and add a @example.com to the email
+      const email = sponsor_name.replace(/\s+/g, '-') + "@example.com";
+      
+      // Delete sponsor profile photo
+      try {
+        await this.deleteSponsorProfilePhoto(sponsor_name);
+      } catch (error) {
         console.error("Error deleting sponsor profile photo:", error);
-      });
-    // delete from allowed_members table
-    const { error: allowedError } = await this.supabase
-      .from('allowed_members')
-      .delete()
-      .eq('email', email);
-
-    if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
-    // get category id 
-    const { data: categoryData, error: fetchError } = await this.supabase
-      .from('categories')
-      .select('id')
-      .eq('name', sponsor_name)
-      .single();
-      if(categoryData){
-
-      // Delete all files in the sponsor's folder - first list all files
-      const { data: fileList, error: listError } = await this.supabase.storage
-        .from('resources')
-        .list(categoryData.id);
-      
-      if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
-      // If no files found, return early
-      if (!fileList || fileList.length === 0) {
-        console.log("No files found to delete.");
-        throw new Error("No files found to delete.");
+        // Continue with deletion even if photo deletion fails
       }
-      // If there are files, delete them
-      if (fileList && fileList.length > 0) {
-        const filePaths = fileList.map(file => `${categoryData.id}/${file.name}`);
-        if (filePaths.length === 0) {
-          console.log("No files to delete.");
-          throw new Error("No files to delete.");
-        }
-        const { error: removeError } = await this.supabase.storage
+
+      console.log("email", email);
+      
+      // delete from allowed_members table
+      const { error: allowedError } = await this.supabase
+        .from('allowed_members')
+        .delete()
+        .eq('email', email);
+
+      if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
+      
+      // get category id 
+      const { data: categoryData, error: fetchError } = await this.supabase
+        .from('categories')
+        .select('id')
+        .eq('name', sponsor_name)
+        .single();
+      
+      if (categoryData) {
+        // Delete all files in the sponsor's folder - first list all files
+        const { data: fileList, error: listError } = await this.supabase.storage
           .from('resources')
-          .remove(filePaths);
-          
-        if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
+          .list(categoryData.id);
+        
+        if (listError) throw new Error(`Error listing files to delete: ${listError.message}`);
+        
+        // If there are files, delete them
+        if (fileList && fileList.length > 0) {
+          const filePaths = fileList.map(file => `${categoryData.id}/${file.name}`);
+          const { error: removeError } = await this.supabase.storage
+            .from('resources')
+            .remove(filePaths);
+            
+          if (removeError) throw new Error(`Error removing files: ${removeError.message}`);
+        }
+       
+        // delete from categories table
+        const { error: categoryError } = await this.supabase
+          .from('categories')
+          .delete()
+          .eq('name', sponsor_name);
+        if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
       }
-     
-      // delete from categories table
-      const { error: categoryError } = await this.supabase
-      .from('categories')
-      .delete()
-      .eq('name', sponsor_name);
-      if (categoryError) throw new Error(`Error deleting category: ${categoryError.message}`);
-    }
       
-    
-    return "Sponsor deleted successfully";
+      // delete from sponsor_info table
+      const { error: sponsorError } = await this.supabase
+        .from('sponsor_info')
+        .delete()
+        .eq('company_name', sponsor_name);
+      
+      if (sponsorError) throw new Error(`Error deleting sponsor: ${sponsorError.message}`);
+      
+      return "Sponsor deleted successfully";
+    } catch (error) {
+      console.error('Error deleting sponsor:', error);
+      throw error;
+    }
   }
 
   // Get sponsor info by passcode
