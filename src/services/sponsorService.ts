@@ -126,25 +126,28 @@ export class SponsorService {
 
   // delete a sponsor
   async deleteSponsor(sponsor_name: string) {
+
+    // replace spaces with - and add a @example.com to the email
+    const email = sponsor_name.replace(/\s+/g, '-') + "@example.com";
      //delete sponsorProfile photo using method 
     this.deleteSponsorProfilePhoto(sponsor_name).then(() => {
-    }).catch((error) => {
-      console.error("Error deleting sponsor profile photo:", error);
-    });
+      }).catch((error) => {
+        console.error("Error deleting sponsor profile photo:", error);
+      });
     // delete from allowed_members table
     const { error: allowedError } = await this.supabase
-    .from('allowed_members')
-    .delete()
-    .eq('email', sponsor_name.toLowerCase() + "@example.com");
+      .from('allowed_members')
+      .delete()
+      .eq('email', email);
 
     if (allowedError) throw new Error(`Error deleting allowed member: ${allowedError.message}`);
     // get category id 
     const { data: categoryData, error: fetchError } = await this.supabase
-    .from('categories')
-    .select('id')
-    .eq('name', sponsor_name)
-    .single();
-    if(categoryData){
+      .from('categories')
+      .select('id')
+      .eq('name', sponsor_name)
+      .single();
+      if(categoryData){
 
       // Delete all files in the sponsor's folder - first list all files
       const { data: fileList, error: listError } = await this.supabase.storage
