@@ -293,7 +293,7 @@ export class EventService {
       await Promise.all(promises);
 
       console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} users.`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending event:', error?.response?.body?.errors);
       throw error;
     }

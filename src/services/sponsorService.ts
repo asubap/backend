@@ -125,7 +125,8 @@ export class SponsorService {
   }
 
   // delete a sponsor
-  async deleteSponsor(sponsor_name: string) {
+  async deleteSponsor(sponsor_name: string)
+ {
     try {
       // replace spaces with - and add a @example.com to the email
       const email = sponsor_name.replace(/\s+/g, '-') + "@example.com";
