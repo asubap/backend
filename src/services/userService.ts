@@ -91,7 +91,7 @@ export default class UserRoleService {
         if (userError) throw userError;
 
         const user = userData.users.find(u => u.email === user_email);
-        console.log(user);
+        console.log(userData);
         if (!user) {
             throw new Error("User not found");
         }
