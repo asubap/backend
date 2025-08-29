@@ -88,13 +88,11 @@ export default class UserRoleService {
         // Use service role client for admin API
         const adminClient = createSupabaseClient(undefined, true);
         console.log(adminClient);
-        let page = 1;
-        const perPage = 200;
-        const { data: userData, error: userError } = await adminClient.auth.admin.listUsers({page, perPage});
+        const { data: userData, error: userError } = await adminClient
         if (userError) throw userError;
-
-        const user = userData.users.find(u => u.email === user_email);
         console.log(userData);
+        const user = userData.users.find(u => u.email === user_email);
+        console.log(user);
         if (!user) {
             throw new Error("User not found");
         }
