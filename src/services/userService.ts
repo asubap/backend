@@ -87,6 +87,7 @@ export default class UserRoleService {
     async getUserIdByEmail(user_email: string) {
         // Use service role client for admin API
         const adminClient = createSupabaseClient(undefined, true);
+        console.log(adminClient);
         const { data: userData, error: userError } = await adminClient.auth.admin.listUsers();
         if (userError) throw userError;
 
