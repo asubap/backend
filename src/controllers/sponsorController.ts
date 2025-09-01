@@ -207,16 +207,18 @@ export class SponsorController {
   async addSponsorResource(req: Request, res: Response): Promise<void> {
     try {
       const { companyName } = req.params;
-      const { resourceLabel, description } = req.body;
+      const { resourceLabel, description, blobUrl } = req.body;
       const file = (req as any).file;
+
       
       if (!companyName || !resourceLabel || !description) {
         res.status(400).json({ error: 'Company name (in URL) and resource label (in body) are required' });
         return;
       }
       
-      if (!file) {
-        res.status(400).json({ error: 'No file uploaded' });
+      // Either file or blobUrl must be provided
+      if (!file && !blobUrl) {
+        res.status(400).json({ error: 'Either file or blobUrl is required' });
         return;
       }
 
@@ -232,7 +234,7 @@ export class SponsorController {
       const token = authHeader.split(' ')[1];
       sponsorService.setToken(token);
       
-      const result = await sponsorService.addSponsorResource(companyName, resourceLabel,description, file);
+      const result = await sponsorService.addSponsorResource(companyName, resourceLabel, description, file, blobUrl);
       res.status(201).json(result);
     } catch (error) {
       console.error('Error adding sponsor resource:', error);
@@ -415,32 +417,4 @@ export class SponsorController {
       }
     }
   }; 
-
-  // Sponsor auth
-  // async sponsorAuth(req: Request, res: Response): Promise<void> {
-  //   try {
-  //     const { companyName, passcode } = req.body;
-  //     const sponsorService = new SponsorService();
-  //     const result = await sponsorService.sponsorAuth(companyName, passcode);
-
-  //     if (!result) {
-  //       res.status(401).json({ error: 'Invalid passcode' });
-  //       return;
-  //     }
-
-  //     // check if passcode_hash is correct
-  //     const isMatch = await bcrypt.compare(passcode, result);
-  //     if (!isMatch) {
-  //       res.status(401).json({ error: 'Invalid passcode' });
-  //       return;
-  //     }
-  //     // generate token
-  //     const token = generateSupabaseToken(companyName);
-  //     res.status(200).json({ token });
-  //   } catch (error) {
-  //     console.error('Error authenticating sponsor:', error);
-  //     res.status(500).json({ error: (error as Error).message });
-  //   }
-  // }
-  
 }
