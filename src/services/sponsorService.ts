@@ -213,72 +213,194 @@ export class SponsorService {
 
   // Get all sponsors
   async getAllSponsors() {
-    const { data, error } = await this.supabase
-      .from('sponsor_info')
-      .select('*');
+    try {
+      // Get all sponsors
+      const { data: sponsors, error: sponsorError } = await this.supabase
+        .from('sponsor_info')
+        .select('*')
+        .order('company_name');
 
-    if (error) throw error;
-    return data;
+      if (sponsorError) throw sponsorError;
+
+      // For each sponsor, fetch their resources
+      const result = await Promise.all(
+        sponsors.map(async (sponsor) => {
+          try {
+            // Get resources for this sponsor
+            const { data: resourceData, error: resourceError } = await this.supabase
+              .from('resources')
+              .select('*')
+              .eq('category_id', (await this.getSponsorCategoryId(sponsor.company_name)))
+              .order('name');
+
+            if (resourceError) {
+              console.warn(`Error fetching resources for sponsor ${sponsor.company_name}:`, resourceError);
+              // Return sponsor with empty resources array
+              return {
+                ...sponsor,
+                resources: []
+              };
+            }
+
+                      // Map the resources to match frontend format
+            const resourcesWithUrls = await Promise.all(
+              resourceData.map(async (resource) => {
+                let url = null;
+                
+                // Check if file_key is already a URL (Vercel Blob)
+                if (resource.file_key && resource.file_key.startsWith('http')) {
+                  // It's a Vercel Blob URL - use it directly
+                  url = resource.file_key;
+                } else {
+                  // It's a Supabase path - generate signed URL
+                  const { data: urlData } = await this.supabase.storage
+                    .from('resources')
+                    .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
+                  url = urlData?.signedUrl || null;
+                }
+
+                // Return in frontend-expected format
+                return {
+                  id: resource.id,
+                  label: resource.name, // Map name to label
+                  url: url, // The actual file URL
+                  uploadDate: resource.created_at
+                };
+              })
+            );
+
+            // Return sponsor with properly formatted resources
+            return {
+              ...sponsor,
+              resources: resourcesWithUrls
+            };
+          } catch (error) {
+            console.warn(`Error processing sponsor ${sponsor.company_name}:`, error);
+            // Return sponsor with empty resources array if there's any error
+            return {
+              ...sponsor,
+              resources: []
+            };
+          }
+        })
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching sponsors with resources:', error);
+      throw error;
+    }
   }
 
-  // Add a new resource for a sponsor
-  async addSponsorResource(companyName: string, resourceLabel: string, description:string, file: Express.Multer.File) {
-    try {
-      // First upload the file to the storage bucket
-   
-      //Adding Company as a category 
-      const { data, error } = await this.supabase
-        .from('categories')
-        .insert({ name: companyName, description: `These are all the resources for ${companyName}` })
-        .select()
-        .single();
-      //ISSUE 
-      const { data: categoryData, error: categoryError } = await this.supabase
+  // Helper method to get category ID for a sponsor
+  private async getSponsorCategoryId(companyName: string): Promise<string> {
+    const { data: category, error } = await this.supabase
       .from('categories')
       .select('id')
       .eq('name', companyName)
       .single();
-      const filePath = `${categoryData?.id}/${Date.now()}_${file.originalname}`;
 
-      const { data: uploadData, error: uploadError } = await this.supabase.storage
-        .from('resources')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: false
-        });
+    if (error || !category) {
+      throw new Error(`Category not found for sponsor: ${companyName}`);
+    }
 
-      if (uploadError) throw uploadError;
+    return category.id;
+  }
+
+  // Add a new resource for a sponsor
+  async addSponsorResource(companyName: string, resourceLabel: string, description:string, file?: Express.Multer.File, blobUrl?: string) {
+    try {
+      // Either file or blobUrl must be provided
+      if (!file && !blobUrl) {
+        throw new Error('Either file or blobUrl must be provided');
+      }
+
+      // Get or create category for this sponsor
+      let { data: categoryData, error: categoryError } = await this.supabase
+        .from('categories')
+        .select('id')
+        .eq('name', companyName)
+        .single();
+
+      if (categoryError) {
+        // Create category if it doesn't exist
+        const { data: newCategory, error: createError } = await this.supabase
+          .from('categories')
+          .insert({ 
+            name: companyName, 
+            description: `These are all the resources for ${companyName}` 
+          })
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        categoryData = newCategory;
+      }
+
+      if (!categoryData) {
+        throw new Error('Failed to get or create category for sponsor');
+      }
+
+      let fileKey: string;
+      let mimeType: string;
+
+      if (file) {
+        // Handle file upload
+        const filePath = `${categoryData.id}/${Date.now()}_${file.originalname}`;
+
+        const { data: uploadData, error: uploadError } = await this.supabase.storage
+          .from('resources')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+        
+        fileKey = filePath;
+        mimeType = file.mimetype;
+      } else if (blobUrl) {
+        // Handle blob URL
+        fileKey = blobUrl;
+        mimeType = 'application/octet-stream'; // Default mime type for blob URLs
+      } else {
+        throw new Error('Either file or blobUrl must be provided');
+      }
+
       const { data: resource, error: resourceError } = await this.supabase
         .from('resources')
         .insert({
-          category_id: categoryData?.id,
+          category_id: categoryData.id,
           name: resourceLabel,
           description: description,
-          file_key: filePath,
-          mime_type: file.mimetype,
+          file_key: fileKey,
+          mime_type: mimeType
         })
         .select()
         .single();
 
-      
-      
       if (resourceError) {
-        // If resource creation fails, try to delete the uploaded file
-        console.log(`DEBUG - addResource: Resource creation failed, cleaning up uploaded file`);
-        await this.supabase.storage.from('resources').remove([filePath]);
+        // If resource creation fails and we uploaded a file, try to delete it
+        if (file) {
+          console.log(`DEBUG - addResource: Resource creation failed, cleaning up uploaded file`);
+          await this.supabase.storage.from('resources').remove([fileKey]);
+        }
         throw resourceError;
       }
 
-      // Generate a signed URL for immediate use
-    
-      const { data: urlData, error: urlError } = await this.supabase.storage
-        .from("resources")
-        .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+      // Generate a signed URL for immediate use (only for Supabase storage files)
+      let signedUrl = null;
+      if (file) {
+        const { data: urlData, error: urlError } = await this.supabase.storage
+          .from("resources")
+          .createSignedUrl(fileKey, 60 * 60); // 1 hour expiry
 
-      
+        signedUrl = urlData?.signedUrl || null;
+      }
+
       const result = {
         ...resource,
-        signed_url: urlData?.signedUrl || null
+        signed_url: signedUrl
       };
       
       return result;
@@ -313,13 +435,23 @@ export class SponsorService {
       // Map the resources to include the signed URL
       const resourcesWithUrls = await Promise.all(
         resourceData.map(async (resource) => {
-          const { data: urlData } = await this.supabase.storage
-            .from('resources')
-            .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
+          let signedUrl = null;
+          
+          // Check if file_key is already a URL (Vercel Blob)
+          if (resource.file_key && resource.file_key.startsWith('http')) {
+            // It's a Vercel Blob URL - use it directly
+            signedUrl = resource.file_key;
+          } else {
+            // It's a Supabase path - generate signed URL
+            const { data: urlData } = await this.supabase.storage
+              .from('resources')
+              .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
+            signedUrl = urlData?.signedUrl || null;
+          }
 
           return {
             ...resource,
-            signed_url: urlData?.signedUrl || null
+            signed_url: signedUrl
           };
         })
       );
@@ -578,4 +710,5 @@ export class SponsorService {
       throw error;
     }
   }
+
 }

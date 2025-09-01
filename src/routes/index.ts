@@ -7,6 +7,7 @@ import sponsorRoutes from "./sponsor";
 import resourceRoutes from "./resources";
 import eboardRoutes from "./eboard";
 import linksRoutes from "./links";
+import blobUploadRoutes from "./blobUpload";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/sponsors', sponsorRoutes);
 router.use('/resources', resourceRoutes);
 router.use('/eboard', eboardRoutes);
 router.use("/links", linksRoutes);
+router.use("/blob-upload", blobUploadRoutes);
 
 export default router;

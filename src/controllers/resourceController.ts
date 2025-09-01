@@ -22,7 +22,6 @@ export class ResourceController {
       const resourceTree = await this.resourceService.getAllResources();
       res.status(200).json(resourceTree);
     } catch (error) {
-      console.error('Error in getAllResources controller:', error);
       res.status(500).json({ error: 'Failed to retrieve resources' });
     }
   }
@@ -50,7 +49,6 @@ export class ResourceController {
       const newCategory = await this.resourceService.addCategory(name, description, resourceType);
       res.status(201).json(newCategory);
     } catch (error) {
-      console.error('Error in addCategory controller:', error);
       res.status(500).json({ error: 'Failed to create category' });
     }
   }
@@ -89,7 +87,6 @@ export class ResourceController {
       const updatedCategory = await this.resourceService.updateCategory(categoryId, updateData);
       res.status(200).json(updatedCategory);
     } catch (error) {
-      console.error('Error in updateCategory controller:', error);
       res.status(500).json({ error: 'Failed to update category' });
     }
   }
@@ -116,7 +113,6 @@ export class ResourceController {
       const result = await this.resourceService.deleteCategory(categoryId);
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error in deleteCategory controller:', error);
       res.status(500).json({ error: 'Failed to delete category' });
     }
   }
@@ -134,7 +130,7 @@ export class ResourceController {
       this.resourceService.setToken(token);
 
       const { categoryId } = req.params;
-      const { name, description } = req.body;
+      const { name, description, blobUrl } = req.body;
       const file = (req as any).file;
 
       if (!categoryId) {
@@ -147,25 +143,18 @@ export class ResourceController {
         return;
       }
 
-      if (!file) {
-        res.status(400).json({ error: 'File is required' });
+      // Either file or blobUrl must be provided
+      if (!file && !blobUrl) {
+        res.status(400).json({ error: 'Either file or blobUrl is required' });
         return;
       }
 
-      const newResource = await this.resourceService.addResource(categoryId, name, description, file);
+      const newResource = await this.resourceService.addResource(categoryId, name, description, file, blobUrl);
       res.status(201).json(newResource);
     } catch (error) {
-      console.error('DEBUG - Controller: Error in addResource controller:', error);
       
-      // Log the full error details
-      if (typeof error === 'object' && error !== null) {
-        console.error('DEBUG - Controller: Error details:', JSON.stringify(error, null, 2));
-      }
       
       if (error instanceof Error) {
-        console.error('DEBUG - Controller: Error message:', error.message);
-        console.error('DEBUG - Controller: Error stack:', error.stack);
-        
         if (error.message.includes('not found')) {
           res.status(404).json({ 
             error: error.message,
@@ -216,7 +205,6 @@ export class ResourceController {
       const updatedResource = await this.resourceService.updateResource(categoryId, resourceId, updateData, file);
       res.status(200).json(updatedResource);
     } catch (error) {
-      console.error('Error in updateResource controller:', error);
       if (error instanceof Error && error.message.includes('not found')) {
         res.status(404).json({ error: error.message });
       } else {
@@ -247,7 +235,6 @@ export class ResourceController {
       const result = await this.resourceService.deleteResource(categoryId, resourceId);
       res.status(200).json(result);
     } catch (error) {
-      console.error('Error in deleteResource controller:', error);
       if (error instanceof Error && error.message.includes('not found')) {
         res.status(404).json({ error: error.message });
       } else {
@@ -255,4 +242,5 @@ export class ResourceController {
       }
     }
   }
+
 } 
