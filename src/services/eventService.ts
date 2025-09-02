@@ -38,12 +38,22 @@ export class EventService {
     // Use service role client for admin API
     const adminClient = createSupabaseClient(undefined, true);
     
-    // Get all users in a single query
-    const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
-    if (authError) throw authError;
-
+    // Get all users across all pages
+    let allUsers: any[] = [];
+    let page = 1;
+    let perPage = 1000;
+    
+    while (true) {
+      const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+      if (error) throw error;
+      if (users.length === 0) break;
+      allUsers = allUsers.concat(users);
+      if (users.length < perPage) break; // No more pages
+      page++;
+    }
+    
     // Create a map of auth user IDs to their emails
-    const authUserMap = new Map(authUsers.users.map(user => [user.id, user.email]));
+    const authUserMap = new Map(allUsers.map(user => [user.id, user.email]));
 
     // Get the emails for our user IDs
     const userEmails = user_ids
@@ -61,7 +71,7 @@ export class EventService {
     if (memberError) throw memberError;
 
     // Create a map of emails to auth user IDs
-    const emailToIdMap = new Map(authUsers.users.map(user => [user.email, user.id]));
+    const emailToIdMap = new Map(allUsers.map(user => [user.email, user.id]));
 
     // Enrich member data with auth user IDs
     const enrichedMemberData = memberData.map(member => ({
