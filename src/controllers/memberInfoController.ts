@@ -333,4 +333,35 @@ export class MemberInfoController {
             res.status(500).json({ error: (error as Error).message || 'Internal server error' });
         }
     }
+
+    /**
+     * Get event attendance for a member
+     * @param req 
+     * @param res 
+     * @returns array of events the member attended
+     */
+    async getEventAttendance(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token as string);
+
+            const { user_email } = req.body;
+
+            if (!user_email) {
+                res.status(400).json({ error: 'User email is required' });
+                return;
+            }
+
+            const eventAttendance = await this.memberInfoService.getEventAttendance(user_email);
+            res.status(200).json(eventAttendance);
+        } catch (error) {
+            console.error('Error getting event attendance:', error);
+            res.status(500).json({ error: 'Failed to get event attendance' });
+        }
+    }
 }

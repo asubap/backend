@@ -48,7 +48,18 @@ export class MemberInfoService {
             return { ...member, role: roleData?.role };
         }));
 
-        return membersWithRoles;
+        // Get event attendance for each member
+        const membersWithAttendance = await Promise.all(membersWithRoles.map(async (member) => {
+            try {
+                const eventAttendance = await this.getEventAttendance(member.user_email);
+                return { ...member, event_attendance: eventAttendance };
+            } catch (error) {
+                console.error(`Error fetching event attendance for ${member.user_email}:`, error);
+                return { ...member, event_attendance: [] };
+            }
+        }));
+
+        return membersWithAttendance;
     }
 
 
@@ -257,6 +268,53 @@ export class MemberInfoService {
             }
         } catch (error) {
             console.error('Error deleting profile photo:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get event attendance for a member
+     * @param userEmail - The email of the member
+     * @returns array of events the member attended
+     */
+    async getEventAttendance(userEmail: string) {
+        try {
+            const { data, error } = await this.supabase
+                .from('member_info')
+                .select(`
+                    id,
+                    event_attendance!inner(
+                        event_id,
+                        events!inner(
+                            id,
+                            event_name,
+                            event_date,
+                            event_description
+                        )
+                    )
+                `)
+                .eq('user_email', userEmail)
+                .single();
+
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    // No rows returned
+                    return [];
+                }
+                throw error;
+            }
+
+            // Transform the data to match the expected format
+            const eventAttendance = data.event_attendance?.map((attendance: any) => ({
+                event_id: attendance.events.id,
+                event_name: attendance.events.event_name,
+                event_date: attendance.events.event_date,
+                event_description: attendance.events.event_description
+            })) || [];
+
+            return eventAttendance;
+        } catch (error) {
+            console.error('Error getting event attendance:', error);
             throw error;
         }
     }
