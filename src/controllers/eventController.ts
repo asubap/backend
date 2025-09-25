@@ -111,16 +111,16 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, event_limit} = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window ||!event_limit) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, event_limit);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -135,7 +135,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window, event_limit} = req.body;
 
         const token = extractToken(req);
         
@@ -177,7 +177,7 @@ export class EventController {
         if (time && time.trim() !== '') {
             updateFields.event_time = time;
         }
-        if (sponsors && sponsors.length > 0) {
+        if (sponsors !== undefined) {
             updateFields.sponsors_attending = sponsors;
         }
         if (event_rsvped && event_rsvped.length > 0) {
@@ -195,6 +195,9 @@ export class EventController {
 
         if (check_in_window && typeof check_in_window === 'number') {
             updateFields.check_in_window = check_in_window;
+        }
+        if (event_limit && typeof event_limit === 'number') {
+            updateFields.event_limit = event_limit;
         }
         
         // If there's nothing to update, respond accordingly

@@ -293,7 +293,7 @@ export class SponsorService {
   }
 
   // Helper method to get category ID for a sponsor
-  private async getSponsorCategoryId(companyName: string): Promise<string> {
+  private async getSponsorCategoryId(companyName: string): Promise<string | null> {
     const { data: category, error } = await this.supabase
       .from('categories')
       .select('id')
@@ -301,7 +301,7 @@ export class SponsorService {
       .single();
 
     if (error || !category) {
-      throw new Error(`Category not found for sponsor: ${companyName}`);
+      return null;
     }
 
     return category.id;
