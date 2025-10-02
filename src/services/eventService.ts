@@ -121,7 +121,7 @@ export class EventService {
     return processedEvents;
   }
 
-  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, event_limit: number) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number) {
         const { data, error } = await this.supabase
             .from('events')
             .insert(
@@ -137,12 +137,13 @@ export class EventService {
                     event_description: description,
                     sponsors_attending: sponsors,
                     check_in_window: check_in_window,
+                    check_in_radius: check_in_radius,
                     event_limit: event_limit
                 });
 
         if (error) console.log(error);
         return data;
-    }
+  }
 
   async editEvent(event_id: string, updateData: Record<string, any>) {
     const { data, error } = await this.supabase
@@ -325,7 +326,10 @@ export class EventService {
         { latitude: event.event_lat, longitude: event.event_long }
       ) ?? (() => { throw new Error("Failed to calculate distance") })();
 
-      distance <= 50 || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is 5m)`) })();
+      // get check in radius
+      const checkInRadius = event.check_in_radius;
+
+      distance <= checkInRadius || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is ${checkInRadius}m)`) })();
 
       if (event.event_attending && event.event_attending.includes(userId)) {
         throw new Error("You have already checked in to this event");

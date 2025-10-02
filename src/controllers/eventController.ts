@@ -111,16 +111,16 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, event_limit} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit} = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window ||!event_limit) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window || !check_in_radius || !event_limit) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
 
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, event_limit);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -135,7 +135,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window, event_limit} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window, check_in_radius, event_limit} = req.body;
 
         const token = extractToken(req);
         
@@ -193,9 +193,16 @@ export class EventController {
             updateFields.event_hours_type = event_hours_type;
         }
 
-        if (check_in_window && typeof check_in_window === 'number') {
-            updateFields.check_in_window = check_in_window;
+        // convert check_in_window from string to number
+        if (check_in_window && typeof check_in_window === 'string') {
+            updateFields.check_in_window = parseInt(check_in_window);
         }
+
+        // convert check_in_radius from string to number
+        if (check_in_radius && typeof check_in_radius === 'string') {
+            updateFields.check_in_radius = parseInt(check_in_radius);
+        }
+
         if (event_limit && typeof event_limit === 'number') {
             updateFields.event_limit = event_limit;
         }
