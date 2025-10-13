@@ -44,8 +44,36 @@ export class EventService {
     let perPage = 1000;
     
     while (true) {
-      const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
-      if (error) throw error;
+      // Retry logic with exponential backoff for supabase.auth.admin.listUsers retryable errors
+      const maxRetries = 5;
+      let attempt = 0;
+      let success = false;
+      let users: any[] = [];
+      while (!success && attempt < maxRetries) {
+        try {
+          const { data: { users: fetchedUsers }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+          if (error) {
+            // Check for "AuthRetryableFetchError" or status 503 (service unavailable)
+            const isRetryable = error.status === 503 || (error.name && error.name.includes('Retryable')) || (error.message && error.message.includes('503'));
+            if (isRetryable) {
+              attempt++;
+              const backoff = Math.min(1000 * 2 ** attempt, 10000); // cap at 10 seconds
+              await new Promise(res => setTimeout(res, backoff));
+              if (attempt === maxRetries) throw error;
+              continue;
+            } else {
+              throw error;
+            }
+          }
+          users = fetchedUsers;
+          success = true;
+        } catch (err) {
+          attempt++;
+          if (attempt >= maxRetries) throw err;
+          const backoff = Math.min(1000 * 2 ** attempt, 10000);
+          await new Promise(res => setTimeout(res, backoff));
+        }
+      }
       if (users.length === 0) break;
       allUsers = allUsers.concat(users);
       if (users.length < perPage) break; // No more pages
