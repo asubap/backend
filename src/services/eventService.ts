@@ -44,36 +44,8 @@ export class EventService {
     let perPage = 1000;
     
     while (true) {
-      // Retry logic with exponential backoff for supabase.auth.admin.listUsers retryable errors
-      const maxRetries = 5;
-      let attempt = 0;
-      let success = false;
-      let users: any[] = [];
-      while (!success && attempt < maxRetries) {
-        try {
-          const { data: { users: fetchedUsers }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
-          if (error) {
-            // Check for "AuthRetryableFetchError" or status 503 (service unavailable)
-            const isRetryable = error.status === 503 || (error.name && error.name.includes('Retryable')) || (error.message && error.message.includes('503'));
-            if (isRetryable) {
-              attempt++;
-              const backoff = Math.min(1000 * 2 ** attempt, 10000); // cap at 10 seconds
-              await new Promise(res => setTimeout(res, backoff));
-              if (attempt === maxRetries) throw error;
-              continue;
-            } else {
-              throw error;
-            }
-          }
-          users = fetchedUsers;
-          success = true;
-        } catch (err) {
-          attempt++;
-          if (attempt >= maxRetries) throw err;
-          const backoff = Math.min(1000 * 2 ** attempt, 10000);
-          await new Promise(res => setTimeout(res, backoff));
-        }
-      }
+      const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+      if (error) throw error;
       if (users.length === 0) break;
       allUsers = allUsers.concat(users);
       if (users.length < perPage) break; // No more pages
@@ -188,6 +160,32 @@ export class EventService {
       .delete()
       .eq("id", event_id);
     if (error) throw error;
+    return data;
+  }
+
+  async getEventForCheckin(eventId: string) {
+    const { data, error } = await this.supabase
+      .from("events")
+      .select("id, event_lat, event_long, check_in_radius, event_rsvped, event_attending, event_hours, event_hours_type")
+      .eq("id", eventId)
+      .single();
+      
+    if (error) throw error;
+    if (!data) throw new Error(`No event found with id: ${eventId}`);
+    
+    return data;
+  }
+
+  async getEventBasic(eventId: string) {
+    const { data, error } = await this.supabase
+      .from("events")
+      .select("id, event_rsvped, event_attending, event_hours, event_hours_type")
+      .eq("id", eventId)
+      .single();
+      
+    if (error) throw error;
+    if (!data) throw new Error(`No event found with id: ${eventId}`);
+    
     return data;
   }
 
@@ -341,9 +339,7 @@ export class EventService {
 
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
     try {
-
-      const eventIdNumber = parseInt(eventId);
-      const event: Event = (await this.getEventID(eventIdNumber))[0];
+      const event = await this.getEventForCheckin(eventId);
 
       if (event.event_rsvped && !event.event_rsvped.includes(userId)) {
         throw new Error("You have not RSVP'd for this event");
@@ -403,8 +399,7 @@ export class EventService {
 
   async rsvpForEvent(eventId: string, userId: string) {
     try {
-      const eventIdNumber = parseInt(eventId);
-      const event: Event = (await this.getEventID(eventIdNumber))[0];
+      const event = await this.getEventBasic(eventId);
 
       // Initialize event_rsvped if it doesn't exist
       let currentRsvps: string[] = event.event_rsvped || [];
@@ -428,9 +423,7 @@ export class EventService {
 
   async unRsvpForEvent(eventId: string, userId: string) {
     try {
-      // Convert eventId to number for proper comparison
-      const numericEventId = parseInt(eventId);
-      const event: Event = (await this.getEventID(numericEventId))[0];
+      const event = await this.getEventBasic(eventId);
 
       // Initialize event_rsvped if it doesn't exist
       let currentRsvps: string[] = event.event_rsvped || [];
@@ -454,8 +447,7 @@ export class EventService {
 
   async addMemberAttending(eventId: string, userEmail: string) {
     try {
-      const eventIdNumber = parseInt(eventId);
-      const event: Event = (await this.getEventID(eventIdNumber))[0];
+      const event = await this.getEventBasic(eventId);
 
       // Get user ID using the userService
       const userId = await this.userService.getUserIdByEmail(userEmail);
@@ -492,8 +484,7 @@ export class EventService {
 
   async deleteMemberAttending(eventId: string, userEmail: string) {
     try {
-      const eventIdNumber = parseInt(eventId);
-      const event: Event = (await this.getEventID(eventIdNumber))[0];
+      const event = await this.getEventBasic(eventId);
 
       // Get user ID using the userService
       const userId = await this.userService.getUserIdByEmail(userEmail);
