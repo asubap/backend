@@ -218,16 +218,16 @@ export class EventService {
     // Filter in JavaScript (fast, already in memory)
     const rsvpedUsers = attendance
       .filter((a: any) => a.status === 'rsvped')
-      .map((a: any) => a.member_id);
+      .map((a: any) => a.member_info);
 
     const attendingUsers = attendance
       .filter((a: any) => a.status === 'attended')
-      .map((a: any) => a.member_id);
+      .map((a: any) => a.member_info);
 
     return {
       ...event,
-      event_rsvped: rsvpedUsers,
-      event_attending: attendingUsers,
+      rsvped_users: rsvpedUsers,
+      attending_users: attendingUsers,
     };
   }
 
@@ -351,8 +351,43 @@ export class EventService {
 
     distance <= checkInRadius || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is ${checkInRadius}m)`) })();
 
-    const result = await this.addMemberAttending(eventId, userId);
-    return result;
+    const { data: member, error: memberError } = await this.supabase
+      .from('member_info')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (memberError || !member) throw new Error("Member not found");
+
+    // change userId from rsvped to attending (if it exists, else error)
+    const { data, error } = await this.supabase
+      .from('event_attendance')
+      .update({ status: 'attended' })
+      .eq('event_id', eventId)
+      .eq('member_id', member.id)
+      .eq('status', 'rsvped')
+      .select();  // ← Returns the updated row
+
+    if (error) throw error;
+
+    // Check if any rows were updated
+    if (!data || data.length === 0) {
+      // Check current status
+      const { data: current } = await this.supabase
+        .from('event_attendance')
+        .select('status')
+        .eq('event_id', eventId)
+        .eq('member_id', member.id)
+        .single();
+
+      if (current?.status === 'attended') {
+        return "Already checked in!"; // Not an error
+      } else {
+        throw new Error("User has not RSVP'd for this event");
+      }
+    }
+
+    return "Member successfully marked as attending the event!";
   }
 
   async getPublicEvents() {
@@ -429,33 +464,23 @@ export class EventService {
 
     if (memberError || !member) throw new Error("Member not found");
 
-    // change userId from rsvped to attending (if it exists, else error)
-    const { data, error } = await this.supabase
+    // upsert: insert if not exists, update to attended if exists
+    const { error } = await this.supabase
       .from('event_attendance')
-      .update({ status: 'attended' })
-      .eq('event_id', eventId)
-      .eq('member_id', member.id)
-      .eq('status', 'rsvped')
-      .select();  // ← Returns the updated row
+      .upsert(
+        {
+          event_id: eventId,
+          member_id: member.id,
+          status: 'attended'
+        },
+        {
+          onConflict: 'event_id,member_id'
+        }
+      );
 
     if (error) throw error;
 
-    // Check if any rows were updated
-    if (!data || data.length === 0) {
-      // Check current status
-      const { data: current } = await this.supabase
-        .from('event_attendance')
-        .select('status')
-        .eq('event_id', eventId)
-        .eq('member_id', member.id)
-        .single();
-
-      if (current?.status === 'attended') {
-        return "Already checked in!"; // Not an error
-      } else {
-        throw new Error("User has not RSVP'd for this event");
-      }
-    }
+    console.log("Member marked as attending the event ADMIN style");
 
     return "Member successfully marked as attending the event!";
   }
@@ -468,7 +493,7 @@ export class EventService {
         .eq('user_id', userId)
         .single();
 
-      if (memberError || !member) throw new Error("Member not found");
+      if (memberError) throw new Error("Member not found");
 
       // then remove the member from the event_rsvped table
       const { error } = await this.supabase
