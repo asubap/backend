@@ -135,7 +135,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, event_rsvped, event_attending, check_in_window, check_in_radius, event_limit} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, check_in_window, check_in_radius, event_limit} = req.body;
 
         const token = extractToken(req);
         
@@ -179,12 +179,6 @@ export class EventController {
         }
         if (sponsors !== undefined) {
             updateFields.sponsors_attending = sponsors;
-        }
-        if (event_rsvped && event_rsvped.length > 0) {
-            updateFields.event_rsvped = event_rsvped;
-        }
-        if (event_attending && event_attending.length > 0) {
-            updateFields.event_attending = event_attending;
         }
         if (event_hours) {
             updateFields.event_hours = event_hours;
@@ -304,6 +298,7 @@ export class EventController {
         }
     }
 
+    
     async rsvpForEvent(req: Request, res: Response) {
         try {
             const user = (req as any).user;
@@ -318,6 +313,7 @@ export class EventController {
             let user_id = user.id;
             if (user_email) {
                 console.log("user_email", user_email);
+                // this could be optimized
                 user_id = await this.userService.getUserIdByEmail(user_email);
             }
             
@@ -361,6 +357,8 @@ export class EventController {
             } catch (error) {
                 if (error instanceof Error && error.message === 'You have not RSVP\'d for this event') {
                     res.status(400).json({ error: error.message });
+                } else if (error instanceof Error && error.message === 'Member not found') {
+                    res.status(404).json({ error: error.message });
                 } else {
                     console.error('Error processing un-RSVP:', error);
                     res.status(500).json({ error: 'Failed to process RSVP' });
@@ -406,7 +404,8 @@ export class EventController {
                 return;
             }
 
-            const result = await this.eventService.addMemberAttending(eventId, userEmail);
+            const user_id = await this.userService.getUserIdByEmail(userEmail);
+            const result = await this.eventService.addMemberAttending(eventId, user_id);
             res.json({ message: result });
         } catch (error: any) {
             console.error('Error adding member to event:', error);
@@ -442,8 +441,8 @@ export class EventController {
                 res.status(400).json({ error: 'Missing required fields: eventId and userEmail' });
                 return;
             }
-
-            const result = await this.eventService.deleteMemberAttending(eventId, userEmail);
+            const user_id = await this.userService.getUserIdByEmail(userEmail);
+            const result = await this.eventService.deleteMemberAttending(eventId, user_id);
             res.json({ message: result });
         } catch (error: any) {
             console.error('Error removing member from event:', error);

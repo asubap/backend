@@ -23,7 +23,7 @@ export class MemberInfoService {
      * @returns information about the member
      */
     async getMemberInfo(user_email: string) {
-        const { data: members, error } = await this.supabase.from('member_info').select('*').eq('user_email', user_email);
+        const { data: members, error } = await this.supabase.from('member_hours_summary').select('*').eq('user_email', user_email);
 
         if (error && error.code === '42703') {
             throw new Error("Member not found: " + user_email);
@@ -40,7 +40,7 @@ export class MemberInfoService {
                 .eq('email', member.user_email)
                 .single();
 
-            if (roleError) {
+            if (roleError || !roleData) {
                 console.error(`Error fetching role for ${member.user_email}:`, roleError);
                 return { ...member, role: null };
             }
@@ -52,7 +52,10 @@ export class MemberInfoService {
         const membersWithAttendance = await Promise.all(membersWithRoles.map(async (member) => {
             try {
                 const eventAttendance = await this.getEventAttendance(member.user_email);
-                return { ...member, event_attendance: eventAttendance };
+                console.log(eventAttendance);
+                const finalResult = { ...member, event_attendance: eventAttendance };
+                console.log(finalResult);
+                return finalResult;
             } catch (error) {
                 console.error(`Error fetching event attendance for ${member.user_email}:`, error);
                 return { ...member, event_attendance: [] };
@@ -64,7 +67,11 @@ export class MemberInfoService {
 
 
     async getAllMemberInfo() {
-        const { data: members, error } = await this.supabase.from('member_info').select('*');
+        // Query the view instead of member_info to get calculated hours
+        const { data: members, error } = await this.supabase
+            .from('member_hours_summary')
+            .select('*')
+            .order('total_hours', { ascending: false }); // Optional: order by hours
         
         if (error) throw error;
 
@@ -121,7 +128,7 @@ export class MemberInfoService {
      */
     async addMember(user_id: string) {
         try {
-            const { data, error } = await this.supabase
+            const { error } = await this.supabase
                 .from('member_info')
                 .insert({ user_id })
                 .select();
@@ -294,6 +301,7 @@ export class MemberInfoService {
                     )
                 `)
                 .eq('user_email', userEmail)
+                .eq('event_attendance.status', 'attended')
                 .single();
 
             if (error) {

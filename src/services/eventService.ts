@@ -1,21 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import { getDistance } from "geolib";
-import { Event } from "../types/event";
-import { Member } from "../types/member";
-import { hoursMap, HoursType } from "../types/hours";
 import UserRoleService from "./userService";
-import { MemberInfoService } from "./memberInfoService";
 import sgMail from '@sendgrid/mail';
-
-
-interface UserDetails {
-  id: string;
-  email: string;
-  role: string;
-  [key: string]: any;
-}
-
+import { Event, SupabaseEventResponse, EventAttendanceRecord } from "../types/event";
 
 export class EventService {
 
@@ -32,6 +20,7 @@ export class EventService {
     this.userService.setToken(token);
   }
   
+  // this can be severely optimized -> all of this is not necessary
   async getUsersByIds(user_ids: string[]) {
     if (!user_ids || user_ids.length === 0) return [];
     
@@ -82,44 +71,54 @@ export class EventService {
     return enrichedMemberData;
   }
 
-  async getEvents() {
-    const { data, error } = await this.supabase.from("events").select("*");
-    if (error) {
-        throw error;
-    }
 
-    // Process each event to include user information
-    const processedEvents = await Promise.all(data.map(async (event) => {
-      // Get all unique user IDs from both RSVPs and attendees
-      const allUserIds = [
-        ...(event.event_rsvped || []),
-        ...(event.event_attending || [])
-      ];
+  async getEvents(): Promise<Event[]> {
+    const { data: events, error } = await this.supabase
+      .from("events")
+      .select(`
+        *,
+        event_attendance (
+          status,
+          member_info (
+            user_email,
+            name
+          )
+        )
+      `)
+      .order('event_date', { ascending: false });
 
-      // Get user details in a single batch
-      const userDetails = await this.getUsersByIds(allUserIds);
+    if (error) throw error;
 
-      // Create a map for quick lookup
-      const userMap = new Map(userDetails.map((user: UserDetails) => [user.id, user]));
-
-      // Separate users into RSVPs and attendees
-      const rsvpedUsers = (event.event_rsvped || [])
-        .map((id: string) => userMap.get(id))
-        .filter(Boolean);
-
-      const attendingUsers = (event.event_attending || [])
-        .map((id: string) => userMap.get(id))
-        .filter(Boolean);
+    // Transform to match frontend expectations
+    const processedEvents: Event[] = events?.map((event: SupabaseEventResponse) => {
+      const attendance = event.event_attendance || [];
 
       return {
-        ...event,
-        rsvped_users: rsvpedUsers,
-        attending_users: attendingUsers
+        id: event.id,
+        event_name: event.event_name,
+        event_description: event.event_description,
+        event_location: event.event_location,
+        event_lat: event.event_lat,
+        event_long: event.event_long,
+        event_date: event.event_date,
+        event_time: event.event_time,
+        event_hours: event.event_hours,
+        event_hours_type: event.event_hours_type,
+        sponsors_attending: event.sponsors_attending || [],
+        check_in_window: event.check_in_window,
+        event_limit: event.event_limit,
+        check_in_radius: event.check_in_radius,
+        rsvped_users: attendance
+          .filter((a: EventAttendanceRecord) => a.status === 'rsvped')
+          .map((a: EventAttendanceRecord) => a.member_info),
+        attending_users: attendance
+          .filter((a: EventAttendanceRecord) => a.status === 'attended')
+          .map((a: EventAttendanceRecord) => a.member_info)
       };
-    }));
+  }) || [];
 
-    return processedEvents;
-  }
+  return processedEvents;
+}
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number) {
         const { data, error } = await this.supabase
@@ -166,20 +165,7 @@ export class EventService {
   async getEventForCheckin(eventId: string) {
     const { data, error } = await this.supabase
       .from("events")
-      .select("id, event_lat, event_long, check_in_radius, event_rsvped, event_attending, event_hours, event_hours_type")
-      .eq("id", eventId)
-      .single();
-      
-    if (error) throw error;
-    if (!data) throw new Error(`No event found with id: ${eventId}`);
-    
-    return data;
-  }
-
-  async getEventBasic(eventId: string) {
-    const { data, error } = await this.supabase
-      .from("events")
-      .select("id, event_rsvped, event_attending, event_hours, event_hours_type")
+      .select("id, event_lat, event_long, check_in_radius")
       .eq("id", eventId)
       .single();
       
@@ -190,44 +176,50 @@ export class EventService {
   }
 
   async getEventID(event_id: number) {
-    const { data, error } = await this.supabase
+    const { data: event, error } = await this.supabase
       .from("events")
-      .select("*")
-      .eq("id", event_id);
+      .select(`
+        *,
+        event_attendance (
+          status,
+          member_id,
+          member_info (
+            id,
+            user_id,
+            name,
+            user_email,
+            profile_photo_url,
+            major,
+            graduating_year
+          )
+        )
+      `)
+      .eq("id", event_id)
+      .single();
 
-    if (error) throw error;
-    if (!data || data.length === 0) {
-      throw new Error(`No event found with id: ${event_id}`);
+    if (error) {
+      if (error.code === 'PGRST116') {
+        throw new Error(`No event found with id: ${event_id}`);
+      }
+      throw error;
     }
 
-    const event = data[0];
-    
-    // Get all unique user IDs from both RSVPs and attendees
-    const allUserIds = [
-      ...(event.event_rsvped || []),
-      ...(event.event_attending || [])
-    ];
+    const attendance = event.event_attendance || [];
 
-    // Get user details in a single batch
-    const userDetails = await this.getUsersByIds(allUserIds);
+    // Filter in JavaScript (fast, already in memory)
+    const rsvpedUsers = attendance
+      .filter((a: any) => a.status === 'rsvped')
+      .map((a: any) => a.member_id);
 
-    // Create a map for quick lookup
-    const userMap = new Map(userDetails.map((user: UserDetails) => [user.id, user]));
+    const attendingUsers = attendance
+      .filter((a: any) => a.status === 'attended')
+      .map((a: any) => a.member_id);
 
-    // Separate users into RSVPs and attendees
-    const rsvpedUsers = (event.event_rsvped || [])
-      .map((id: string) => userMap.get(id))
-      .filter(Boolean);
-
-    const attendingUsers = (event.event_attending || [])
-      .map((id: string) => userMap.get(id))
-      .filter(Boolean);
-
-    return [{
+    return {
       ...event,
-      rsvped_users: rsvpedUsers,
-      attending_users: attendingUsers
-    }];
+      event_rsvped: rsvpedUsers,
+      event_attending: attendingUsers,
+    };
   }
 
   async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string, rsvped_users: any[]){
@@ -338,50 +330,20 @@ export class EventService {
   }
 
   async verifyLocationAttendance(eventId: string, userId: string, userLat: number, userLong: number) {
-    try {
-      const event = await this.getEventForCheckin(eventId);
+    const event = await this.getEventForCheckin(eventId);
 
-      if (event.event_rsvped && !event.event_rsvped.includes(userId)) {
-        throw new Error("You have not RSVP'd for this event");
-      }
+    const distance = getDistance(
+      { latitude: userLat, longitude: userLong },
+      { latitude: event.event_lat, longitude: event.event_long }
+    ) ?? (() => { throw new Error("Failed to calculate distance") })();
 
-      const distance = getDistance(
-        { latitude: userLat, longitude: userLong },
-        { latitude: event.event_lat, longitude: event.event_long }
-      ) ?? (() => { throw new Error("Failed to calculate distance") })();
+    // get check in radius
+    const checkInRadius = event.check_in_radius;
 
-      // get check in radius
-      const checkInRadius = event.check_in_radius;
+    distance <= checkInRadius || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is ${checkInRadius}m)`) })();
 
-      distance <= checkInRadius || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is ${checkInRadius}m)`) })();
-
-      if (event.event_attending && event.event_attending.includes(userId)) {
-        throw new Error("You have already checked in to this event");
-      }
-
-      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
-      currentAttending.push(userId);
-
-      await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
-
-      const userEmail = await this.userService.getUserEmail(userId) ?? (() => { throw new Error("User email not found") })();
-
-      const memberInfoService = new MemberInfoService();
-      const user: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
-
-      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
-      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
-      
-      const currentHours = Number(user[hoursKey]) || 0;
-      const newHours = currentHours + event.event_hours;
-
-      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
-      
-      return "Check-in confirmed!";
-    } catch (error) {
-      console.error('verifyLocationAttendance error:', error);
-      throw error;
-    }
+    const result = await this.addMemberAttending(eventId, userId);
+    return result;
   }
 
   async getPublicEvents() {
@@ -398,124 +360,110 @@ export class EventService {
   }
 
   async rsvpForEvent(eventId: string, userId: string) {
-    try {
-      const event = await this.getEventBasic(eventId);
+    const { data: member, error: memberError } = await this.supabase
+      .from('member_info')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
 
-      // Initialize event_rsvped if it doesn't exist
-      let currentRsvps: string[] = event.event_rsvped || [];
-      
-      // Check if user is already RSVP'd
-      if (currentRsvps.includes(userId)) {
+    if (memberError || !member) throw new Error("Member not found");
+
+    // i need to event_attendance table
+    const { error } = await this.supabase.
+      from('event_attendance')
+      .insert({
+        event_id: eventId,
+        member_id: member.id,
+        status: 'rsvped'
+      });
+
+    if (error) {
+      if (error.code === '23505') {
         throw new Error("You have already RSVP'd for this event");
+      } else {
+        throw error;
       }
-
-      // Add user to RSVPs
-      currentRsvps.push(userId);
-      
-      await this.editEvent(eventId, { event_rsvped: currentRsvps.map(id => id.toString())});
-
-      return "RSVP confirmed!";
-    } catch (error) {
-      console.error('rsvpForEvent error:', error);
-      throw error;
     }
+
+    return "RSVP successful!";
   }
 
   async unRsvpForEvent(eventId: string, userId: string) {
-    try {
-      const event = await this.getEventBasic(eventId);
+    const { data: member, error: memberError } = await this.supabase
+      .from('member_info')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
 
-      // Initialize event_rsvped if it doesn't exist
-      let currentRsvps: string[] = event.event_rsvped || [];
-      
-      // Check if user is already RSVP'd
-      if (!currentRsvps.includes(userId)) {
-        throw new Error("You have not RSVP'd for this event");
-      }
 
-      // Remove user from the array
-      const updatedRsvps = currentRsvps.filter(id => id !== userId);
+    if (memberError || !member) throw new Error("Member not found");
 
-      await this.editEvent(eventId, { event_rsvped: updatedRsvps.map(id => id.toString())});
+    const { error } = await this.supabase
+      .from('event_attendance')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('member_id', member.id)
+      .eq('status', 'rsvped');
 
-      return "RSVP removed!";
-    } catch (error) {
-      console.error('unRsvpForEvent error:', error);
-      throw error;
+    if (error) {
+      throw new Error("Error processing un-RSVP");
     }
+
+    return "Successfully un-RSVPed from the event!";
   }
 
-  async addMemberAttending(eventId: string, userEmail: string) {
-    try {
-      const event = await this.getEventBasic(eventId);
+  async addMemberAttending(eventId: string, userId: string) {
+      // get userId from member_info table
+    const { data: member, error: memberError } = await this.supabase
+      .from('member_info')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
 
-      // Get user ID using the userService
-      const userId = await this.userService.getUserIdByEmail(userEmail);
+    if (memberError || !member) throw new Error("Member not found");
 
-      // Check if user is already attending
-      if (event.event_attending && event.event_attending.includes(userId)) {
-        throw new Error("User is already attending this event");
+    // change userId from rsvped to attending (if it exists, else error)
+    const { error } = await this.supabase
+      .from('event_attendance')
+      .update({ status: 'attended' })
+      .eq('event_id', eventId)
+      .eq('member_id', member.id)
+      .eq('status', 'rsvped');
+
+    if (error) {
+      if (error.code === 'P2025') {
+        throw new Error("User has not RSVP'd for this event");
+      } if (error.code === '23505') {
+        throw new Error("User is already marked as attending this event");
+      } else {
+        throw error;
       }
-
-      // Add user to attending list
-      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
-      currentAttending.push(userId);
-
-      await this.editEvent(eventId, { event_attending: currentAttending.map(id => id.toString()) });
-
-      // Update user's hours
-      const memberInfoService = new MemberInfoService();
-      const userInfo: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
-
-      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
-      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
-      
-      const currentHours = Number(userInfo[hoursKey]) || 0;
-      const newHours = currentHours + event.event_hours;
-
-      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
-      
-      return "Member successfully added to event and hours updated!";
-    } catch (error) {
-      console.error('addMemberAttending error:', error);
-      throw error;
     }
+
+    return "Member successfully marked as attending the event!";
   }
 
-  async deleteMemberAttending(eventId: string, userEmail: string) {
-    try {
-      const event = await this.getEventBasic(eventId);
+  async deleteMemberAttending(eventId: string, userId: string) {
+    // get userId from member_info table
+      const { data: member, error: memberError } = await this.supabase
+        .from('member_info')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
-      // Get user ID using the userService
-      const userId = await this.userService.getUserIdByEmail(userEmail);
+      if (memberError || !member) throw new Error("Member not found");
 
-      // Check if user is attending
-      if (!event.event_attending || !event.event_attending.includes(userId)) {
-        throw new Error("User is not attending this event");
+      // then remove the member from the event_rsvped table
+      const { error } = await this.supabase
+        .from('event_attendance')
+        .delete()
+        .eq('event_id', eventId)
+        .eq('member_id', member.id);
+
+      if (error) {
+        throw new Error("Error removing member from event");
       }
 
-      // Remove user from attending list
-      const currentAttending: string[] = Array.isArray(event.event_attending) ? event.event_attending : [];
-      const updatedAttending = currentAttending.filter(id => id !== userId);
-
-      await this.editEvent(eventId, { event_attending: updatedAttending.map(id => id.toString()) });
-
-      // Update user's hours
-      const memberInfoService = new MemberInfoService();
-      const userInfo: Member = (await memberInfoService.getMemberInfo(userEmail))[0];
-
-      const eventHoursType = event.event_hours_type.replace(/\s+/g, '_') as HoursType;
-      const hoursKey = hoursMap[eventHoursType] ?? (() => { throw new Error(`Invalid hours type: ${eventHoursType}`) })();
-      
-      const currentHours = Number(userInfo[hoursKey]) || 0;
-      const newHours = Math.max(0, currentHours - event.event_hours); // Ensure hours don't go below 0
-
-      await memberInfoService.editMemberInfo(userEmail, { [hoursKey]: newHours.toString() });
-      
-      return "Member successfully removed from event and hours updated!";
-    } catch (error) {
-      console.error('deleteMemberAttending error:', error);
-      throw error;
-    }
+      return "Member successfully removed from the event!";
   }
 }
