@@ -323,9 +323,11 @@ export class EventController {
             } catch (error) {
                 if (error instanceof Error && error.message === 'You have already RSVP\'d for this event') {
                     res.status(400).json({ error: error.message });
+                } else if (error instanceof Error && error.message.includes('Event is full')) {
+                    res.status(400).json({ error: error.message });
                 } else {
                     console.error('Error processing RSVP:', error);
-                    res.status(500).json({ error: 'Failed to process RSVP' });
+                    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to process RSVP' });
                 }
             }
         } catch (error) {
@@ -361,7 +363,7 @@ export class EventController {
                     res.status(404).json({ error: error.message });
                 } else {
                     console.error('Error processing un-RSVP:', error);
-                    res.status(500).json({ error: 'Failed to process RSVP' });
+                    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to process un-RSVP' });
                 }
             }
         } catch (error) {
