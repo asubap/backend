@@ -52,10 +52,7 @@ export class MemberInfoService {
         const membersWithAttendance = await Promise.all(membersWithRoles.map(async (member) => {
             try {
                 const eventAttendance = await this.getEventAttendance(member.user_email);
-                console.log(eventAttendance);
-                const finalResult = { ...member, event_attendance: eventAttendance };
-                console.log(finalResult);
-                return finalResult;
+                return { ...member, event_attendance: eventAttendance };
             } catch (error) {
                 console.error(`Error fetching event attendance for ${member.user_email}:`, error);
                 return { ...member, event_attendance: [] };
@@ -296,7 +293,9 @@ export class MemberInfoService {
                             id,
                             event_name,
                             event_date,
-                            event_description
+                            event_description,
+                            event_hours,
+                            event_hours_type
                         )
                     )
                 `)
@@ -317,7 +316,9 @@ export class MemberInfoService {
                 event_id: attendance.events.id,
                 event_name: attendance.events.event_name,
                 event_date: attendance.events.event_date,
-                event_description: attendance.events.event_description
+                event_description: attendance.events.event_description,
+                event_hours: attendance.events.event_hours,
+                event_hours_type: attendance.events.event_hours_type
             })) || [];
 
             return eventAttendance;
