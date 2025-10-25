@@ -21,6 +21,7 @@ export class EventService {
   }
   
   // this can be severely optimized -> all of this is not necessary
+  // DO NOT FORGET
   async getUsersByIds(user_ids: string[]) {
     if (!user_ids || user_ids.length === 0) return [];
     
@@ -121,27 +122,35 @@ export class EventService {
 }
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number) {
-        const { data, error } = await this.supabase
-            .from('events')
-            .insert(
-                {
-                    event_time: time,
-                    event_hours: hours,
-                    event_hours_type: hours_type,
-                    event_name: name,
-                    event_date: date,
-                    event_location: location,
-                    event_lat: lat,
-                    event_long: long,
-                    event_description: description,
-                    sponsors_attending: sponsors,
-                    check_in_window: check_in_window,
-                    check_in_radius: check_in_radius,
-                    event_limit: event_limit
-                });
+    if (hours < 0) throw new Error("Hours cannot be negative");
+    if (event_limit !== null && event_limit < 0) throw new Error("Event limit cannot be negative");
+    
+    const eventDate = new Date(date);
+    if (eventDate < new Date()) throw new Error("Event date cannot be in the past");
+    
+    if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
+    if (long < -180 || long > 180) throw new Error("Invalid longitude");
+    const { data, error } = await this.supabase
+        .from('events')
+        .insert(
+            {
+              event_time: time,
+              event_hours: hours,
+              event_hours_type: hours_type,
+              event_name: name,
+              event_date: date,
+              event_location: location,
+              event_lat: lat,
+              event_long: long,
+              event_description: description,
+              sponsors_attending: sponsors,
+              check_in_window: check_in_window,
+              check_in_radius: check_in_radius,
+              event_limit: event_limit
+            });
 
-        if (error) console.log(error);
-        return data;
+    if (error) throw new Error(error.message);
+    return data;
   }
 
   async editEvent(event_id: string, updateData: Record<string, any>) {
@@ -368,21 +377,19 @@ export class EventService {
 
     if (memberError || !member) throw new Error("Member not found");
 
-    // i need to event_attendance table
-    const { error } = await this.supabase.
-      from('event_attendance')
-      .insert({
-        event_id: eventId,
-        member_id: member.id,
-        status: 'rsvped'
-      });
+    // Call the database function
+    const { error: rsvpError } = await this.supabase.rpc('rsvp_with_limit_check', {
+      p_event_id: eventId,
+      p_member_id: member.id
+    });
 
-    if (error) {
-      if (error.code === '23505') {
+    if (rsvpError) {
+      if (rsvpError.message.includes('Event is full')) {
+        throw new Error("Event is full. Maximum capacity reached.");
+      } else if (rsvpError.code === '23505') {
         throw new Error("You have already RSVP'd for this event");
-      } else {
-        throw error;
       }
+      throw rsvpError;
     }
 
     return "RSVP successful!";
@@ -423,20 +430,30 @@ export class EventService {
     if (memberError || !member) throw new Error("Member not found");
 
     // change userId from rsvped to attending (if it exists, else error)
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('event_attendance')
       .update({ status: 'attended' })
       .eq('event_id', eventId)
       .eq('member_id', member.id)
-      .eq('status', 'rsvped');
+      .eq('status', 'rsvped')
+      .select();  // ← Returns the updated row
 
-    if (error) {
-      if (error.code === 'P2025') {
-        throw new Error("User has not RSVP'd for this event");
-      } if (error.code === '23505') {
-        throw new Error("User is already marked as attending this event");
+    if (error) throw error;
+
+    // Check if any rows were updated
+    if (!data || data.length === 0) {
+      // Check current status
+      const { data: current } = await this.supabase
+        .from('event_attendance')
+        .select('status')
+        .eq('event_id', eventId)
+        .eq('member_id', member.id)
+        .single();
+
+      if (current?.status === 'attended') {
+        return "Already checked in!"; // Not an error
       } else {
-        throw error;
+        throw new Error("User has not RSVP'd for this event");
       }
     }
 
