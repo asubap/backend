@@ -1,6 +1,7 @@
 export interface MemberSummary {
   name: string | null;
   user_email: string;
+  user_id: string;
 }
 
 export type AttendanceStatus = 'rsvped' | 'attended';
@@ -43,6 +44,8 @@ export interface Event {
   check_in_window: number;
   event_limit: number;
   check_in_radius: number;
+  event_rsvped: string[];
   rsvped_users: MemberSummary[];
+  event_attending: string[];
   attending_users: MemberSummary[];
 }

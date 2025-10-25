@@ -82,7 +82,8 @@ export class EventService {
           status,
           member_info (
             user_email,
-            name
+            name,
+            user_id
           )
         )
       `)
@@ -93,6 +94,9 @@ export class EventService {
     // Transform to match frontend expectations
     const processedEvents: Event[] = events?.map((event: SupabaseEventResponse) => {
       const attendance = event.event_attendance || [];
+
+      const rsvpedAttendance = attendance.filter((a: EventAttendanceRecord) => a.status === 'rsvped');
+      const attendedAttendance = attendance.filter((a: EventAttendanceRecord) => a.status === 'attended');
 
       return {
         id: event.id,
@@ -109,12 +113,10 @@ export class EventService {
         check_in_window: event.check_in_window,
         event_limit: event.event_limit,
         check_in_radius: event.check_in_radius,
-        rsvped_users: attendance
-          .filter((a: EventAttendanceRecord) => a.status === 'rsvped')
-          .map((a: EventAttendanceRecord) => a.member_info),
-        attending_users: attendance
-          .filter((a: EventAttendanceRecord) => a.status === 'attended')
-          .map((a: EventAttendanceRecord) => a.member_info)
+        event_rsvped: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
+        rsvped_users: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info),
+        event_attending: attendedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
+        attending_users: attendedAttendance.map((a: EventAttendanceRecord) => a.member_info)
       };
   }) || [];
 
@@ -122,14 +124,6 @@ export class EventService {
 }
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number) {
-    if (hours < 0) throw new Error("Hours cannot be negative");
-    if (event_limit !== null && event_limit < 0) throw new Error("Event limit cannot be negative");
-    
-    const eventDate = new Date(date);
-    if (eventDate < new Date()) throw new Error("Event date cannot be in the past");
-    
-    if (lat < -90 || lat > 90) throw new Error("Invalid latitude");
-    if (long < -180 || long > 180) throw new Error("Invalid longitude");
     const { data, error } = await this.supabase
         .from('events')
         .insert(
