@@ -14,10 +14,10 @@ eventRoutes
 .post('/', controller.getEventByID.bind(controller)) // get events by id
 
 // checkin route
-.post('/checkin/:eventId', controller.verifyAttendance.bind(controller) as RequestHandler)
+.post('/checkin/:eventId', verifySupabaseToken, controller.verifyAttendance.bind(controller) as RequestHandler)
 
 // rsvp route
-.post('/rsvp/:eventId', controller.rsvpForEvent.bind(controller) as RequestHandler)
+.post('/rsvp/:eventId', verifySupabaseToken, controller.rsvpForEvent.bind(controller) as RequestHandler)
 .post('/unrsvp/:eventId', verifySupabaseToken, controller.unRsvpForEvent.bind(controller) as RequestHandler)
 
 // admin routes
