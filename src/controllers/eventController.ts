@@ -247,10 +247,10 @@ export class EventController {
 
     async verifyAttendance(req: Request, res: Response) {
         try {
-            const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
+            // const user = (req as any).user;
+            // if (!user?.id) {
+            //     return res.status(401).json({ error: 'Unauthorized' });
+            // }
 
             const { eventId } = req.params;
             const { latitude, longitude, accuracy} = req.body;
@@ -302,9 +302,9 @@ export class EventController {
     async rsvpForEvent(req: Request, res: Response) {
         try {
             const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
+            // if (!user?.id) {
+            //     return res.status(401).json({ error: 'Unauthorized' });
+            // }
 
             const { eventId } = req.params;
             const { user_email } = req.body;
