@@ -47,9 +47,14 @@ export default class UserRoleService {
     }
 
     async addUser(user_email: string, role: string) {
-        const { data, error } = await this.supabase
+        // Use service role client for admin API
+        const adminClient = createSupabaseClient(undefined, true);
+        const { data, error } = await adminClient
             .from('allowed_members')
             .insert({ email: user_email, role: role });
+
+
+        console.log(data, error);
 
         if (error) throw error;
         return data;
@@ -85,21 +90,17 @@ export default class UserRoleService {
     }
 
     async getUserIdByEmail(user_email: string) {
-        // Use service role client for admin API
-        const adminClient = createSupabaseClient(undefined, true);
-        console.log(adminClient);
-        const { data: userData, error: userError } = await adminClient.auth.admin.listUsers({
-  page: 1,
-  perPage: 1000
-});
-        if (userError) throw userError;
-        console.log(userData);
-        const user = userData.users.find(u => u.email === user_email);
-        console.log(user);
-        if (!user) {
+        // Use member_user_mapping view for efficient lookup
+        const { data, error } = await this.supabase
+            .from('member_user_mapping')
+            .select('user_id')
+            .eq('user_email', user_email)
+            .single();
+
+        if (error || !data || !data.user_id) {
             throw new Error("User not found");
         }
 
-        return user.id;
+        return data.user_id;
     }
 }

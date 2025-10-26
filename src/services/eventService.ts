@@ -19,7 +19,23 @@ export class EventService {
     this.supabase = createSupabaseClient(token);
     this.userService.setToken(token);
   }
-  
+
+  /**
+   * Helper method to get member_info.id from user_id using the member_user_mapping view
+   * @param user_id - The auth user ID
+   * @returns The member_info.id
+   */
+  private async getMemberIdByUserId(user_id: string): Promise<number> {
+    const { data, error } = await this.supabase
+      .from('member_user_mapping')
+      .select('id')
+      .eq('user_id', user_id)
+      .single();
+
+    if (error || !data) throw new Error("Member not found");
+    return data.id;
+  }
+
   // this can be severely optimized -> all of this is not necessary
   // DO NOT FORGET
   async getUsersByIds(user_ids: string[]) {
@@ -345,20 +361,14 @@ export class EventService {
 
     distance <= checkInRadius || (() => { throw new Error(`You are too far from the event location (${Math.round(distance)}m away, maximum distance is ${checkInRadius}m)`) })();
 
-    const { data: member, error: memberError } = await this.supabase
-      .from('member_info')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    if (memberError || !member) throw new Error("Member not found");
+    const memberId = await this.getMemberIdByUserId(userId);
 
     // change userId from rsvped to attending (if it exists, else error)
     const { data, error } = await this.supabase
       .from('event_attendance')
       .update({ status: 'attended' })
       .eq('event_id', eventId)
-      .eq('member_id', member.id)
+      .eq('member_id', memberId)
       .eq('status', 'rsvped')
       .select();  // ← Returns the updated row
 
@@ -371,7 +381,7 @@ export class EventService {
         .from('event_attendance')
         .select('status')
         .eq('event_id', eventId)
-        .eq('member_id', member.id)
+        .eq('member_id', memberId)
         .single();
 
       if (current?.status === 'attended') {
@@ -398,18 +408,12 @@ export class EventService {
   }
 
   async rsvpForEvent(eventId: string, userId: string) {
-    const { data: member, error: memberError } = await this.supabase
-      .from('member_info')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    if (memberError || !member) throw new Error("Member not found");
+    const memberId = await this.getMemberIdByUserId(userId);
 
     // Call the database function
     const { error: rsvpError } = await this.supabase.rpc('rsvp_with_limit_check', {
       p_event_id: eventId,
-      p_member_id: member.id
+      p_member_id: memberId
     });
 
     if (rsvpError) {
@@ -425,20 +429,13 @@ export class EventService {
   }
 
   async unRsvpForEvent(eventId: string, userId: string) {
-    const { data: member, error: memberError } = await this.supabase
-      .from('member_info')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-
-    if (memberError || !member) throw new Error("Member not found");
+    const memberId = await this.getMemberIdByUserId(userId);
 
     const { error } = await this.supabase
       .from('event_attendance')
       .delete()
       .eq('event_id', eventId)
-      .eq('member_id', member.id)
+      .eq('member_id', memberId)
       .eq('status', 'rsvped');
 
     if (error) {
@@ -449,14 +446,7 @@ export class EventService {
   }
 
   async addMemberAttending(eventId: string, userId: string) {
-      // get userId from member_info table
-    const { data: member, error: memberError } = await this.supabase
-      .from('member_info')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    if (memberError || !member) throw new Error("Member not found");
+    const memberId = await this.getMemberIdByUserId(userId);
 
     // upsert: insert if not exists, update to attended if exists
     const { error } = await this.supabase
@@ -464,7 +454,7 @@ export class EventService {
       .upsert(
         {
           event_id: eventId,
-          member_id: member.id,
+          member_id: memberId,
           status: 'attended'
         },
         {
@@ -480,21 +470,14 @@ export class EventService {
   }
 
   async deleteMemberAttending(eventId: string, userId: string) {
-    // get userId from member_info table
-      const { data: member, error: memberError } = await this.supabase
-        .from('member_info')
-        .select('id')
-        .eq('user_id', userId)
-        .single();
+    const memberId = await this.getMemberIdByUserId(userId);
 
-      if (memberError) throw new Error("Member not found");
-
-      // then remove the member from the event_rsvped table
-      const { error } = await this.supabase
-        .from('event_attendance')
-        .delete()
-        .eq('event_id', eventId)
-        .eq('member_id', member.id);
+    // then remove the member from the event_rsvped table
+    const { error } = await this.supabase
+      .from('event_attendance')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('member_id', memberId);
 
       if (error) {
         throw new Error("Error removing member from event");
