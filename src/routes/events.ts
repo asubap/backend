@@ -14,7 +14,7 @@ eventRoutes
 .post('/', controller.getEventByID.bind(controller)) // get events by id
 
 // checkin route
-.post('/checkin/:eventId', verifySupabaseToken, controller.verifyAttendance.bind(controller) as RequestHandler)
+.post('/checkin/:eventId', controller.verifyAttendance.bind(controller) as RequestHandler)
 
 // rsvp route
 .post('/rsvp/:eventId', controller.rsvpForEvent.bind(controller) as RequestHandler)
