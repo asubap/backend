@@ -247,13 +247,13 @@ export class EventController {
 
     async verifyAttendance(req: Request, res: Response) {
         try {
-            const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
+            // const user = (req as any).user;
+            // if (!user?.id) {
+            //     return res.status(401).json({ error: 'Unauthorized' });
+            // }
 
             const { eventId } = req.params;
-            const { latitude, longitude, accuracy} = req.body;
+            const { latitude, longitude, accuracy, user_id} = req.body;
             
             if (!latitude || !longitude) {
                 console.error('Missing user location data');
@@ -268,7 +268,7 @@ export class EventController {
             
             const result = await this.eventService.verifyLocationAttendance(
                 eventId,
-                user.id,
+                user_id,
                 latitude,
                 longitude
             );
@@ -301,21 +301,21 @@ export class EventController {
     
     async rsvpForEvent(req: Request, res: Response) {
         try {
-            const user = (req as any).user;
-            if (!user?.id) {
-                return res.status(401).json({ error: 'Unauthorized' });
-            }
+            // const user = (req as any).user;
+            // if (!user?.id) {
+            //     return res.status(401).json({ error: 'Unauthorized' });
+            // }
 
             const { eventId } = req.params;
-            const { user_email } = req.body;
+            const { user_email, user_id } = req.body;
 
             // find user_id if the user_email is provided
-            let user_id = user.id;
-            if (user_email) {
-                console.log("user_email", user_email);
-                // this could be optimized
-                user_id = await this.userService.getUserIdByEmail(user_email);
-            }
+            // let user_id = "";
+            // if (user_email) {
+            //     console.log("user_email", user_email);
+            //     // this could be optimized
+            //     user_id = await this.userService.getUserIdByEmail(user_email);
+            // }
             
             try {
                 const result = await this.eventService.rsvpForEvent(eventId, user_id);

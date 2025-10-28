@@ -17,7 +17,7 @@ eventRoutes
 .post('/checkin/:eventId', verifySupabaseToken, controller.verifyAttendance.bind(controller) as RequestHandler)
 
 // rsvp route
-.post('/rsvp/:eventId', verifySupabaseToken, controller.rsvpForEvent.bind(controller) as RequestHandler)
+.post('/rsvp/:eventId', controller.rsvpForEvent.bind(controller) as RequestHandler)
 .post('/unrsvp/:eventId', verifySupabaseToken, controller.unRsvpForEvent.bind(controller) as RequestHandler)
 
 // admin routes

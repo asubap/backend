@@ -26,6 +26,8 @@ export class EventService {
    * @returns The member_info.id
    */
   private async getMemberIdByUserId(user_id: string): Promise<number> {
+
+    console.log("Fetching member ID for user ID:", user_id);
     const { data, error } = await this.supabase
       .from('member_user_mapping')
       .select('id')
