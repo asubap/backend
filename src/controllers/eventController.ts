@@ -264,7 +264,7 @@ export class EventController {
                 console.warn('Low accuracy location data:', { accuracy });
             }
 
-            this.eventService.setToken(extractToken(req) as string);
+            // this.eventService.setToken(extractToken(req) as string);
             
             const result = await this.eventService.verifyLocationAttendance(
                 eventId,
