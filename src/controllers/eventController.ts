@@ -82,7 +82,7 @@ export class EventController {
 
         const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, rsvped_users } = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !rsvped_users) {
+        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || event_hours === undefined || !event_hours_type || !sponsors_attending || !rsvped_users) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
@@ -180,7 +180,7 @@ export class EventController {
         if (sponsors !== undefined) {
             updateFields.sponsors_attending = sponsors;
         }
-        if (event_hours) {
+        if (event_hours !== undefined) {
             updateFields.event_hours = event_hours;
         }
         if (event_hours_type && event_hours_type.trim() !== '') {
