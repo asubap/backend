@@ -113,7 +113,7 @@ export class EventController {
 
         const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit} = req.body;
 
-        if (!event_name || !event_description || !event_location || !event_lat || !event_long || !event_date || !event_time || !event_hours || !event_hours_type || !sponsors_attending || !check_in_window || !check_in_radius || !event_limit) {
+        if (!event_name || !event_description || !event_location || event_lat === undefined || event_long === undefined || !event_date || !event_time || event_hours === undefined || !event_hours_type || sponsors_attending === undefined || check_in_window === undefined || check_in_radius === undefined || event_limit === undefined) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
