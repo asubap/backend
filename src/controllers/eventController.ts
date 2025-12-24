@@ -117,9 +117,9 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit} = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
 
-        if (!event_name || !event_description || !event_location || event_lat === undefined || event_long === undefined || !event_date || !event_time || event_hours === undefined || !event_hours_type || sponsors_attending === undefined || check_in_window === undefined || check_in_radius === undefined || event_limit === undefined) {
+        if (!event_name || !event_description || !event_location || event_lat === undefined || event_long === undefined || !event_date || !event_time || event_hours === undefined || !event_hours_type || sponsors_attending === undefined || check_in_window === undefined || check_in_radius === undefined || event_limit === undefined || is_hidden === undefined) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
@@ -130,7 +130,7 @@ export class EventController {
         }
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -145,7 +145,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, check_in_window, check_in_radius, event_limit} = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
 
         const token = extractToken(req);
         
@@ -214,7 +214,11 @@ export class EventController {
         if (event_limit && typeof event_limit === 'number') {
             updateFields.event_limit = event_limit;
         }
-        
+
+        if (is_hidden !== undefined) {
+            updateFields.is_hidden = is_hidden;
+        }
+
         // If there's nothing to update, respond accordingly
         if (Object.keys(updateFields).length === 0) {
             res.status(400).json({ error: 'No valid update fields provided.' });

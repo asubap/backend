@@ -26,6 +26,7 @@ export interface SupabaseEventResponse {
   check_in_window: number;
   event_limit: number;
   check_in_radius: number;
+  is_hidden: boolean;
   event_attendance: EventAttendanceRecord[];
 }
 
@@ -44,6 +45,7 @@ export interface Event {
   check_in_window: number;
   event_limit: number;
   check_in_radius: number;
+  is_hidden: boolean;
   event_rsvped: string[];
   rsvped_users: MemberSummary[];
   event_attending: string[];

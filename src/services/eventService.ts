@@ -129,6 +129,7 @@ export class EventService {
         check_in_window: event.check_in_window,
         event_limit: event.event_limit,
         check_in_radius: event.check_in_radius,
+        is_hidden: event.is_hidden,
         event_rsvped: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
         rsvped_users: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info),
         event_attending: attendedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
@@ -139,7 +140,7 @@ export class EventService {
   return processedEvents;
 }
 
-  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number, is_hidden: boolean) {
     const { data, error } = await this.supabase
         .from('events')
         .insert(
@@ -156,7 +157,8 @@ export class EventService {
               sponsors_attending: sponsors,
               check_in_window: check_in_window,
               check_in_radius: check_in_radius,
-              event_limit: event_limit
+              event_limit: event_limit,
+              is_hidden: is_hidden
             });
 
     if (error) throw new Error(error.message);
