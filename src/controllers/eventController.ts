@@ -3,6 +3,7 @@ import extractToken from "../utils/extractToken";
 import { EventService } from "../services/eventService";
 import { geocodeAddress } from "../utils/geocoding";
 import UserService from "../services/userService";
+import { VALID_EVENT_HOURS_TYPES } from "../types/hours";
 
 export class EventController {
     private eventService: EventService;
@@ -87,6 +88,11 @@ export class EventController {
             return;
         }
 
+        if (!VALID_EVENT_HOURS_TYPES.includes(event_hours_type)) {
+            res.status(400).json({ error: `Invalid event_hours_type. Must be one of: ${VALID_EVENT_HOURS_TYPES.join(', ')}` });
+            return;
+        }
+
         try {
             await this.eventService.sendEvent(event_name, event_date, event_location, event_description, event_time, event_hours, event_hours_type, sponsors_attending, rsvped_users);
             res.json("Event send successfully");
@@ -118,6 +124,10 @@ export class EventController {
             return;
         }
 
+        if (!VALID_EVENT_HOURS_TYPES.includes(event_hours_type)) {
+            res.status(400).json({ error: `Invalid event_hours_type. Must be one of: ${VALID_EVENT_HOURS_TYPES.join(', ')}` });
+            return;
+        }
 
         try {
             await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit);
@@ -184,6 +194,10 @@ export class EventController {
             updateFields.event_hours = event_hours;
         }
         if (event_hours_type && event_hours_type.trim() !== '') {
+            if (!VALID_EVENT_HOURS_TYPES.includes(event_hours_type)) {
+                res.status(400).json({ error: `Invalid event_hours_type. Must be one of: ${VALID_EVENT_HOURS_TYPES.join(', ')}` });
+                return;
+            }
             updateFields.event_hours_type = event_hours_type;
         }
 
