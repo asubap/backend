@@ -400,7 +400,8 @@ export class EventService {
     const { data, error } = await this.supabase
       .from("events")
       .select("id, event_name, event_date")
-      .order('event_date', { ascending: true });
+      .order('event_date', { ascending: true })
+      .eq("is_hidden", false);
     
     if (error) {
       console.error('EventService: Error fetching public events:', error);
