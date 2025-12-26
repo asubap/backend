@@ -536,4 +536,85 @@ export class MemberInfoController {
             res.status(500).json({ error: 'Failed to get member details' });
         }
     }
+
+    /**
+     * Archive a member (soft delete)
+     * @param req - Request with email in params
+     * @param res - Response object
+     */
+    async archiveMember(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const { email } = req.params;
+            if (!email) {
+                res.status(400).json({ error: 'Email parameter is required' });
+                return;
+            }
+
+            const result = await this.memberInfoService.archiveMember(email);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error archiving member:', error);
+            res.status(500).json({ error: (error as Error).message || 'Failed to archive member' });
+        }
+    }
+
+    /**
+     * Restore an archived member
+     * @param req - Request with email in params
+     * @param res - Response object
+     */
+    async restoreMember(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const { email } = req.params;
+            if (!email) {
+                res.status(400).json({ error: 'Email parameter is required' });
+                return;
+            }
+
+            const result = await this.memberInfoService.restoreMember(email);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error restoring member:', error);
+            res.status(500).json({ error: (error as Error).message || 'Failed to restore member' });
+        }
+    }
+
+    /**
+     * Get all archived members
+     * @param req - Request object
+     * @param res - Response object
+     */
+    async getArchivedMembers(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const archivedMembers = await this.memberInfoService.getArchivedMembers();
+            res.status(200).json(archivedMembers);
+        } catch (error) {
+            console.error('Error getting archived members:', error);
+            res.status(500).json({ error: 'Failed to get archived members' });
+        }
+    }
 }

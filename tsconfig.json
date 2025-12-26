@@ -12,9 +12,9 @@
       "skipLibCheck": true,
       "resolveJsonModule": true,
       "baseUrl": "./src",
-      "types": ["node", "express"]
+      "types": ["node", "express", "jest"]
     },
-    "include": ["src"],
+    "include": ["src", "tests"],
     "exclude": ["node_modules", "dist"]
   }
   

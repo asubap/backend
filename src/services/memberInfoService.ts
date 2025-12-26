@@ -431,6 +431,7 @@ export class MemberInfoService {
     /**
      * Get active members summary (optimized for networking page)
      * Returns pledge and inducted members (excludes alumni) with essential fields only
+     * Uses member_hours_summary view with role to avoid N+1 queries
      */
     async getActiveMembersSummary() {
         const { data: members, error } = await this.supabase
@@ -446,26 +447,17 @@ export class MemberInfoService {
                 member_status,
                 about,
                 graduating_year,
-                links
+                links,
+                role
             `)
             .neq('rank', 'alumni')
+            .eq('role', 'general-member')
             .order('name', { ascending: true });
 
         if (error) throw error;
 
-        // Filter to only include general-members and extract first link
-        const membersWithRole = await Promise.all(members.map(async (member) => {
-            const { data: roleData } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            // Only include general-members
-            if (roleData?.role !== 'general-member') {
-                return null;
-            }
-
+        // Extract first link for each member
+        return members.map(member => {
             // Extract first link
             let firstLink = null;
             if (member.links) {
@@ -489,10 +481,7 @@ export class MemberInfoService {
                 graduating_year: member.graduating_year,
                 first_link: firstLink
             };
-        }));
-
-        // Filter out null values (non-general-members)
-        return membersWithRole.filter(member => member !== null);
+        });
     }
 
     /**
@@ -595,5 +584,60 @@ export class MemberInfoService {
             role: roleData?.role || '',
             event_attendance: eventAttendance
         };
+    }
+
+    /**
+     * Archive a member (soft delete)
+     * @param email - Email of member to archive
+     * @returns Success message
+     */
+    async archiveMember(email: string) {
+        const { error } = await this.supabase
+            .from('allowed_members')
+            .update({ deleted_at: new Date().toISOString() })
+            .eq('email', email)
+            .is('deleted_at', null); // Only archive if not already archived
+
+        if (error) {
+            throw new Error(`Failed to archive member: ${error.message}`);
+        }
+
+        return { success: true, message: `Member ${email} archived successfully` };
+    }
+
+    /**
+     * Restore an archived member
+     * @param email - Email of member to restore
+     * @returns Success message
+     */
+    async restoreMember(email: string) {
+        const { error } = await this.supabase
+            .from('allowed_members')
+            .update({ deleted_at: null })
+            .eq('email', email)
+            .not('deleted_at', 'is', null); // Only restore if currently archived
+
+        if (error) {
+            throw new Error(`Failed to restore member: ${error.message}`);
+        }
+
+        return { success: true, message: `Member ${email} restored successfully` };
+    }
+
+    /**
+     * Get all archived members
+     * @returns List of archived members
+     */
+    async getArchivedMembers() {
+        const { data, error } = await this.supabase
+            .from('archived_members')
+            .select('*')
+            .order('deleted_at', { ascending: false });
+
+        if (error) {
+            throw new Error(`Failed to get archived members: ${error.message}`);
+        }
+
+        return data || [];
     }
 }

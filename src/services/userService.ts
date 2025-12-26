@@ -107,33 +107,22 @@ export default class UserRoleService {
     /**
      * Get users summary with rank for admin dashboard
      * Optimized endpoint that returns only essential fields
+     * Uses users_summary view to avoid N+1 queries
      */
     async getUsersSummary() {
-        const { data: users, error: usersError } = await this.supabase
-            .from('allowed_members')
-            .select('email, role')
-            .order('role', { ascending: false });
+        const { data: users, error } = await this.supabase
+            .from('users_summary')
+            .select('*');
 
-        if (usersError) throw usersError;
+        if (error) throw error;
 
-        // Get member info with rank for all users
-        const usersWithRank = await Promise.all(users.map(async (user) => {
-            const { data: memberData } = await this.supabase
-                .from('member_info')
-                .select('name, rank')
-                .eq('user_email', user.email)
-                .single();
-
-            return {
-                email: user.email,
-                name: memberData?.name || '',
-                role: user.role,
-                rank: memberData?.rank || 'not_specified'
-            };
-        }));
-
-        // Sort by role DESC, then by name ASC
-        return usersWithRank.sort((a, b) => {
+        // Handle null rank values and sort by role DESC, then by name ASC
+        return users.map(user => ({
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            rank: user.rank || 'not_specified'
+        })).sort((a, b) => {
             if (a.role !== b.role) {
                 return b.role.localeCompare(a.role);
             }

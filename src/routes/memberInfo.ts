@@ -26,6 +26,7 @@ memberInfoRoutes
 // Get filtered member lists
 .get('/alumni', verifySupabaseToken, controller.getAlumniMembers.bind(controller))
 .get('/active', verifySupabaseToken, controller.getActiveMembers.bind(controller))
+.get('/archived', verifySupabaseToken, controller.getArchivedMembers.bind(controller)) // get archived members
 
 // general routes
 .get('/', controller.getAllMemberInfo.bind(controller)) // get all members info and their roles
@@ -34,6 +35,8 @@ memberInfoRoutes
 
 // admin routes
 .post('/edit-member-info', controller.editMemberInfo.bind(controller)) // edit member info by email
+.post('/:email/archive', verifySupabaseToken, controller.archiveMember.bind(controller)) // archive a member
+.post('/:email/restore', verifySupabaseToken, controller.restoreMember.bind(controller)) // restore an archived member
 
 // Profile Photo Management
 .post('/:email/pfp', upload.single('file'), controller.uploadProfilePhoto.bind(controller)) // upload/update profile photo
