@@ -1,25 +1,15 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { handleUpload } from '@vercel/blob/client';
 import { verifySupabaseToken } from '../middleware/verifySupabaseToken';
 import extractToken from '../utils/extractToken';
 import { createSupabaseClient } from '../config/db';
-// If TS lacks DOM lib, uncomment:
-// import { Request, Headers } from 'undici';
+import { IncomingMessage } from 'http';
 
 const router = Router();
 
-router.post('/resources/:categoryId', async (req, res) => {
+router.post('/resources/:categoryId', async (req: Request, res: Response) => {
   try {
     const { categoryId } = req.params;
-
-    // Build a Web Fetch Request for handleUpload
-    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    const headers = new Headers();
-    for (const [k, v] of Object.entries(req.headers)) {
-      if (Array.isArray(v)) headers.set(k, v.join(', '));
-      else if (typeof v === 'string') headers.set(k, v);
-    }
-    const webRequest = new Request(fullUrl, { method: req.method, headers });
 
     // Auth → build supabase client for validations
     const token = req.query.token as string;
@@ -30,7 +20,7 @@ router.post('/resources/:categoryId', async (req, res) => {
     const supabase = createSupabaseClient(token);
 
     const jsonResponse = await handleUpload({
-      request: webRequest,
+      request: req as unknown as IncomingMessage,
       body: req.body, // Express already JSON-parsed
       onBeforeGenerateToken: async () => {
         // Validate category exists
@@ -64,18 +54,9 @@ router.post('/resources/:categoryId', async (req, res) => {
 });
 
 // Vercel Blob upload route for sponsor resources
-router.post('/sponsor/:companyName', async (req, res) => {
+router.post('/sponsor/:companyName', async (req: Request, res: Response) => {
   try {
     const { companyName } = req.params;
-
-    // Build a Web Fetch Request for handleUpload
-    const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    const headers = new Headers();
-    for (const [k, v] of Object.entries(req.headers)) {
-      if (Array.isArray(v)) headers.set(k, v.join(', '));
-      else if (typeof v === 'string') headers.set(k, v);
-    }
-    const webRequest = new Request(fullUrl, { method: req.method, headers });
 
     // Auth → build supabase client for validations
     const token = req.query.token as string;
@@ -86,7 +67,7 @@ router.post('/sponsor/:companyName', async (req, res) => {
     const supabase = createSupabaseClient(token);
 
     const jsonResponse = await handleUpload({
-      request: webRequest,
+      request: req as unknown as IncomingMessage,
       body: req.body, // Express already JSON-parsed
       onBeforeGenerateToken: async () => {
         // Validate sponsor exists
@@ -120,7 +101,7 @@ router.post('/sponsor/:companyName', async (req, res) => {
 });
 
 // Vercel Blob delete route for general resources
-router.delete('/resources/:categoryId', verifySupabaseToken, async (req, res) => {
+router.delete('/resources/:categoryId', verifySupabaseToken, async (req: Request, res: Response) => {
   try {
     const { categoryId } = req.params;
     const { blobUrl } = req.body; // Get blob URL from request body
@@ -175,7 +156,7 @@ router.delete('/resources/:categoryId', verifySupabaseToken, async (req, res) =>
 });
 
 // Vercel Blob delete route for sponsor resources
-router.delete('/sponsor/:companyName', verifySupabaseToken, async (req, res) => {
+router.delete('/sponsor/:companyName', verifySupabaseToken, async (req: Request, res: Response) => {
   try {
     const { companyName } = req.params;
     const { blobUrl } = req.body; // Get blob URL from request body
