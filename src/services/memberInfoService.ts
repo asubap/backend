@@ -430,7 +430,7 @@ export class MemberInfoService {
 
     /**
      * Get active members summary (optimized for networking page)
-     * Returns inducted members with essential fields only
+     * Returns pledge and inducted members (excludes alumni) with essential fields only
      */
     async getActiveMembersSummary() {
         const { data: members, error } = await this.supabase
@@ -448,7 +448,7 @@ export class MemberInfoService {
                 graduating_year,
                 links
             `)
-            .eq('rank', 'inducted')
+            .neq('rank', 'alumni')
             .order('name', { ascending: true });
 
         if (error) throw error;
