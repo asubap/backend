@@ -734,7 +734,7 @@ export class SponsorService {
         .from('sponsor_info')
         .update(updateData)
         .eq('company_name', companyName) // Use companyName directly
-        .select() 
+        .select()
         .single();
 
       if (error) {
@@ -751,6 +751,122 @@ export class SponsorService {
       };
     } catch (error) {
       console.error('Error updating sponsor details:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get sponsors summary (optimized for sponsors network page)
+   * Returns only essential sponsor fields without resources
+   */
+  async getSponsorsSummary() {
+    try {
+      const { data: sponsors, error } = await this.supabase
+        .from('sponsor_info')
+        .select('id, company_name, pfp_url, tier, about, links');
+
+      if (error) throw error;
+
+      // Sort by tier priority, then by company name
+      const tierOrder: Record<string, number> = {
+        'platinum': 1,
+        'gold': 2,
+        'silver': 3,
+        'bronze': 4
+      };
+
+      return sponsors.sort((a, b) => {
+        const aTierOrder = tierOrder[a.tier] || 5;
+        const bTierOrder = tierOrder[b.tier] || 5;
+
+        if (aTierOrder !== bTierOrder) {
+          return aTierOrder - bTierOrder;
+        }
+
+        return a.company_name.localeCompare(b.company_name);
+      });
+    } catch (error) {
+      console.error('Error fetching sponsors summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get full sponsor details by ID (for modal display)
+   * Returns all sponsor information including resources
+   */
+  async getSponsorById(sponsorId: number) {
+    try {
+      // Get sponsor info
+      const { data: sponsor, error: sponsorError } = await this.supabase
+        .from('sponsor_info')
+        .select('*')
+        .eq('id', sponsorId)
+        .single();
+
+      if (sponsorError) {
+        if (sponsorError.code === 'PGRST116') {
+          return null;
+        }
+        throw sponsorError;
+      }
+
+      // Get resources for this sponsor
+      const categoryId = await this.getSponsorCategoryId(sponsor.company_name);
+      let resources: Array<{
+        id: number;
+        label: string;
+        url: string | null;
+        uploadDate: string;
+      }> = [];
+
+      if (categoryId) {
+        const { data: resourceData, error: resourceError } = await this.supabase
+          .from('resources')
+          .select('*')
+          .eq('category_id', categoryId)
+          .order('name');
+
+        if (!resourceError && resourceData) {
+          // Map resources to match frontend format
+          resources = await Promise.all(
+            resourceData.map(async (resource) => {
+              let url = null;
+
+              // Check if file_key is already a URL (Vercel Blob)
+              if (resource.file_key && resource.file_key.startsWith('http')) {
+                url = resource.file_key;
+              } else {
+                // It's a Supabase path - generate signed URL
+                const { data: urlData } = await this.supabase.storage
+                  .from('resources')
+                  .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
+                url = urlData?.signedUrl || null;
+              }
+
+              return {
+                id: resource.id,
+                label: resource.name,
+                url: url,
+                uploadDate: resource.created_at
+              };
+            })
+          );
+        }
+      }
+
+      return {
+        id: sponsor.id,
+        company_name: sponsor.company_name,
+        about: sponsor.about,
+        links: sponsor.links,
+        pfp_url: sponsor.pfp_url,
+        tier: sponsor.tier,
+        resources: resources,
+        emails: sponsor.emails
+      };
+    } catch (error) {
+      console.error('Error fetching sponsor by ID:', error);
       throw error;
     }
   }

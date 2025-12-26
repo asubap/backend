@@ -285,7 +285,7 @@ export class MemberInfoService {
             const filePath = `${userId}/${timestamp}_${file.originalname}`;
 
             // Upload the new photo
-            const { data: uploadData, error: uploadError } = await this.supabase.storage
+            const { error: uploadError } = await this.supabase.storage
                 .from('profile-photos')
                 .upload(filePath, file.buffer, {
                     contentType: file.mimetype,
@@ -426,5 +426,174 @@ export class MemberInfoService {
             console.error('Error getting event attendance:', error);
             throw error;
         }
+    }
+
+    /**
+     * Get active members summary (optimized for networking page)
+     * Returns inducted members with essential fields only
+     */
+    async getActiveMembersSummary() {
+        const { data: members, error } = await this.supabase
+            .from('member_hours_summary')
+            .select(`
+                id,
+                user_email,
+                name,
+                major,
+                profile_photo_url,
+                total_hours,
+                rank,
+                member_status,
+                about,
+                graduating_year,
+                links
+            `)
+            .eq('rank', 'inducted')
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        // Filter to only include general-members and extract first link
+        const membersWithRole = await Promise.all(members.map(async (member) => {
+            const { data: roleData } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            // Only include general-members
+            if (roleData?.role !== 'general-member') {
+                return null;
+            }
+
+            // Extract first link
+            let firstLink = null;
+            if (member.links) {
+                if (Array.isArray(member.links) && member.links.length > 0) {
+                    firstLink = member.links[0];
+                } else if (typeof member.links === 'string') {
+                    firstLink = member.links.split(',')[0].trim();
+                }
+            }
+
+            return {
+                id: member.id,
+                user_email: member.user_email,
+                name: member.name,
+                major: member.major,
+                profile_photo_url: member.profile_photo_url,
+                total_hours: member.total_hours,
+                rank: member.rank,
+                member_status: member.member_status,
+                about: member.about,
+                graduating_year: member.graduating_year,
+                first_link: firstLink
+            };
+        }));
+
+        // Filter out null values (non-general-members)
+        return membersWithRole.filter(member => member !== null);
+    }
+
+    /**
+     * Get alumni members summary (optimized for alumni page)
+     * Returns alumni with essential fields only
+     */
+    async getAlumniMembersSummary() {
+        const { data: members, error } = await this.supabase
+            .from('member_hours_summary')
+            .select(`
+                id,
+                user_email,
+                name,
+                major,
+                profile_photo_url,
+                total_hours,
+                rank,
+                member_status,
+                about,
+                graduating_year,
+                links
+            `)
+            .eq('rank', 'alumni')
+            .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        // Filter to only include general-members and extract first link
+        const membersWithRole = await Promise.all(members.map(async (member) => {
+            const { data: roleData } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            // Only include general-members
+            if (roleData?.role !== 'general-member') {
+                return null;
+            }
+
+            // Extract first link
+            let firstLink = null;
+            if (member.links) {
+                if (Array.isArray(member.links) && member.links.length > 0) {
+                    firstLink = member.links[0];
+                } else if (typeof member.links === 'string') {
+                    firstLink = member.links.split(',')[0].trim();
+                }
+            }
+
+            return {
+                id: member.id,
+                user_email: member.user_email,
+                name: member.name,
+                major: member.major,
+                profile_photo_url: member.profile_photo_url,
+                total_hours: member.total_hours,
+                rank: member.rank,
+                member_status: member.member_status,
+                about: member.about,
+                graduating_year: member.graduating_year,
+                first_link: firstLink
+            };
+        }));
+
+        // Filter out null values (non-general-members)
+        return membersWithRole.filter(member => member !== null);
+    }
+
+    /**
+     * Get full member details by email (for modal display)
+     * Returns all member information including hours breakdown
+     */
+    async getMemberDetailsByEmail(userEmail: string) {
+        const { data: member, error } = await this.supabase
+            .from('member_hours_summary')
+            .select('*')
+            .eq('user_email', userEmail)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return null;
+            }
+            throw error;
+        }
+
+        // Get role
+        const { data: roleData } = await this.supabase
+            .from('allowed_members')
+            .select('role')
+            .eq('email', userEmail)
+            .single();
+
+        // Get event attendance
+        const eventAttendance = await this.getEventAttendance(userEmail);
+
+        return {
+            ...member,
+            role: roleData?.role || '',
+            event_attendance: eventAttendance
+        };
     }
 }

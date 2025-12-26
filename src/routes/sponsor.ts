@@ -19,10 +19,13 @@ const controller = new SponsorController();
 // Public routes (no authentication required)
 router
 
+// Optimized summary endpoints (must be BEFORE other routes to avoid conflicts)
+.get("/summary", verifySupabaseToken, controller.getSponsorsSummary.bind(controller)) // get sponsors summary (optimized)
+
 // get sponsor names only
 .get("/names", controller.getSponsorNames.bind(controller))
 
-.post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters 
+.post("/add-sponsor", verifySupabaseToken, controller.addSponsor.bind(controller)) // add new sponsor and send email to all recruiters
 
 .post("/change-sponsor-tier", verifySupabaseToken, controller.changeSponsorTier.bind(controller)) // change sponsor tier
 
@@ -46,6 +49,8 @@ router
 .post("/:companyName/pfp",verifySupabaseToken,upload.single("file"), controller.uploadSponsorProfilePhoto)
 .delete("/:companyName/pfp",verifySupabaseToken,controller.deleteSponsorProfilePhoto)
 
+// Get sponsor by ID (must be AFTER other parameterized routes to avoid conflicts)
+.get("/:id", verifySupabaseToken, controller.getSponsorById.bind(controller)) // get full sponsor details by ID
 
 // Sponsor auth
 // .post("/auth", controller.sponsorAuth.bind(controller)); // authenticate sponsor

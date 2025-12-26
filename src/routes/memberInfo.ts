@@ -19,6 +19,10 @@ memberInfoRoutes
 // Get current user's member info (must be BEFORE other routes)
 .get('/me', verifySupabaseToken, controller.getCurrentUserMemberInfo.bind(controller))
 
+// Optimized summary endpoints (must be BEFORE parameterized routes)
+.get('/active/summary', verifySupabaseToken, controller.getActiveMembersSummary.bind(controller)) // get active members summary (optimized)
+.get('/alumni/summary', verifySupabaseToken, controller.getAlumniMembersSummary.bind(controller)) // get alumni members summary (optimized)
+
 // Get filtered member lists
 .get('/alumni', verifySupabaseToken, controller.getAlumniMembers.bind(controller))
 .get('/active', verifySupabaseToken, controller.getActiveMembers.bind(controller))
@@ -34,5 +38,8 @@ memberInfoRoutes
 // Profile Photo Management
 .post('/:email/pfp', upload.single('file'), controller.uploadProfilePhoto.bind(controller)) // upload/update profile photo
 .delete('/:email/pfp', controller.deleteProfilePhoto.bind(controller)) // delete profile photo
+
+// Full member details by email (must be AFTER other routes to avoid conflicts)
+.get('/:email', verifySupabaseToken, controller.getMemberDetailsByEmail.bind(controller)) // get full member details by email
 
 export default memberInfoRoutes;

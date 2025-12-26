@@ -458,4 +458,82 @@ export class MemberInfoController {
             res.status(500).json({ error: 'Failed to get event attendance' });
         }
     }
+
+    /**
+     * Get active members summary (optimized for networking page)
+     * Returns only inducted general-members with essential fields
+     */
+    async getActiveMembersSummary(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const activeMembersSummary = await this.memberInfoService.getActiveMembersSummary();
+            res.status(200).json(activeMembersSummary);
+        } catch (error) {
+            console.error('Error getting active members summary:', error);
+            res.status(500).json({ error: 'Failed to get active members summary' });
+        }
+    }
+
+    /**
+     * Get alumni members summary (optimized for alumni page)
+     * Returns only alumni general-members with essential fields
+     */
+    async getAlumniMembersSummary(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const alumniMembersSummary = await this.memberInfoService.getAlumniMembersSummary();
+            res.status(200).json(alumniMembersSummary);
+        } catch (error) {
+            console.error('Error getting alumni members summary:', error);
+            res.status(500).json({ error: 'Failed to get alumni members summary' });
+        }
+    }
+
+    /**
+     * Get full member details by email (for modal display)
+     * Returns all member information including hours and event attendance
+     */
+    async getMemberDetailsByEmail(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const { email } = req.params;
+            if (!email) {
+                res.status(400).json({ error: 'Email parameter is required' });
+                return;
+            }
+
+            const memberDetails = await this.memberInfoService.getMemberDetailsByEmail(email);
+
+            if (!memberDetails) {
+                res.status(404).json({ error: 'Member not found' });
+                return;
+            }
+
+            res.status(200).json(memberDetails);
+        } catch (error) {
+            console.error('Error getting member details:', error);
+            res.status(500).json({ error: 'Failed to get member details' });
+        }
+    }
 }

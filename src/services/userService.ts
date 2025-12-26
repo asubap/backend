@@ -103,4 +103,41 @@ export default class UserRoleService {
 
         return data.user_id;
     }
+
+    /**
+     * Get users summary with rank for admin dashboard
+     * Optimized endpoint that returns only essential fields
+     */
+    async getUsersSummary() {
+        const { data: users, error: usersError } = await this.supabase
+            .from('allowed_members')
+            .select('email, role')
+            .order('role', { ascending: false });
+
+        if (usersError) throw usersError;
+
+        // Get member info with rank for all users
+        const usersWithRank = await Promise.all(users.map(async (user) => {
+            const { data: memberData } = await this.supabase
+                .from('member_info')
+                .select('name, rank')
+                .eq('user_email', user.email)
+                .single();
+
+            return {
+                email: user.email,
+                name: memberData?.name || '',
+                role: user.role,
+                rank: memberData?.rank || 'not_specified'
+            };
+        }));
+
+        // Sort by role DESC, then by name ASC
+        return usersWithRank.sort((a, b) => {
+            if (a.role !== b.role) {
+                return b.role.localeCompare(a.role);
+            }
+            return a.name.localeCompare(b.name);
+        });
+    }
 }

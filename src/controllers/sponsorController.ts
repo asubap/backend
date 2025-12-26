@@ -416,5 +416,63 @@ export class SponsorController {
           res.status(500).json({ error: 'An unexpected error occurred.' });
       }
     }
-  }; 
+  };
+
+  /**
+   * Get sponsors summary (optimized for sponsors network page)
+   * Returns only essential sponsor fields without resources
+   */
+  async getSponsorsSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const token = extractToken(req);
+      if (!token) {
+        res.status(401).json({ error: 'No authorization token provided' });
+        return;
+      }
+
+      this.sponsorService.setToken(token);
+
+      const sponsorsSummary = await this.sponsorService.getSponsorsSummary();
+      res.status(200).json(sponsorsSummary);
+    } catch (error) {
+      console.error('Error fetching sponsors summary:', error);
+      res.status(500).json({ error: 'Failed to get sponsors summary' });
+    }
+  }
+
+  /**
+   * Get full sponsor details by ID (for modal display)
+   * Returns all sponsor information including resources
+   */
+  async getSponsorById(req: Request, res: Response): Promise<void> {
+    try {
+      const token = extractToken(req);
+      if (!token) {
+        res.status(401).json({ error: 'No authorization token provided' });
+        return;
+      }
+
+      this.sponsorService.setToken(token);
+
+      const { id } = req.params;
+      const sponsorId = parseInt(id, 10);
+
+      if (isNaN(sponsorId)) {
+        res.status(400).json({ error: 'Invalid sponsor ID' });
+        return;
+      }
+
+      const sponsor = await this.sponsorService.getSponsorById(sponsorId);
+
+      if (!sponsor) {
+        res.status(404).json({ error: 'Sponsor not found' });
+        return;
+      }
+
+      res.status(200).json(sponsor);
+    } catch (error) {
+      console.error('Error fetching sponsor by ID:', error);
+      res.status(500).json({ error: 'Failed to get sponsor details' });
+    }
+  }
 }

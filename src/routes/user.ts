@@ -1,10 +1,12 @@
 import { Router } from "express";
 import UserController from "../controllers/userController";
+import { verifySupabaseToken } from "../middleware/verifySupabaseToken";
 
 const userRoleRoutes = Router();
 
 const controller = new UserController();
 userRoleRoutes
+.get('/summary', verifySupabaseToken, controller.getUsersSummary.bind(controller)) // get users summary with rank (optimized)
 .get('/', controller.getAllUsers.bind(controller)) // get all users and their roles
 .post('/', controller.getUserRole.bind(controller)) // get user role by email
 .post('/add-user', controller.addUser.bind(controller)) // add user-email and assign role

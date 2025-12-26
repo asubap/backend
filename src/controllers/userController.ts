@@ -86,7 +86,7 @@ export default class UserController {
             res.status(401).json('No authorization token provided');
             return;
         }
-        
+
         this.userService.setToken(token as string);
         const { user_email } = req.body;
 
@@ -96,8 +96,8 @@ export default class UserController {
         }
 
         try {
-            const deletedUser = await this.userService.deleteUser(user_email);
-            
+            await this.userService.deleteUser(user_email);
+
             res.status(200).json('User deleted successfully');
         } catch (error) {
             console.error('Error deleting user:', error);
@@ -122,12 +122,33 @@ export default class UserController {
         }
 
         try {
-            const updatedUser = await this.userService.updateRole(user_email, role);
+            await this.userService.updateRole(user_email, role);
             res.status(200).json("User updated successfully");
         } catch (error) {
             console.error('Error updating user:', error);
             res.status(500).json('Failed to update user');
         }
     }
-    
+
+    /**
+     * Get users summary with rank (optimized for admin dashboard)
+     */
+    async getUsersSummary(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.userService.setToken(token as string);
+
+            const usersSummary = await this.userService.getUsersSummary();
+            res.status(200).json(usersSummary);
+        } catch (error) {
+            console.error('Error getting users summary:', error);
+            res.status(500).json({ error: 'Failed to get users summary' });
+        }
+    }
+
 }
