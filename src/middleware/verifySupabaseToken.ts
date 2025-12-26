@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { jwtVerify, importJWK } from 'jose';
 
 // Supabase JWT Public Key in JWK format
 const SUPABASE_JWT_PUBLIC_KEY_JWK = process.env.JWT_PUBLIC_KEY;
@@ -48,9 +49,6 @@ export const verifySupabaseToken = async (req: Request, res: Response, next: Nex
     if (!publicKey) {
       throw new Error('JWT_PUBLIC_KEY not configured');
     }
-
-    // Bypass TS transpilation of import() for CommonJS
-    const { importJWK, jwtVerify } = await (eval('import("jose")') as Promise<typeof import('jose')>);
 
     // Import the JWK and verify the token with ES256
     const key = await importJWK(publicKey, 'ES256');
