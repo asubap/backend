@@ -62,13 +62,18 @@ export class announcementsService {
 
     async getUsersEmails(title: string, description: string){
         try{
-            // Use individual filters instead of the combined not-in syntax
+            // Join allowed_members with member_info to filter by rank
+            // Filter out: sponsors, e-board, and alumni
             const { data: allMemberEmails, error: eError } = await this.supabase
                 .from('allowed_members')
-                .select('email')
+                .select(`
+                    email,
+                    member_info!inner(rank)
+                `)
                 .neq('role', 'sponsor')
-                .neq('role', 'e-board'); 
-            
+                .neq('role', 'e-board')
+                .neq('member_info.rank', 'alumni');
+
             if (eError) throw eError;
 
             //combining all emails to one unique list of emails 
@@ -77,6 +82,7 @@ export class announcementsService {
         }
         catch (error) {
             console.error('Error fetching emails:', error);
+            throw error;
         }
     }
 

@@ -468,9 +468,17 @@ export class EventService {
       const formattedSponsors = formatSponsors(sponsors_attending);
       const formattedHoursType = formatHoursType(event_hours_type);
 
-      // Extract emails from rsvped_users instead of querying database
-      const emailsFromMembers = rsvped_users.map(user => user.email);
-      
+      // Extract emails from rsvped_users, filtering out alumni
+      // Frontend should pre-filter, but this is a safety check
+      const emailsFromMembers = rsvped_users
+          .filter(user => user.rank && user.rank.toLowerCase() !== 'alumni')
+          .map(user => user.email);
+
+      if (emailsFromMembers.length === 0) {
+          console.warn('No eligible members to receive event email after filtering');
+          return;
+      }
+
       // Create email messages for each recipient using dynamic template
       const messages = emailsFromMembers.map(email => ({
           to: email,

@@ -4,15 +4,18 @@ import { EventService } from "../services/eventService";
 import { geocodeAddress } from "../utils/geocoding";
 import UserService from "../services/userService";
 import { VALID_EVENT_HOURS_TYPES } from "../types/hours";
+import { MemberInfoService } from "../services/memberInfoService";
+import { canParticipateInEvents } from "../utils/permissions";
 
 export class EventController {
     private eventService: EventService;
     private userService: UserService;
+    private memberInfoService: MemberInfoService;
 
     constructor() {
         this.eventService = new EventService();
         this.userService = new UserService();
-
+        this.memberInfoService = new MemberInfoService();
     }
 
     /**
@@ -333,8 +336,31 @@ export class EventController {
                 console.warn('Low accuracy location data:', { accuracy });
             }
 
-            this.eventService.setToken(extractToken(req) as string);
-            
+            // Set token for services
+            const token = extractToken(req);
+            if (token) {
+                this.eventService.setToken(token);
+                this.memberInfoService.setToken(token);
+            }
+
+            // Get user email
+            const userEmail = await this.userService.getUserEmail(user.id);
+            if (!userEmail) {
+                return res.status(404).json({ error: 'User email not found' });
+            }
+
+            // ALUMNI CHECK - Check if member is alumni
+            const member = await this.memberInfoService.getMemberByEmail(userEmail);
+            if (!member) {
+                return res.status(404).json({ error: 'Member not found' });
+            }
+
+            if (!canParticipateInEvents(member)) {
+                return res.status(403).json({
+                    error: 'Alumni members cannot check into events'
+                });
+            }
+
             const result = await this.eventService.verifyLocationAttendance(
                 eventId,
                 user.id,
@@ -378,12 +404,33 @@ export class EventController {
             const { eventId } = req.params;
             const { user_email } = req.body;
 
+            // Set token for member service
+            const token = extractToken(req);
+            if (token) {
+                this.memberInfoService.setToken(token);
+            }
+
             // find user_id if the user_email is provided
             let user_id = user.id;
+            let email_to_check = user.email;
+
             if (user_email) {
                 console.log("user_email", user_email);
                 // this could be optimized
                 user_id = await this.userService.getUserIdByEmail(user_email);
+                email_to_check = user_email;
+            }
+
+            // ALUMNI CHECK - Check if member is alumni
+            const member = await this.memberInfoService.getMemberByEmail(email_to_check);
+            if (!member) {
+                return res.status(404).json({ error: 'Member not found' });
+            }
+
+            if (!canParticipateInEvents(member)) {
+                return res.status(403).json({
+                    error: 'Alumni members cannot RSVP to events'
+                });
             }
             
             try {
@@ -467,12 +514,25 @@ export class EventController {
             }
 
             this.eventService.setToken(token as string);
+            this.memberInfoService.setToken(token as string);
 
             const { eventId, userEmail } = req.body;
 
             if (!eventId || !userEmail) {
                 res.status(400).json({ error: 'Missing required fields: eventId and userEmail' });
                 return;
+            }
+
+            // ALUMNI CHECK - Check if member is alumni
+            const member = await this.memberInfoService.getMemberByEmail(userEmail);
+            if (!member) {
+                return res.status(404).json({ error: 'Member not found' });
+            }
+
+            if (!canParticipateInEvents(member)) {
+                return res.status(403).json({
+                    error: 'Alumni members cannot be added to events'
+                });
             }
 
             const user_id = await this.userService.getUserIdByEmail(userEmail);

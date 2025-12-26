@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
+import { Member } from "../types/member";
 
 export class MemberInfoService {
     private supabase: SupabaseClient;
@@ -101,6 +102,39 @@ export class MemberInfoService {
         if (error) throw error;
 
         return data;
+    }
+
+    /**
+     * Get member by email - Helper method for permission checks
+     * @param user_email - The email of the member
+     * @returns Member information including rank
+     */
+    async getMemberByEmail(user_email: string): Promise<Member | null> {
+        const { data: member, error } = await this.supabase
+            .from('member_info')
+            .select('*')
+            .eq('user_email', user_email)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // No rows returned
+                return null;
+            }
+            throw error;
+        }
+
+        // Get role from allowed_members
+        const { data: roleData } = await this.supabase
+            .from('allowed_members')
+            .select('role')
+            .eq('email', user_email)
+            .single();
+
+        return {
+            ...member,
+            role: roleData?.role || ''
+        } as Member;
     }
 
     /**

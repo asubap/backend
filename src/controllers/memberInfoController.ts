@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { MemberInfoService } from "../services/memberInfoService";
-import extractToken from "../utils/extractToken";   
+import extractToken from "../utils/extractToken";
+import { isValidRank, normalizeRank } from "../utils/permissions";   
 export class MemberInfoController {
     private memberInfoService: MemberInfoService;
 
@@ -216,7 +217,13 @@ export class MemberInfoController {
             } else {
                 const trimmedRank = member_rank.trim();
                 if (trimmedRank !== '') {
-                    updateFields.rank = trimmedRank;
+                    // Validate rank is one of: pledge, inducted, alumni
+                    if (!isValidRank(trimmedRank)) {
+                        validationErrors.push('Rank must be: pledge, inducted, or alumni');
+                    } else {
+                        // Normalize to lowercase for consistency
+                        updateFields.rank = normalizeRank(trimmedRank);
+                    }
                 }
             }
         }
