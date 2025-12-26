@@ -24,19 +24,22 @@ export class EventController {
     async getEvents(req: Request, res: Response) {
         try {
             const token = extractToken(req);
+            const user = (req as any).user;
+            const userRole = (req as any).userRole;
 
-            if (!token) {
-                res.status(401).json({ error: 'No authorization token provided' });
-                return;
+            if (token) {
+                this.eventService.setToken(token as string);
             }
-            this.eventService.setToken(token as string);
 
-            const events = await this.eventService.getEvents();
+            const events = await this.eventService.getEvents(
+                user?.id,
+                userRole
+            );
+
             res.json(events);
         } catch (error) {
             console.error('Error getting events:', error);
             res.status(500).json({ error: 'Failed to get events' });
-
         }
     }
 
@@ -47,24 +50,72 @@ export class EventController {
      * @returns 
      */
     async getEventByID(req: Request, res: Response) {
-        const token = extractToken(req);
-
-        if (!token) {
-            res.status(401).json({ error: 'No authorization token provided' });
-            return;
-        }
-
-        this.eventService.setToken(token as string);
-
         try {
+            const token = extractToken(req);
+            const user = (req as any).user;
+            const userRole = (req as any).userRole;
+
+            if (token) {
+                this.eventService.setToken(token as string);
+            }
+
             const { event_id } = req.body;
-            const event = await this.eventService.getEventID(event_id);
+
+            const event = await this.eventService.getEventID(
+                event_id,
+                user?.id,
+                userRole
+            );
+
             res.json(event);
         } catch (error) {
             console.error('Error fetching event:', error);
-            res.status(500).json({ error: 'Failed to fetch event' });
+
+            if (error instanceof Error && error.message.includes('No event found')) {
+                res.status(404).json({ error: error.message });
+            } else {
+                res.status(500).json({ error: 'Failed to fetch event' });
+            }
         }
     }
+
+    /**
+     * Get event participants with emails - E-BOARD ONLY
+     * This endpoint requires e-board role via middleware
+     * @param req
+     * @param res
+     */
+    async getEventParticipants(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.eventService.setToken(token as string);
+
+            const { eventId } = req.params;
+
+            if (!eventId) {
+                res.status(400).json({ error: 'Event ID is required' });
+                return;
+            }
+
+            const participants = await this.eventService.getEventParticipants(eventId);
+            res.json(participants);
+        } catch (error) {
+            console.error('Error fetching event participants:', error);
+
+            if (error instanceof Error && error.message.includes('No event found')) {
+                res.status(404).json({ error: error.message });
+            } else {
+                res.status(500).json({ error: 'Failed to fetch participants' });
+            }
+        }
+    }
+
     /**
      * Send event to all members
      * @param req 

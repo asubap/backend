@@ -1,31 +1,32 @@
 import { Router, RequestHandler } from "express";
 import { EventController } from "../controllers/eventController";
 import { verifySupabaseToken } from "../middleware/verifySupabaseToken";
+import { requireEBoard, requireMember, requireMemberOrSponsor } from "../middleware/requireRole";
 
 const eventRoutes = Router();
-
 const controller = new EventController();
-eventRoutes
 
-// public routes
-.get('/public', controller.getPublicEvents.bind(controller)) // get all events for public view
-.get('/', controller.getEvents.bind(controller)) // get all events (authenticated)
+// PUBLIC ROUTES - No authentication required
+eventRoutes.get('/public', controller.getPublicEvents.bind(controller));
 
-.post('/', controller.getEventByID.bind(controller)) // get events by id
+// MEMBER/SPONSOR ROUTES - Allow both members and sponsors to view events
+eventRoutes.get('/', verifySupabaseToken, requireMemberOrSponsor, controller.getEvents.bind(controller) as RequestHandler);
 
-// checkin route
-.post('/checkin/:eventId', verifySupabaseToken, controller.verifyAttendance.bind(controller) as RequestHandler)
+eventRoutes.post('/', verifySupabaseToken, requireMemberOrSponsor, controller.getEventByID.bind(controller) as RequestHandler);
+eventRoutes.post('/checkin/:eventId', verifySupabaseToken, requireMemberOrSponsor, controller.verifyAttendance.bind(controller) as RequestHandler);
 
-// rsvp route
-.post('/rsvp/:eventId', verifySupabaseToken, controller.rsvpForEvent.bind(controller) as RequestHandler)
-.post('/unrsvp/:eventId', verifySupabaseToken, controller.unRsvpForEvent.bind(controller) as RequestHandler)
+eventRoutes.post('/rsvp/:eventId', verifySupabaseToken, requireMemberOrSponsor, controller.rsvpForEvent.bind(controller) as RequestHandler);
+eventRoutes.post('/unrsvp/:eventId', verifySupabaseToken, requireMemberOrSponsor, controller.unRsvpForEvent.bind(controller) as RequestHandler);
 
-// admin routes
-.post('/send-event', controller.sendEvent.bind(controller)) // sends event to all members immediately
-.post('/add-event', controller.addEvent.bind(controller)) // add an event
-.post('/edit-event', controller.editEvent.bind(controller)) // edit an event
-.post('/delete-event', controller.deleteEvent.bind(controller)) // delete an event
-.post('/add-member-attending', verifySupabaseToken, controller.addMemberAttending.bind(controller) as RequestHandler) // add member to event without location check
-.post('/delete-member-attending', verifySupabaseToken, controller.deleteMemberAttending.bind(controller) as RequestHandler) // remove member from event and update hours
+// E-BOARD ONLY ROUTES
+eventRoutes.get('/:eventId/participants', verifySupabaseToken, requireEBoard, controller.getEventParticipants.bind(controller) as RequestHandler);
+eventRoutes.post('/send-event',verifySupabaseToken, requireEBoard, controller.sendEvent.bind(controller) as RequestHandler);
 
+eventRoutes.post('/add-event', verifySupabaseToken, requireEBoard, controller.addEvent.bind(controller) as RequestHandler);
+eventRoutes.post('/edit-event', verifySupabaseToken, requireEBoard, controller.editEvent.bind(controller) as RequestHandler);
+
+eventRoutes.post('/delete-event', verifySupabaseToken, requireEBoard, controller.deleteEvent.bind(controller) as RequestHandler);
+eventRoutes.post('/add-member-attending', verifySupabaseToken, requireEBoard, controller.addMemberAttending.bind(controller) as RequestHandler);
+
+eventRoutes.post('/delete-member-attending', verifySupabaseToken, requireEBoard, controller.deleteMemberAttending.bind(controller) as RequestHandler);
 export default eventRoutes;

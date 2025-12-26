@@ -19,7 +19,7 @@ export const createSupabaseClient = (
 
     return createClient(supabaseUrl, key, {
         global: {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            headers: (token && !useServiceRole) ? { Authorization: `Bearer ${token}` } : {},
         },
     });
 };

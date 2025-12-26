@@ -15,12 +15,12 @@ export class SponsorService {
 
   constructor() {
     this.supabase = createSupabaseClient();
-    this.supabaseAdmin = createSupabaseClient(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY);
+    this.supabaseAdmin = createSupabaseClient(undefined, true);
   }
 
   setToken(token: string) {
     this.supabase = createSupabaseClient(token);
-    this.supabaseAdmin = createSupabaseClient(process.env.VITE_SUPABASE_SERVICE_ROLE_KEY);
+    this.supabaseAdmin = createSupabaseClient(undefined, true);
   }
 
   // get sponsor names
@@ -75,17 +75,57 @@ export class SponsorService {
         sponsor_email = sponsor.split(' ').join('-');
       }
 
-      const { data, error } = await this.supabaseAdmin.auth.signUp({
-        email: `${sponsor_email}@example.com`,
+      const emailToCreate = `${sponsor_email.toLowerCase()}@example.com`;
+
+      // Ensure password meets minimum requirements
+      if (passcode_hash.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+
+      // Try to create user, if it fails due to existing user, get and delete them first
+      let { data, error } = await this.supabaseAdmin.auth.admin.createUser({
+        email: emailToCreate,
         password: passcode_hash,
+        email_confirm: true, // Auto-confirm email
       })
 
-      if (!data.user) {
-        throw new Error('User not found');
+      // If creation failed due to existing user, find and delete them, then retry
+      if (error && error.message.includes('already')) {
+        console.log("User already exists, attempting to find and delete...");
+
+        try {
+          const { data: existingUsers } = await this.supabaseAdmin.auth.admin.listUsers();
+          const existingUser = existingUsers?.users.find(u => u.email?.toLowerCase() === emailToCreate.toLowerCase());
+
+          if (existingUser) {
+            console.log("Found existing user with ID:", existingUser.id);
+            console.log("Deleting from allowed_members (triggers will handle auth.users and sponsor_info cleanup)...");
+
+            // Delete from allowed_members - triggers handle the rest (auth.users, sponsor_info, etc.)
+            await this.supabaseAdmin.from('allowed_members').delete().eq('email', existingUser.email);
+
+            console.log("Retrying user creation...");
+            // Retry creation
+            const retryResult = await this.supabaseAdmin.auth.admin.createUser({
+              email: emailToCreate,
+              password: passcode_hash,
+              email_confirm: true,
+            });
+
+            data = retryResult.data;
+            error = retryResult.error;
+          }
+        } catch (deleteErr) {
+          console.error("Error during user cleanup:", deleteErr);
+        }
       }
   
       if (error) {
           throw new Error(`Error creating user: ${error.message}`);
+      }
+
+      if (!data.user) {
+        throw new Error('User not found');
       }
 
       // add role to allowed_members table
@@ -104,6 +144,10 @@ export class SponsorService {
   
       if (roleError) {
           throw new Error(`Error adding user to database: ${roleError.message}`);
+      }
+
+      if (sponsorError) {
+          throw new Error(`Error adding sponsor to database: ${sponsorError.message}`);
       }
 
       return data;

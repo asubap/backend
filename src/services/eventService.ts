@@ -3,7 +3,7 @@ import { createSupabaseClient } from "../config/db";
 import { getDistance } from "geolib";
 import UserRoleService from "./userService";
 import sgMail from '@sendgrid/mail';
-import { Event, SupabaseEventResponse, EventAttendanceRecord } from "../types/event";
+import {SupabaseEventResponse, PublicEvent, MemberEvent, EBoardEvent, EventParticipant, EventParticipantsResponse, RoleBasedEvent } from "../types/event";
 
 export class EventService {
 
@@ -34,6 +34,125 @@ export class EventService {
 
     if (error || !data) throw new Error("Member not found");
     return data.id;
+  }
+
+  /**
+   * Check if user has RSVP'd for an event
+   */
+  private userHasRsvped(event: SupabaseEventResponse, userId?: string): boolean {
+    if (!userId) return false;
+    const attendance = event.event_attendance || [];
+    return attendance.some(a =>
+      a.member_info.user_id === userId && a.status === 'rsvped'
+    );
+  }
+
+  /**
+   * Check if user has attended/checked in for an event
+   */
+  private userHasAttended(event: SupabaseEventResponse, userId?: string): boolean {
+    if (!userId) return false;
+    const attendance = event.event_attendance || [];
+    return attendance.some(a =>
+      a.member_info.user_id === userId && a.status === 'attended'
+    );
+  }
+
+  /**
+   * Transform event for public (unauthenticated) view
+   * Only show minimal info: id, name, and date (matches previous commit behavior)
+   */
+  private transformEventForPublic(event: SupabaseEventResponse): PublicEvent {
+    return {
+      id: event.id,
+      event_name: event.event_name,
+      event_date: event.event_date
+    };
+  }
+
+  /**
+   * Transform event for member view - filters PII, geolocation, and sensitive fields
+   */
+  private transformEventForMember(
+    event: SupabaseEventResponse,
+    userId?: string
+  ): MemberEvent {
+    const attendance = event.event_attendance || [];
+    const rsvpedAttendance = attendance.filter(a => a.status === 'rsvped');
+    const attendedAttendance = attendance.filter(a => a.status === 'attended');
+    const userHasRsvped = this.userHasRsvped(event, userId);
+    const userHasAttended = this.userHasAttended(event, userId);
+
+    return {
+      id: event.id,
+      event_name: event.event_name,
+      event_description: event.event_description,
+      event_location: event.event_location,
+      // SECURITY: Only show geolocation if user has RSVP'd
+      event_lat: userHasRsvped ? event.event_lat : null,
+      event_long: userHasRsvped ? event.event_long : null,
+      event_date: event.event_date,
+      event_time: event.event_time,
+      event_hours: event.event_hours,
+      event_hours_type: event.event_hours_type,
+      sponsors_attending: event.sponsors_attending || [],
+      check_in_window: event.check_in_window,
+      event_limit: event.event_limit,
+      check_in_radius: event.check_in_radius,
+      // SECURITY: is_hidden, event_rsvped, event_attending arrays removed - E-BOARD ONLY
+      rsvp_count: rsvpedAttendance.length,
+      attending_count: attendedAttendance.length,
+      user_rsvped: userHasRsvped,
+      user_attended: userHasAttended
+    };
+  }
+
+  /**
+   * Transform event for e-board view - includes full participant data with emails
+   */
+  private transformEventForEBoard(event: SupabaseEventResponse, userId?: string): EBoardEvent {
+    const attendance = event.event_attendance || [];
+    const rsvpedAttendance = attendance.filter(a => a.status === 'rsvped');
+    const attendedAttendance = attendance.filter(a => a.status === 'attended');
+    const userHasRsvped = this.userHasRsvped(event, userId);
+    const userHasAttended = this.userHasAttended(event, userId);
+
+    return {
+      id: event.id,
+      event_name: event.event_name,
+      event_description: event.event_description,
+      event_location: event.event_location,
+      event_lat: event.event_lat,
+      event_long: event.event_long,
+      event_date: event.event_date,
+      event_time: event.event_time,
+      event_hours: event.event_hours,
+      event_hours_type: event.event_hours_type,
+      sponsors_attending: event.sponsors_attending || [],
+      check_in_window: event.check_in_window,
+      event_limit: event.event_limit,
+      check_in_radius: event.check_in_radius,
+      is_hidden: event.is_hidden,
+      // E-BOARD: Full participant objects with emails
+      event_rsvped: rsvpedAttendance
+        .map(a => ({
+          user_id: a.member_info.user_id,
+          name: a.member_info.name,
+          user_email: a.member_info.user_email
+        }))
+        .filter(p => p.user_id),
+      event_attending: attendedAttendance
+        .map(a => ({
+          user_id: a.member_info.user_id,
+          name: a.member_info.name,
+          user_email: a.member_info.user_email
+        }))
+        .filter(p => p.user_id),
+      rsvp_count: rsvpedAttendance.length,
+      attending_count: attendedAttendance.length,
+      user_rsvped: userHasRsvped,
+      user_attended: userHasAttended
+    };
   }
 
   // this can be severely optimized -> all of this is not necessary
@@ -89,8 +208,13 @@ export class EventService {
   }
 
 
-  async getEvents(): Promise<Event[]> {
-    const { data: events, error } = await this.supabase
+  /**
+   * Get events with role-based filtering
+   * @param userId - Optional user ID for RSVP checking and geolocation filtering
+   * @param userRole - User's role (e-board, member, sponsor, or null for public)
+   */
+  async getEvents(userId?: string, userRole?: string): Promise<RoleBasedEvent[]> {
+    let query = this.supabase
       .from("events")
       .select(`
         *,
@@ -105,40 +229,30 @@ export class EventService {
       `)
       .order('event_date', { ascending: false });
 
+    // SECURITY: Filter hidden events for non-admins
+    if (userRole !== 'e-board') {
+      query = query.eq('is_hidden', false);
+    }
+
+    const { data: events, error } = await query;
+
     if (error) throw error;
+    if (!events) return [];
 
-    // Transform to match frontend expectations
-    const processedEvents: Event[] = events?.map((event: SupabaseEventResponse) => {
-      const attendance = event.event_attendance || [];
-
-      const rsvpedAttendance = attendance.filter((a: EventAttendanceRecord) => a.status === 'rsvped');
-      const attendedAttendance = attendance.filter((a: EventAttendanceRecord) => a.status === 'attended');
-
-      return {
-        id: event.id,
-        event_name: event.event_name,
-        event_description: event.event_description,
-        event_location: event.event_location,
-        event_lat: event.event_lat,
-        event_long: event.event_long,
-        event_date: event.event_date,
-        event_time: event.event_time,
-        event_hours: event.event_hours,
-        event_hours_type: event.event_hours_type,
-        sponsors_attending: event.sponsors_attending || [],
-        check_in_window: event.check_in_window,
-        event_limit: event.event_limit,
-        check_in_radius: event.check_in_radius,
-        is_hidden: event.is_hidden,
-        event_rsvped: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
-        rsvped_users: rsvpedAttendance.map((a: EventAttendanceRecord) => a.member_info),
-        event_attending: attendedAttendance.map((a: EventAttendanceRecord) => a.member_info.user_id).filter(Boolean),
-        attending_users: attendedAttendance.map((a: EventAttendanceRecord) => a.member_info)
-      };
-  }) || [];
-
-  return processedEvents;
-}
+    // Transform based on role
+    if (!userRole) {
+      // Public view
+      return events.map(event => this.transformEventForPublic(event));
+    } else if (userRole === 'e-board') {
+      // E-board view
+      return events.map(event => this.transformEventForEBoard(event, userId));
+    } else {
+      // Member view (includes sponsors)
+      return events.map(event =>
+        this.transformEventForMember(event, userId)
+      );
+    }
+  }
 
   async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number, is_hidden: boolean) {
     const { data, error } = await this.supabase
@@ -196,7 +310,13 @@ export class EventService {
     return data;
   }
 
-  async getEventID(event_id: number) {
+  /**
+   * Get event by ID with role-based filtering
+   * @param event_id - The event ID
+   * @param userId - Optional user ID for RSVP checking and geolocation filtering
+   * @param userRole - User's role (e-board, member, sponsor, or null for public)
+   */
+  async getEventID(event_id: number, userId?: string, userRole?: string): Promise<RoleBasedEvent> {
     const { data: event, error } = await this.supabase
       .from("events")
       .select(`
@@ -208,10 +328,7 @@ export class EventService {
             id,
             user_id,
             name,
-            user_email,
-            profile_photo_url,
-            major,
-            graduating_year
+            user_email
           )
         )
       `)
@@ -225,21 +342,63 @@ export class EventService {
       throw error;
     }
 
+    // SECURITY: Check if non-admin trying to access hidden event
+    if (event.is_hidden && userRole !== 'e-board') {
+      throw new Error(`No event found with id: ${event_id}`);
+    }
+
+    // Transform based on role
+    if (!userRole) {
+      return this.transformEventForPublic(event);
+    } else if (userRole === 'e-board') {
+      return this.transformEventForEBoard(event, userId);
+    } else {
+      return this.transformEventForMember(event, userId);
+    }
+  }
+
+  /**
+   * Get event participants with emails - E-BOARD ONLY
+   * This is the ONLY method that returns email addresses for events
+   */
+  async getEventParticipants(eventId: string): Promise<EventParticipantsResponse> {
+    const { data: event, error } = await this.supabase
+      .from("events")
+      .select(`
+        id,
+        event_name,
+        event_attendance (
+          status,
+          member_info (
+            user_id,
+            name,
+            user_email
+          )
+        )
+      `)
+      .eq("id", eventId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        throw new Error(`No event found with id: ${eventId}`);
+      }
+      throw error;
+    }
+
     const attendance = event.event_attendance || [];
 
-    // Filter in JavaScript (fast, already in memory)
-    const rsvpedUsers = attendance
-      .filter((a: any) => a.status === 'rsvped')
-      .map((a: any) => a.member_info);
-
-    const attendingUsers = attendance
-      .filter((a: any) => a.status === 'attended')
-      .map((a: any) => a.member_info);
+    const participants: EventParticipant[] = attendance.map((a: any) => ({
+      user_id: a.member_info.user_id,
+      name: a.member_info.name,
+      user_email: a.member_info.user_email,
+      status: a.status
+    }));
 
     return {
-      ...event,
-      rsvped_users: rsvpedUsers,
-      attending_users: attendingUsers,
+      event_id: event.id,
+      event_name: event.event_name,
+      participants
     };
   }
 
@@ -396,18 +555,24 @@ export class EventService {
     return "Member successfully marked as attending the event!";
   }
 
-  async getPublicEvents() {
+  async getPublicEvents(): Promise<PublicEvent[]> {
     const { data, error } = await this.supabase
       .from("events")
-      .select("id, event_name, event_date")
+      .select(`
+        *,
+        event_attendance (
+          status
+        )
+      `)
       .order('event_date', { ascending: true })
       .eq("is_hidden", false);
-    
+
     if (error) {
       console.error('EventService: Error fetching public events:', error);
       throw error;
     }
-    return data;
+
+    return (data || []).map(event => this.transformEventForPublic(event));
   }
 
   async rsvpForEvent(eventId: string, userId: string) {
