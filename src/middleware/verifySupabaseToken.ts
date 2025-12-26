@@ -49,8 +49,8 @@ export const verifySupabaseToken = async (req: Request, res: Response, next: Nex
       throw new Error('JWT_PUBLIC_KEY not configured');
     }
 
-    // Dynamic import of jose (ESM module)
-    const { importJWK, jwtVerify } = await import('jose');
+    // Bypass TS transpilation of import() for CommonJS
+    const { importJWK, jwtVerify } = await (eval('import("jose")') as Promise<typeof import('jose')>);
 
     // Import the JWK and verify the token with ES256
     const key = await importJWK(publicKey, 'ES256');
