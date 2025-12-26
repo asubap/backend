@@ -11,8 +11,7 @@
       "forceConsistentCasingInFileNames": true,
       "skipLibCheck": true,
       "resolveJsonModule": true,
-      "baseUrl": "./src",
-      "types": ["node", "express"]
+      "baseUrl": "./src"
     },
     "include": ["src"],
     "exclude": ["node_modules", "dist"]
