@@ -6,6 +6,7 @@
       "moduleResolution": "Node",
       "target": "ES2021",
       "lib": ["ES2021"],
+      "types": ["node"],
       "strict": true,
       "esModuleInterop": true,
       "forceConsistentCasingInFileNames": true,

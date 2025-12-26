@@ -242,13 +242,13 @@ export class EventService {
     // Transform based on role
     if (!userRole) {
       // Public view
-      return events.map(event => this.transformEventForPublic(event));
+      return events.map((event: SupabaseEventResponse) => this.transformEventForPublic(event));
     } else if (userRole === 'e-board') {
       // E-board view
-      return events.map(event => this.transformEventForEBoard(event, userId));
+      return events.map((event: SupabaseEventResponse) => this.transformEventForEBoard(event, userId));
     } else {
       // Member view (includes sponsors)
-      return events.map(event =>
+      return events.map((event: SupabaseEventResponse) =>
         this.transformEventForMember(event, userId)
       );
     }
@@ -572,7 +572,7 @@ export class EventService {
       throw error;
     }
 
-    return (data || []).map(event => this.transformEventForPublic(event));
+    return (data || []).map((event: SupabaseEventResponse) => this.transformEventForPublic(event));
   }
 
   async rsvpForEvent(eventId: string, userId: string) {
