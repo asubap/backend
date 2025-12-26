@@ -28,6 +28,93 @@ export class MemberInfoController {
         }
     }
 
+    /**
+     * Get current authenticated user's member info
+     * Uses email from JWT token attached by verifySupabaseToken middleware
+     * @param req - Request object with authenticated user
+     * @param res - Response object
+     */
+    async getCurrentUserMemberInfo(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            // Get user email from JWT (set by verifySupabaseToken middleware)
+            const user = (req as any).user;
+            if (!user || !user.email) {
+                res.status(401).json({ error: 'User email not found in token' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            // Fetch only current user's member info
+            const memberInfo = await this.memberInfoService.getMemberByEmail(user.email);
+
+            if (!memberInfo) {
+                res.status(404).json({ error: 'Member info not found for current user' });
+                return;
+            }
+
+            // Return minimal response with just the rank
+            res.status(200).json({
+                rank: memberInfo.rank,
+                user_email: memberInfo.user_email
+            });
+        } catch (error) {
+            console.error('Error getting current user member info:', error);
+            res.status(500).json({ error: 'Failed to get current user member info' });
+        }
+    }
+
+    /**
+     * Get all alumni members
+     * Filtered at database level for performance
+     */
+    async getAlumniMembers(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const alumniMembers = await this.memberInfoService.getAlumniMembers();
+
+            res.status(200).json(alumniMembers);
+        } catch (error) {
+            console.error('Error getting alumni members:', error);
+            res.status(500).json({ error: 'Failed to get alumni members' });
+        }
+    }
+
+    /**
+     * Get all active (non-alumni) members
+     * Filtered at database level for performance
+     */
+    async getActiveMembers(req: Request, res: Response) {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                res.status(401).json({ error: 'No authorization token provided' });
+                return;
+            }
+
+            this.memberInfoService.setToken(token);
+
+            const activeMembers = await this.memberInfoService.getActiveMembers();
+
+            res.status(200).json(activeMembers);
+        } catch (error) {
+            console.error('Error getting active members:', error);
+            res.status(500).json({ error: 'Failed to get active members' });
+        }
+    }
 
     async getMemberInfoByEmail(req: Request, res: Response) {
         try {

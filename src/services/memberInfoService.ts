@@ -70,7 +70,73 @@ export class MemberInfoService {
             .from('member_hours_summary')
             .select('*')
             .order('total_hours', { ascending: false }); // Optional: order by hours
-        
+
+        if (error) throw error;
+
+        // Get roles for each member
+        const membersWithRoles = await Promise.all(members.map(async (member) => {
+            const { data: roleData, error: roleError } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            if (roleError) {
+                console.error(`Error fetching role for ${member.user_email}:`, roleError);
+                return { ...member, role: null };
+            }
+
+            return { ...member, role: roleData?.role || null };
+        }));
+
+        return membersWithRoles;
+    }
+
+    /**
+     * Get all alumni members
+     * Filters at database level for better performance
+     */
+    async getAlumniMembers() {
+        // Query the view and filter for alumni only
+        const { data: members, error } = await this.supabase
+            .from('member_hours_summary')
+            .select('*')
+            .eq('rank', 'alumni')  // Filter at database level
+            .order('total_hours', { ascending: false });
+
+        if (error) throw error;
+
+        // Get roles for each member
+        const membersWithRoles = await Promise.all(members.map(async (member) => {
+            const { data: roleData, error: roleError } = await this.supabase
+                .from('allowed_members')
+                .select('role')
+                .eq('email', member.user_email)
+                .single();
+
+            if (roleError) {
+                console.error(`Error fetching role for ${member.user_email}:`, roleError);
+                return { ...member, role: null };
+            }
+
+            return { ...member, role: roleData?.role || null };
+        }));
+
+        return membersWithRoles;
+    }
+
+    /**
+     * Get all active (non-alumni) members
+     * Filters at database level for better performance
+     */
+    async getActiveMembers() {
+        // Query the view and filter out alumni
+        const { data: members, error } = await this.supabase
+            .from('member_hours_summary')
+            .select('*')
+            .neq('rank', 'alumni')  // Filter out alumni at database level
+            .order('total_hours', { ascending: false });
+
         if (error) throw error;
 
         // Get roles for each member

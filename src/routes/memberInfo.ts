@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { MemberInfoController } from "../controllers/memberInfoController";
 import multer from "multer";
+import { verifySupabaseToken } from "../middleware/verifySupabaseToken";
 
 const memberInfoRoutes = Router();
 
@@ -15,6 +16,13 @@ const upload = multer({
 
 const controller = new MemberInfoController();
 memberInfoRoutes
+// Get current user's member info (must be BEFORE other routes)
+.get('/me', verifySupabaseToken, controller.getCurrentUserMemberInfo.bind(controller))
+
+// Get filtered member lists
+.get('/alumni', verifySupabaseToken, controller.getAlumniMembers.bind(controller))
+.get('/active', verifySupabaseToken, controller.getActiveMembers.bind(controller))
+
 // general routes
 .get('/', controller.getAllMemberInfo.bind(controller)) // get all members info and their roles
 .post('/', controller.getMemberInfoByEmail.bind(controller)) // get member info by email
