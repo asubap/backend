@@ -58,6 +58,18 @@ Performance tests for slow endpoints with timing analysis:
 - 📊 Multiple runs for consistency checking
 - ⚠️ Automatic warnings for slow responses (>3s for users, >5s for members)
 
+### `memberInfoOptimization.test.ts`
+Integration and performance tests for N+1 query optimizations:
+- ✅ `/member-info/` - getAllMemberInfo with role field
+- ✅ `/member-info/alumni` - getAlumniMembers with role field
+- ✅ `/member-info/active` - getActiveMembers with role field
+- ✅ `/member-info/alumni/summary` - getAlumniMembersSummary optimized query
+- ✅ `/member-info/:email` - getMemberDetailsByEmail with role field
+- 📊 Performance comparison across all optimized endpoints
+- 📊 Data integrity checks - role field consistency
+- ⚡ Verifies N+1 query problem is resolved (all queries use view's role field)
+- ⚠️ Performance thresholds for optimized endpoints (<50ms per record)
+
 ## What's Being Tested
 
 ### Archive/Restore Functionality
@@ -102,6 +114,33 @@ Performance tests for slow endpoints with timing analysis:
 
    # Run with verbose output to see detailed timing
    npm test -- performance.test.ts --verbose
+   ```
+
+### N+1 Query Optimization Testing
+
+1. **Role Field Verification**
+   - Ensures all optimized endpoints return `role` field from the `member_hours_summary` view
+   - No additional queries to `allowed_members` table needed
+   - Single query execution per endpoint (JOIN already in view)
+
+2. **Performance Benchmarks**
+   - Measures response time for each optimized endpoint
+   - Calculates time per record (should be <50ms per record)
+   - Compares performance across all endpoints
+   - Identifies potential remaining bottlenecks
+
+3. **Data Consistency**
+   - Verifies role field is consistent across different endpoints
+   - Ensures same member has same role regardless of which endpoint fetched them
+   - Validates data integrity after optimization
+
+4. **Run the Optimization Tests**
+   ```bash
+   # Run only optimization tests
+   npm test -- memberInfoOptimization.test.ts
+
+   # Run with verbose output to see detailed performance metrics
+   npm test -- memberInfoOptimization.test.ts --verbose
    ```
 
 ## Notes

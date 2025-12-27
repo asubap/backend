@@ -33,24 +33,9 @@ export class MemberInfoService {
         if (!members) {
             throw new Error("Member not found: " + user_email);
         }
-        // Get roles for each member
-        const membersWithRoles = await Promise.all(members.map(async (member) => {
-            const { data: roleData, error: roleError } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            if (roleError || !roleData) {
-                console.error(`Error fetching role for ${member.user_email}:`, roleError);
-                return { ...member, role: null };
-            }
-
-            return { ...member, role: roleData?.role };
-        }));
 
         // Get event attendance for each member
-        const membersWithAttendance = await Promise.all(membersWithRoles.map(async (member) => {
+        const membersWithAttendance = await Promise.all(members.map(async (member) => {
             try {
                 const eventAttendance = await this.getEventAttendance(member.user_email);
                 return { ...member, event_attendance: eventAttendance };
@@ -73,23 +58,7 @@ export class MemberInfoService {
 
         if (error) throw error;
 
-        // Get roles for each member
-        const membersWithRoles = await Promise.all(members.map(async (member) => {
-            const { data: roleData, error: roleError } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            if (roleError) {
-                console.error(`Error fetching role for ${member.user_email}:`, roleError);
-                return { ...member, role: null };
-            }
-
-            return { ...member, role: roleData?.role || null };
-        }));
-
-        return membersWithRoles;
+        return members;
     }
 
     /**
@@ -106,23 +75,7 @@ export class MemberInfoService {
 
         if (error) throw error;
 
-        // Get roles for each member
-        const membersWithRoles = await Promise.all(members.map(async (member) => {
-            const { data: roleData, error: roleError } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            if (roleError) {
-                console.error(`Error fetching role for ${member.user_email}:`, roleError);
-                return { ...member, role: null };
-            }
-
-            return { ...member, role: roleData?.role || null };
-        }));
-
-        return membersWithRoles;
+        return members;
     }
 
     /**
@@ -139,23 +92,7 @@ export class MemberInfoService {
 
         if (error) throw error;
 
-        // Get roles for each member
-        const membersWithRoles = await Promise.all(members.map(async (member) => {
-            const { data: roleData, error: roleError } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            if (roleError) {
-                console.error(`Error fetching role for ${member.user_email}:`, roleError);
-                return { ...member, role: null };
-            }
-
-            return { ...member, role: roleData?.role || null };
-        }));
-
-        return membersWithRoles;
+        return members;
     }
 
     async editMemberInfo(user_email: string, updateFields: Record<string, any>) {
@@ -502,26 +439,17 @@ export class MemberInfoService {
                 member_status,
                 about,
                 graduating_year,
-                links
+                links,
+                role
             `)
             .eq('rank', 'alumni')
+            .eq('role', 'general-member')
             .order('name', { ascending: true });
 
         if (error) throw error;
 
-        // Filter to only include general-members and extract first link
-        const membersWithRole = await Promise.all(members.map(async (member) => {
-            const { data: roleData } = await this.supabase
-                .from('allowed_members')
-                .select('role')
-                .eq('email', member.user_email)
-                .single();
-
-            // Only include general-members
-            if (roleData?.role !== 'general-member') {
-                return null;
-            }
-
+        // Extract first link for each member
+        return members.map(member => {
             // Extract first link
             let firstLink = null;
             if (member.links) {
@@ -545,10 +473,7 @@ export class MemberInfoService {
                 graduating_year: member.graduating_year,
                 first_link: firstLink
             };
-        }));
-
-        // Filter out null values (non-general-members)
-        return membersWithRole.filter(member => member !== null);
+        });
     }
 
     /**
@@ -569,19 +494,11 @@ export class MemberInfoService {
             throw error;
         }
 
-        // Get role
-        const { data: roleData } = await this.supabase
-            .from('allowed_members')
-            .select('role')
-            .eq('email', userEmail)
-            .single();
-
         // Get event attendance
         const eventAttendance = await this.getEventAttendance(userEmail);
 
         return {
             ...member,
-            role: roleData?.role || '',
             event_attendance: eventAttendance
         };
     }
