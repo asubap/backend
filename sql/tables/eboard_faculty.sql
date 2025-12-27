@@ -70,3 +70,38 @@ $function$
 CREATE TRIGGER trg_sync_eboard_faculty AFTER INSERT OR DELETE OR UPDATE ON public.eboard_faculty FOR EACH ROW EXECUTE FUNCTION sync_eboard_faculty_with_member_info();
 
 CREATE TRIGGER trg_update_eboard_faculty_info AFTER UPDATE OF email ON public.eboard_faculty FOR EACH ROW EXECUTE FUNCTION update_eboard_faculty_info_on_email_update();
+
+-- Row Level Security
+ALTER TABLE public.eboard_faculty ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY Anyone can read eboard faculty
+    ON public.eboard_faculty
+    AS PERMISSIVE
+    FOR SELECT
+    TO {public}
+    USING (true)
+;
+
+CREATE POLICY Only e-board can delete eboard faculty
+    ON public.eboard_faculty
+    AS PERMISSIVE
+    FOR DELETE
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
+;
+
+CREATE POLICY Only e-board can insert eboard faculty
+    ON public.eboard_faculty
+    AS PERMISSIVE
+    FOR INSERT
+    TO {authenticated}
+    WITH CHECK (is_eboard(auth.email()))
+;
+
+CREATE POLICY Only e-board can update eboard faculty
+    ON public.eboard_faculty
+    AS PERMISSIVE
+    FOR UPDATE
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
+;

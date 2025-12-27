@@ -49,21 +49,36 @@ CREATE UNIQUE INDEX member_info_user_email_key ON public.member_info USING btree
 CREATE UNIQUE INDEX member_info_user_id_unique ON public.member_info USING btree (user_id);
 
 -- Row Level Security
+ALTER TABLE public.member_info ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY Allow user or e-board to update member_info
-    ON public.member_info
-    AS PERMISSIVE
-    FOR UPDATE
-    TO {public}
-    USING (((user_email = auth.email()) OR (EXISTS ( SELECT 1
-   FROM allowed_members am
-  WHERE ((am.email = auth.email()) AND (am.role = 'e-board'::text))))))
-;
-
-CREATE POLICY Enable read access for all users
+CREATE POLICY Authenticated users can read member profiles
     ON public.member_info
     AS PERMISSIVE
     FOR SELECT
-    TO {public}
+    TO {authenticated}
     USING (true)
+;
+
+CREATE POLICY Only e-board can delete member profiles
+    ON public.member_info
+    AS PERMISSIVE
+    FOR DELETE
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
+;
+
+CREATE POLICY Only e-board can insert member profiles
+    ON public.member_info
+    AS PERMISSIVE
+    FOR INSERT
+    TO {authenticated}
+    WITH CHECK (is_eboard(auth.email()))
+;
+
+CREATE POLICY Users can update own profile, e-board can update all
+    ON public.member_info
+    AS PERMISSIVE
+    FOR UPDATE
+    TO {authenticated}
+    USING (((user_email = auth.email()) OR is_eboard(auth.email())))
 ;

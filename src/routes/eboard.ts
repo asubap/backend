@@ -1,13 +1,18 @@
 import { Router } from "express";
+import { verifySupabaseToken } from "../middleware/verifySupabaseToken";
+import { requireEBoard } from "../middleware/requireRole";
 import EboardController from "../controllers/eboardController";
 
 const eboardRoutes = Router();
 
 const controller = new EboardController();
 eboardRoutes
-.get('/', controller.getEboard.bind(controller)) // get all users and their roles
-.post('/add-role', controller.addRole.bind(controller)) // add role to user
-.post('/edit-role', controller.editRole.bind(controller)) // edit role
-.post('/delete-role', controller.deleteRole.bind(controller)) // delete role
+// Public - anyone can view e-board roster
+.get('/', controller.getEboard.bind(controller))
+
+// E-board only - manage roster
+.post('/add-role', verifySupabaseToken, requireEBoard, controller.addRole.bind(controller))
+.post('/edit-role', verifySupabaseToken, requireEBoard, controller.editRole.bind(controller))
+.post('/delete-role', verifySupabaseToken, requireEBoard, controller.deleteRole.bind(controller));
 
 export default eboardRoutes;

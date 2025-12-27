@@ -39,10 +39,21 @@ export default class UserRoleService {
     async getUserRole(user_email: string) {
         const { data, error } = await this.supabase
             .from('allowed_members')
-            .select('role')
+            .select('role, deleted_at')
             .eq('email', user_email);
 
         if (error) throw error;
+
+        // User not found
+        if (!data || data.length === 0) {
+            throw new Error('USER_NOT_FOUND');
+        }
+
+        // User is archived
+        if (data[0].deleted_at !== null) {
+            throw new Error('USER_ARCHIVED');
+        }
+
         return data[0].role;
     }
 

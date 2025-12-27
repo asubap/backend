@@ -38,7 +38,7 @@ export default class UserController {
                 return;
             }
 
-        this.userService.setToken(token as string); 
+        this.userService.setToken(token as string);
         const { user_email } = req.body;
 
         if (!user_email) {
@@ -50,6 +50,19 @@ export default class UserController {
         res.json(userRole);
     } catch (error) {
             console.error('Error getting user role:', error);
+
+            // Handle specific error types
+            if (error instanceof Error) {
+                if (error.message === 'USER_NOT_FOUND') {
+                    res.status(404).json('User not found');
+                    return;
+                }
+                if (error.message === 'USER_ARCHIVED') {
+                    res.status(403).json('User account has been archived');
+                    return;
+                }
+            }
+
             res.status(500).json('Failed to get user role');
             return;
         }

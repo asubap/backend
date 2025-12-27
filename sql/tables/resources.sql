@@ -20,11 +20,42 @@ ALTER TABLE public.resources
 CREATE INDEX resources_category_idx ON public.resources USING btree (category_id);
 
 -- Row Level Security
+ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY Allow_inserts
+CREATE POLICY Anyone can read resources
+    ON public.resources
+    AS PERMISSIVE
+    FOR SELECT
+    TO {public}
+    USING (true)
+;
+
+CREATE POLICY E-board and sponsors can delete resources
+    ON public.resources
+    AS PERMISSIVE
+    FOR DELETE
+    TO {authenticated}
+    USING ((is_eboard(auth.email()) OR (EXISTS ( SELECT 1
+   FROM (categories c
+     JOIN allowed_members am ON (((lower(replace(c.name, ' '::text, '-'::text)) || '@example.com'::text) = am.email)))
+  WHERE ((c.id = resources.category_id) AND (am.email = auth.email()) AND (am.role = 'sponsor'::text))))))
+;
+
+CREATE POLICY E-board and sponsors can insert resources
     ON public.resources
     AS PERMISSIVE
     FOR INSERT
     TO {authenticated}
-    WITH CHECK ((auth.role() = 'authenticated'::text))
+    WITH CHECK ((is_eboard(auth.email()) OR (EXISTS ( SELECT 1
+   FROM (categories c
+     JOIN allowed_members am ON (((lower(replace(c.name, ' '::text, '-'::text)) || '@example.com'::text) = am.email)))
+  WHERE ((c.id = resources.category_id) AND (am.email = auth.email()) AND (am.role = 'sponsor'::text))))))
+;
+
+CREATE POLICY Only e-board can update resources
+    ON public.resources
+    AS PERMISSIVE
+    FOR UPDATE
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
 ;

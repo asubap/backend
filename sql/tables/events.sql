@@ -23,49 +23,36 @@ CREATE TABLE IF NOT EXISTS public.events (
 CREATE INDEX idx_events_hours ON public.events USING btree (id, event_hours_type, event_hours);
 
 -- Row Level Security
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY Enable insert for authenticated users only
+CREATE POLICY Only e-board can create events
     ON public.events
     AS PERMISSIVE
     FOR INSERT
     TO {authenticated}
-    WITH CHECK (true)
+    WITH CHECK (is_eboard(auth.email()))
 ;
 
-CREATE POLICY Enable read access for all users
-    ON public.events
-    AS PERMISSIVE
-    FOR SELECT
-    TO {public}
-    USING (true)
-;
-
-CREATE POLICY delete for e-board
+CREATE POLICY Only e-board can delete events
     ON public.events
     AS PERMISSIVE
     FOR DELETE
-    TO {public}
-    USING ((EXISTS ( SELECT 1
-   FROM allowed_members am
-  WHERE ((am.email = auth.email()) AND (am.role = 'e-board'::text)))))
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
 ;
 
-CREATE POLICY e-board insert
+CREATE POLICY Only e-board can update events
     ON public.events
     AS PERMISSIVE
-    FOR INSERT
-    TO {public}
-    WITH CHECK ((EXISTS ( SELECT 1
-   FROM allowed_members am
-  WHERE ((am.email = auth.email()) AND (am.role = 'e-board'::text)))))
+    FOR UPDATE
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
 ;
 
-CREATE POLICY update for e-board
+CREATE POLICY Public can view non-hidden events, auth users role-based
     ON public.events
     AS PERMISSIVE
     FOR SELECT
     TO {public}
-    USING ((EXISTS ( SELECT 1
-   FROM allowed_members am
-  WHERE ((am.email = auth.email()) AND (am.role = 'e-board'::text)))))
+    USING (((is_hidden = false) OR is_eboard(auth.email()) OR ((is_hidden = false) AND (auth.role() = 'authenticated'::text))))
 ;

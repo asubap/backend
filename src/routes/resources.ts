@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { verifySupabaseToken } from '../middleware/verifySupabaseToken';
+import { requireEBoard } from '../middleware/requireRole';
 import { ResourceController } from '../controllers/resourceController';
 
 // Configure multer for file uploads
@@ -17,38 +18,33 @@ const router = Router();
 
 // Resource routes
 router
-// GET /resources - Get the full resource tree
+// GET /resources - Public access (no auth required)
 .get('/', controller.getAllResources.bind(controller))
 
-// POST /resources/add-category - Create a new category
-.post('/add-category', verifySupabaseToken, controller.addCategory.bind(controller))
+// Category management - E-BOARD ONLY
+.post('/add-category', verifySupabaseToken, requireEBoard, controller.addCategory.bind(controller))
+.post('/:categoryId/update', verifySupabaseToken, requireEBoard, controller.updateCategory.bind(controller))
+.post('/:categoryId/delete', verifySupabaseToken, requireEBoard, controller.deleteCategory.bind(controller))
 
-// POST /resources/:categoryId/update - Update a category
-.post('/:categoryId/update', verifySupabaseToken, controller.updateCategory.bind(controller))
-
-// POST /resources/:categoryId/delete - Delete a category
-.post('/:categoryId/delete', verifySupabaseToken, controller.deleteCategory.bind(controller))
-
-// POST /resources/:categoryId/resources - Add a resource to a category
+// Resource management - E-BOARD ONLY
 .post(
   '/:categoryId/resources',
   verifySupabaseToken,
-  upload.single('file'), // Expect a file with a field name 'file'
+  requireEBoard,
+  upload.single('file'),
   controller.addResource.bind(controller)
 )
-
-// POST /resources/:categoryId/resources/:resourceId/update - Update a resource
 .post(
   '/:categoryId/resources/:resourceId/update',
   verifySupabaseToken,
-  upload.single('file'), // Optional file
+  requireEBoard,
+  upload.single('file'),
   controller.updateResource.bind(controller)
 )
-
-// POST /resources/:categoryId/resources/:resourceId/delete - Delete a resource
 .post(
   '/:categoryId/resources/:resourceId/delete',
   verifySupabaseToken,
+  requireEBoard,
   controller.deleteResource.bind(controller)
 );
 

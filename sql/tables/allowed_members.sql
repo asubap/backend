@@ -255,6 +255,7 @@ CREATE INDEX idx_allowed_members_active ON public.allowed_members USING btree (e
 CREATE INDEX idx_allowed_members_deleted ON public.allowed_members USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 
 -- Row Level Security
+ALTER TABLE public.allowed_members ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Only e-board can delete members
     ON public.allowed_members
@@ -280,10 +281,10 @@ CREATE POLICY Only e-board can update members
     USING (is_eboard(auth.email()))
 ;
 
-CREATE POLICY Users can view active members, e-board sees all
+CREATE POLICY Users can read based on role and context
     ON public.allowed_members
     AS PERMISSIVE
     FOR SELECT
     TO {public}
-    USING (((deleted_at IS NULL) OR is_eboard(auth.email())))
+    USING (((email = auth.email()) OR (deleted_at IS NULL) OR is_eboard(auth.email())))
 ;

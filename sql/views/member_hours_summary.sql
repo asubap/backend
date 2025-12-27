@@ -1,5 +1,4 @@
 -- View: member_hours_summary
--- Updated: Added am.role to optimize /member-info/active/summary endpoint
 CREATE OR REPLACE VIEW public.member_hours_summary AS
  SELECT mi.id,
     mi.user_id,

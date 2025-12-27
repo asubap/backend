@@ -9,6 +9,3 @@ CREATE TABLE IF NOT EXISTS public.roles (
 -- Indexes
 
 CREATE UNIQUE INDEX roles_role_name_key ON public.roles USING btree (role_name);
-
--- Row Level Security
-ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
