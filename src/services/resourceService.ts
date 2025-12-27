@@ -19,30 +19,24 @@ export class ResourceService {
    */
   async getAllResources() {
     try {
-      // First get all categories
+      // Use optimized view that includes resources
       const { data: categories, error: categoryError } = await this.supabase
-        .from('categories')
-        .select('*')
-        .order('name');
+        .from('categories_with_resources')
+        .select('*');
 
       if (categoryError) throw categoryError;
 
-      // For each category, fetch its resources
+      // Generate signed URLs for each resource
       const result = await Promise.all(
         categories.map(async (category) => {
-          const { data: resources, error: resourceError } = await this.supabase
-            .from('resources')
-            .select('*')
-            .eq('category_id', category.id)
-            .order('name');
-
-          if (resourceError) throw resourceError;
+          // Parse resources JSON array
+          const resources = Array.isArray(category.resources) ? category.resources : [];
 
           // Generate signed URLs for each resource file
           const resourcesWithUrls = await Promise.all(
-            resources.map(async (resource) => {
+            resources.map(async (resource: any) => {
               let signedUrl = null;
-              
+
               // If file_key is already a URL, use it directly
               if (resource.file_key && resource.file_key.startsWith('http')) {
                 signedUrl = resource.file_key;
@@ -62,7 +56,11 @@ export class ResourceService {
           );
 
           return {
-            ...category,
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            created_at: category.created_at,
+            resource_type: category.resource_type,
             resources: resourcesWithUrls
           };
         })

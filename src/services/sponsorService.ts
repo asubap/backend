@@ -258,39 +258,25 @@ export class SponsorService {
   // Get all sponsors
   async getAllSponsors() {
     try {
-      // Get all sponsors
+      // Use optimized view that includes resources
       const { data: sponsors, error: sponsorError } = await this.supabase
-        .from('sponsor_info')
-        .select('*')
-        .order('company_name');
+        .from('sponsor_resources_summary')
+        .select('*');
 
       if (sponsorError) throw sponsorError;
 
-      // For each sponsor, fetch their resources
+      // Map the resources to match frontend format with signed URLs
       const result = await Promise.all(
         sponsors.map(async (sponsor) => {
           try {
-            // Get resources for this sponsor
-            const { data: resourceData, error: resourceError } = await this.supabase
-              .from('resources')
-              .select('*')
-              .eq('category_id', (await this.getSponsorCategoryId(sponsor.company_name)))
-              .order('name');
+            // Parse resources JSON array
+            const resources = Array.isArray(sponsor.resources) ? sponsor.resources : [];
 
-            if (resourceError) {
-              console.warn(`Error fetching resources for sponsor ${sponsor.company_name}:`, resourceError);
-              // Return sponsor with empty resources array
-              return {
-                ...sponsor,
-                resources: []
-              };
-            }
-
-                      // Map the resources to match frontend format
+            // Generate signed URLs for each resource
             const resourcesWithUrls = await Promise.all(
-              resourceData.map(async (resource) => {
+              resources.map(async (resource: any) => {
                 let url = null;
-                
+
                 // Check if file_key is already a URL (Vercel Blob)
                 if (resource.file_key && resource.file_key.startsWith('http')) {
                   // It's a Vercel Blob URL - use it directly
@@ -315,14 +301,28 @@ export class SponsorService {
 
             // Return sponsor with properly formatted resources
             return {
-              ...sponsor,
+              id: sponsor.id,
+              company_name: sponsor.company_name,
+              about: sponsor.about,
+              links: sponsor.links,
+              pfp_url: sponsor.pfp_url,
+              tier: sponsor.tier,
+              emails: sponsor.emails,
+              uuid: sponsor.uuid,
               resources: resourcesWithUrls
             };
           } catch (error) {
             console.warn(`Error processing sponsor ${sponsor.company_name}:`, error);
             // Return sponsor with empty resources array if there's any error
             return {
-              ...sponsor,
+              id: sponsor.id,
+              company_name: sponsor.company_name,
+              about: sponsor.about,
+              links: sponsor.links,
+              pfp_url: sponsor.pfp_url,
+              tier: sponsor.tier,
+              emails: sponsor.emails,
+              uuid: sponsor.uuid,
               resources: []
             };
           }
@@ -797,9 +797,9 @@ export class SponsorService {
    */
   async getSponsorById(sponsorId: number) {
     try {
-      // Get sponsor info
+      // Use optimized view that includes resources
       const { data: sponsor, error: sponsorError } = await this.supabase
-        .from('sponsor_info')
+        .from('sponsor_resources_summary')
         .select('*')
         .eq('id', sponsorId)
         .single();
@@ -811,49 +811,33 @@ export class SponsorService {
         throw sponsorError;
       }
 
-      // Get resources for this sponsor
-      const categoryId = await this.getSponsorCategoryId(sponsor.company_name);
-      let resources: Array<{
-        id: number;
-        label: string;
-        url: string | null;
-        uploadDate: string;
-      }> = [];
+      // Parse resources JSON array
+      const resources = Array.isArray(sponsor.resources) ? sponsor.resources : [];
 
-      if (categoryId) {
-        const { data: resourceData, error: resourceError } = await this.supabase
-          .from('resources')
-          .select('*')
-          .eq('category_id', categoryId)
-          .order('name');
+      // Generate signed URLs for resources
+      const resourcesWithUrls = await Promise.all(
+        resources.map(async (resource: any) => {
+          let url = null;
 
-        if (!resourceError && resourceData) {
-          // Map resources to match frontend format
-          resources = await Promise.all(
-            resourceData.map(async (resource) => {
-              let url = null;
+          // Check if file_key is already a URL (Vercel Blob)
+          if (resource.file_key && resource.file_key.startsWith('http')) {
+            url = resource.file_key;
+          } else {
+            // It's a Supabase path - generate signed URL
+            const { data: urlData } = await this.supabase.storage
+              .from('resources')
+              .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
+            url = urlData?.signedUrl || null;
+          }
 
-              // Check if file_key is already a URL (Vercel Blob)
-              if (resource.file_key && resource.file_key.startsWith('http')) {
-                url = resource.file_key;
-              } else {
-                // It's a Supabase path - generate signed URL
-                const { data: urlData } = await this.supabase.storage
-                  .from('resources')
-                  .createSignedUrl(resource.file_key, 60 * 60); // 1 hour expiry
-                url = urlData?.signedUrl || null;
-              }
-
-              return {
-                id: resource.id,
-                label: resource.name,
-                url: url,
-                uploadDate: resource.created_at
-              };
-            })
-          );
-        }
-      }
+          return {
+            id: resource.id,
+            label: resource.name,
+            url: url,
+            uploadDate: resource.created_at
+          };
+        })
+      );
 
       return {
         id: sponsor.id,
@@ -862,7 +846,7 @@ export class SponsorService {
         links: sponsor.links,
         pfp_url: sponsor.pfp_url,
         tier: sponsor.tier,
-        resources: resources,
+        resources: resourcesWithUrls,
         emails: sponsor.emails
       };
     } catch (error) {

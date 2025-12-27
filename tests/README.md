@@ -70,6 +70,17 @@ Integration and performance tests for N+1 query optimizations:
 - ⚡ Verifies N+1 query problem is resolved (all queries use view's role field)
 - ⚠️ Performance thresholds for optimized endpoints (<50ms per record)
 
+### `queryOptimization.test.ts`
+Integration and performance tests for sponsors, resources, and events N+1 query optimizations:
+- ✅ `/sponsor/get-all-sponsor-info` - getAllSponsors with resources (uses sponsor_resources_summary view)
+- ✅ `/sponsor/:id` - getSponsorById with resources (uses sponsor_resources_summary view)
+- ✅ `/resources/` - getAllResources with categories (uses categories_with_resources view)
+- 📊 Performance comparison across all optimized endpoints
+- 📊 Multiple runs for consistency checking (3 runs per endpoint)
+- 📊 Query count verification - ensures single query instead of N+1
+- ⚡ Verifies optimization: sponsors <100ms/record, resources <50ms/record
+- 🔍 Validates resource URL structure and signed URLs
+
 ## What's Being Tested
 
 ### Archive/Restore Functionality
@@ -136,11 +147,41 @@ Integration and performance tests for N+1 query optimizations:
 
 4. **Run the Optimization Tests**
    ```bash
-   # Run only optimization tests
+   # Run only member info optimization tests
    npm test -- memberInfoOptimization.test.ts
 
    # Run with verbose output to see detailed performance metrics
    npm test -- memberInfoOptimization.test.ts --verbose
+   ```
+
+### Query Optimization Testing (Sponsors, Resources, Events)
+
+1. **View-Based Query Optimization**
+   - Uses `sponsor_resources_summary` view to fetch sponsors with resources in one query
+   - Uses `categories_with_resources` view to fetch categories with resources in one query
+   - Eliminates N+1 query patterns (old: 1+2N queries, new: 1 query)
+
+2. **Performance Benchmarks**
+   - Sponsors: <100ms per sponsor (old: could be >200ms per sponsor)
+   - Resources: <50ms per category (old: could be >100ms per category)
+   - Consistency checks across multiple runs
+   - Statistical analysis (avg, min, max, std dev)
+
+3. **Query Count Verification**
+   - Verifies single query execution per endpoint
+   - Detects potential N+1 patterns by analyzing time-per-record ratios
+   - Warns if performance suggests multiple queries
+
+4. **Run the Query Optimization Tests**
+   ```bash
+   # Run only query optimization tests
+   npm test -- queryOptimization.test.ts
+
+   # Run with verbose output to see detailed performance metrics
+   npm test -- queryOptimization.test.ts --verbose
+
+   # Run all optimization tests together
+   npm test -- optimization
    ```
 
 ## Notes

@@ -155,56 +155,19 @@ export class EventService {
     };
   }
 
-  // this can be severely optimized -> all of this is not necessary
-  // DO NOT FORGET
+  // Optimized to use member_user_mapping view
   async getUsersByIds(user_ids: string[]) {
     if (!user_ids || user_ids.length === 0) return [];
-    
-    // Use service role client for admin API
-    const adminClient = createSupabaseClient(undefined, true);
-    
-    // Get all users across all pages
-    let allUsers: any[] = [];
-    let page = 1;
-    let perPage = 1000;
-    
-    while (true) {
-      const { data: { users }, error } = await adminClient.auth.admin.listUsers({ page, perPage });
-      if (error) throw error;
-      if (users.length === 0) break;
-      allUsers = allUsers.concat(users);
-      if (users.length < perPage) break; // No more pages
-      page++;
-    }
-    
-    // Create a map of auth user IDs to their emails
-    const authUserMap = new Map(allUsers.map(user => [user.id, user.email]));
 
-    // Get the emails for our user IDs
-    const userEmails = user_ids
-      .map(id => authUserMap.get(id))
-      .filter((email): email is string => email !== undefined);
+    // Use member_user_mapping view for efficient lookup
+    const { data: members, error } = await this.supabase
+      .from('member_user_mapping')
+      .select('user_id, user_email, name, id')
+      .in('user_id', user_ids);
 
-    if (userEmails.length === 0) return [];
+    if (error) throw error;
 
-    // Get user details from allowed_members in a single query
-    const { data: memberData, error: memberError } = await this.supabase
-      .from('allowed_members')
-      .select('*')
-      .in('email', userEmails);
-
-    if (memberError) throw memberError;
-
-    // Create a map of emails to auth user IDs
-    const emailToIdMap = new Map(allUsers.map(user => [user.email, user.id]));
-
-    // Enrich member data with auth user IDs
-    const enrichedMemberData = memberData.map(member => ({
-      ...member,
-      id: emailToIdMap.get(member.email) // Add the auth user ID
-    }));
-
-    return enrichedMemberData;
+    return members || [];
   }
 
 
@@ -214,19 +177,10 @@ export class EventService {
    * @param userRole - User's role (e-board, member, sponsor, or null for public)
    */
   async getEvents(userId?: string, userRole?: string): Promise<RoleBasedEvent[]> {
+    // Use optimized view that pre-joins event attendance and member info
     let query = this.supabase
-      .from("events")
-      .select(`
-        *,
-        event_attendance (
-          status,
-          member_info (
-            user_email,
-            name,
-            user_id
-          )
-        )
-      `)
+      .from("events_with_attendance")
+      .select('*')
       .order('event_date', { ascending: false });
 
     // SECURITY: Filter hidden events for non-admins
@@ -317,21 +271,10 @@ export class EventService {
    * @param userRole - User's role (e-board, member, sponsor, or null for public)
    */
   async getEventID(event_id: number, userId?: string, userRole?: string): Promise<RoleBasedEvent> {
+    // Use optimized view that pre-joins event attendance and member info
     const { data: event, error } = await this.supabase
-      .from("events")
-      .select(`
-        *,
-        event_attendance (
-          status,
-          member_id,
-          member_info (
-            id,
-            user_id,
-            name,
-            user_email
-          )
-        )
-      `)
+      .from("events_with_attendance")
+      .select('*')
       .eq("id", event_id)
       .single();
 
@@ -362,20 +305,10 @@ export class EventService {
    * This is the ONLY method that returns email addresses for events
    */
   async getEventParticipants(eventId: string): Promise<EventParticipantsResponse> {
+    // Use optimized view that pre-joins event attendance and member info
     const { data: event, error } = await this.supabase
-      .from("events")
-      .select(`
-        id,
-        event_name,
-        event_attendance (
-          status,
-          member_info (
-            user_id,
-            name,
-            user_email
-          )
-        )
-      `)
+      .from("events_with_attendance")
+      .select('id, event_name, event_attendance')
       .eq("id", eventId)
       .single();
 
@@ -564,14 +497,10 @@ export class EventService {
   }
 
   async getPublicEvents(): Promise<PublicEvent[]> {
+    // Use optimized view that pre-joins event attendance and member info
     const { data, error } = await this.supabase
-      .from("events")
-      .select(`
-        *,
-        event_attendance (
-          status
-        )
-      `)
+      .from("events_with_attendance")
+      .select('*')
       .order('event_date', { ascending: true })
       .eq("is_hidden", false);
 
