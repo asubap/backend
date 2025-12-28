@@ -27,7 +27,7 @@ memberInfoRoutes
 // Auth required - Get filtered member lists
 .get('/alumni', verifySupabaseToken, controller.getAlumniMembers.bind(controller))
 .get('/active', verifySupabaseToken, controller.getActiveMembers.bind(controller))
-.get('/archived', verifySupabaseToken, controller.getArchivedMembers.bind(controller))
+.get('/archived', verifySupabaseToken, requireEBoard, controller.getArchivedMembers.bind(controller))
 
 // Auth required - General routes
 .get('/', verifySupabaseToken, controller.getAllMemberInfo.bind(controller))
