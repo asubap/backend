@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS public.categories (
 CREATE UNIQUE INDEX categories_name_idx ON public.categories USING btree (lower(name));
 
 -- Row Level Security
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Anyone can read categories
     ON public.categories

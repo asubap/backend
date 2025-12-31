@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS public.sponsor_info (
 CREATE UNIQUE INDEX sponsor_info_company_name_key ON public.sponsor_info USING btree (company_name);
 
 -- Row Level Security
-ALTER TABLE public.sponsor_info ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Anyone can read sponsor info
     ON public.sponsor_info

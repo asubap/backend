@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 );
 
 -- Row Level Security
-ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Authenticated users can read announcements
     ON public.announcements

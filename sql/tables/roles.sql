@@ -9,3 +9,21 @@ CREATE TABLE IF NOT EXISTS public.roles (
 -- Indexes
 
 CREATE UNIQUE INDEX roles_role_name_key ON public.roles USING btree (role_name);
+
+-- Row Level Security
+
+CREATE POLICY Anyone can read roles
+    ON public.roles
+    AS PERMISSIVE
+    FOR SELECT
+    TO {public}
+    USING (true)
+;
+
+CREATE POLICY Only e-board can modify roles
+    ON public.roles
+    AS PERMISSIVE
+    FOR ALL
+    TO {authenticated}
+    USING (is_eboard(auth.email()))
+;

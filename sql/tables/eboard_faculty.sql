@@ -72,7 +72,6 @@ CREATE TRIGGER trg_sync_eboard_faculty AFTER INSERT OR DELETE OR UPDATE ON publi
 CREATE TRIGGER trg_update_eboard_faculty_info AFTER UPDATE OF email ON public.eboard_faculty FOR EACH ROW EXECUTE FUNCTION update_eboard_faculty_info_on_email_update();
 
 -- Row Level Security
-ALTER TABLE public.eboard_faculty ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Anyone can read eboard faculty
     ON public.eboard_faculty

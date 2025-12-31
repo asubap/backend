@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS public.links (
 );
 
 -- Row Level Security
-ALTER TABLE public.links ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Anyone can read links
     ON public.links

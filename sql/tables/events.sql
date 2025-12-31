@@ -20,10 +20,13 @@ CREATE TABLE IF NOT EXISTS public.events (
 
 -- Indexes
 
+CREATE INDEX idx_events_date ON public.events USING btree (event_date DESC);
+
+CREATE INDEX idx_events_hidden ON public.events USING btree (is_hidden);
+
 CREATE INDEX idx_events_hours ON public.events USING btree (id, event_hours_type, event_hours);
 
 -- Row Level Security
-ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Only e-board can create events
     ON public.events
@@ -54,5 +57,8 @@ CREATE POLICY Public can view non-hidden events, auth users role-based
     AS PERMISSIVE
     FOR SELECT
     TO {public}
-    USING (((is_hidden = false) OR is_eboard(auth.email()) OR ((is_hidden = false) AND (auth.role() = 'authenticated'::text))))
+    USING (((is_hidden = false) OR is_eboard(auth.email()) OR ((is_hidden = true) AND (auth.role() = 'authenticated'::text) AND (EXISTS ( SELECT 1
+   FROM (event_attendance ea
+     JOIN member_info mi ON ((ea.member_id = mi.id)))
+  WHERE ((ea.event_id = events.id) AND (mi.user_email = auth.email())))))))
 ;

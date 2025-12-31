@@ -17,14 +17,19 @@ ALTER TABLE public.event_attendance
 
 -- Indexes
 
+CREATE INDEX idx_event_attendance_event_id ON public.event_attendance USING btree (event_id);
+
 CREATE INDEX idx_event_attendance_event_status ON public.event_attendance USING btree (event_id, status);
 
 CREATE INDEX idx_event_attendance_member_attended ON public.event_attendance USING btree (member_id, event_id) WHERE (status = 'attended'::text);
 
+CREATE INDEX idx_event_attendance_member_id ON public.event_attendance USING btree (member_id);
+
+CREATE INDEX idx_event_attendance_status ON public.event_attendance USING btree (status);
+
 CREATE UNIQUE INDEX unique_attendance ON public.event_attendance USING btree (member_id, event_id);
 
 -- Row Level Security
-ALTER TABLE public.event_attendance ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Users can RSVP for themselves, e-board can add anyone
     ON public.event_attendance

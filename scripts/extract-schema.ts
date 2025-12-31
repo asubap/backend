@@ -325,6 +325,71 @@ async function extractSchema() {
     console.log(`Tables saved to: ${sqlDir}`);
     console.log(`Views saved to: ${viewsDir}`);
 
+    // Extract Cron Jobs
+    console.log('\nExtracting cron jobs...');
+
+    const cronJobsQuery = `
+      SELECT
+        jobid,
+        schedule,
+        command,
+        nodename,
+        nodeport,
+        database,
+        username,
+        active,
+        jobname
+      FROM cron.job
+      ORDER BY jobid;
+    `;
+
+    try {
+      const cronJobsResult = await client.query(cronJobsQuery);
+      console.log(`Found ${cronJobsResult.rows.length} cron jobs`);
+
+      if (cronJobsResult.rows.length > 0) {
+        // Create sql/cron directory
+        const cronDir = path.join(process.cwd(), 'sql', 'cron');
+        if (!fs.existsSync(cronDir)) {
+          fs.mkdirSync(cronDir, { recursive: true });
+        }
+
+        let cronDDL = '-- Cron Jobs\n';
+        cronDDL += '-- Note: These jobs use pg_cron extension\n';
+        cronDDL += '-- Make sure pg_cron is enabled: CREATE EXTENSION IF NOT EXISTS pg_cron;\n\n';
+
+        cronJobsResult.rows.forEach(job => {
+          cronDDL += `-- Job ID: ${job.jobid}\n`;
+          cronDDL += `-- Job Name: ${job.jobname || 'unnamed'}\n`;
+          cronDDL += `-- Active: ${job.active}\n`;
+          cronDDL += `SELECT cron.schedule(\n`;
+          cronDDL += `    '${job.jobname || `job_${job.jobid}`}',\n`;
+          cronDDL += `    '${job.schedule}',\n`;
+          cronDDL += `    $$${job.command}$$\n`;
+          cronDDL += `);\n\n`;
+
+          if (!job.active) {
+            cronDDL += `-- This job is currently disabled\n`;
+            cronDDL += `-- To disable: SELECT cron.alter_job(${job.jobid}, active := false);\n\n`;
+          }
+
+          cronDDL += `-- To unschedule: SELECT cron.unschedule('${job.jobname || `job_${job.jobid}`}');\n`;
+          cronDDL += `---\n\n`;
+        });
+
+        // Write to file
+        const cronFilePath = path.join(cronDir, 'cron_jobs.sql');
+        fs.writeFileSync(cronFilePath, cronDDL);
+        console.log(`  ✓ Written to ${cronFilePath}`);
+        console.log(`\nCron jobs saved to: ${cronDir}`);
+      } else {
+        console.log('  No cron jobs found');
+      }
+    } catch (cronError: any) {
+      console.log('  ⚠ Could not extract cron jobs (pg_cron may not be enabled)');
+      console.log(`  Error: ${cronError.message}`);
+    }
+
   } catch (error) {
     console.error('Error:', error);
   } finally {

@@ -190,50 +190,50 @@ CREATE OR REPLACE FUNCTION public.handle_soft_delete_auth_ban()
  SECURITY DEFINER
  SET search_path TO 'public', 'auth', 'pg_temp'
 AS $function$
-  DECLARE
-    auth_user_exists BOOLEAN;
-  BEGIN
-    -- Check if auth user exists
-    SELECT EXISTS(
-      SELECT 1 FROM auth.users WHERE email = NEW.email
-    ) INTO auth_user_exists;
+    DECLARE
+      auth_user_exists BOOLEAN;
+    BEGIN
+      -- Check if auth user exists
+      SELECT EXISTS(
+        SELECT 1 FROM auth.users WHERE email = NEW.email
+      ) INTO auth_user_exists;
 
-    -- User being archived (deleted_at set)
-    IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
+      -- User being archived (deleted_at set)
+      IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
 
-      IF auth_user_exists THEN
-        -- Ban the user in Supabase Auth
-        UPDATE auth.users
-        SET banned_until = 'infinity'::timestamptz,
-            updated_at = NOW()
-        WHERE email = NEW.email;
+        IF auth_user_exists THEN
+          -- Ban the user in Supabase Auth (using far-future date instead of 'infinity' for Go compatibility)
+          UPDATE auth.users
+          SET banned_until = '2099-12-31 23:59:59+00'::timestamptz,
+              updated_at = NOW()
+          WHERE email = NEW.email;
 
-        RAISE NOTICE 'User % has been banned', NEW.email;
-      ELSE
-        -- User never logged in, log warning but don't fail
-        RAISE WARNING 'Cannot ban user % - no auth record exists', NEW.email;
+          RAISE NOTICE 'User % has been banned', NEW.email;
+        ELSE
+          -- User never logged in, log warning but don't fail
+          RAISE WARNING 'Cannot ban user % - no auth record exists', NEW.email;
+        END IF;
+
+      -- User being restored (deleted_at cleared)
+      ELSIF NEW.deleted_at IS NULL AND OLD.deleted_at IS NOT NULL THEN
+
+        IF auth_user_exists THEN
+          -- Unban the user
+          UPDATE auth.users
+          SET banned_until = NULL,
+              updated_at = NOW()
+          WHERE email = NEW.email;
+
+          RAISE NOTICE 'User % has been unbanned', NEW.email;
+        ELSE
+          RAISE WARNING 'Cannot unban user % - no auth record exists', NEW.email;
+        END IF;
+
       END IF;
 
-    -- User being restored (deleted_at cleared)
-    ELSIF NEW.deleted_at IS NULL AND OLD.deleted_at IS NOT NULL THEN
-
-      IF auth_user_exists THEN
-        -- Unban the user
-        UPDATE auth.users
-        SET banned_until = NULL,
-            updated_at = NOW()
-        WHERE email = NEW.email;
-
-        RAISE NOTICE 'User % has been unbanned', NEW.email;
-      ELSE
-        RAISE WARNING 'Cannot unban user % - no auth record exists', NEW.email;
-      END IF;
-
-    END IF;
-
-    RETURN NEW;
-  END;
-  $function$
+      RETURN NEW;
+    END;
+    $function$
 ;
 
 CREATE TRIGGER add_member_info_on_allowed_member_insert AFTER INSERT ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION create_member_info_on_allowed_member_insert();
@@ -255,7 +255,6 @@ CREATE INDEX idx_allowed_members_active ON public.allowed_members USING btree (e
 CREATE INDEX idx_allowed_members_deleted ON public.allowed_members USING btree (deleted_at) WHERE (deleted_at IS NOT NULL);
 
 -- Row Level Security
-ALTER TABLE public.allowed_members ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Only e-board can delete members
     ON public.allowed_members

@@ -20,7 +20,6 @@ ALTER TABLE public.resources
 CREATE INDEX resources_category_idx ON public.resources USING btree (category_id);
 
 -- Row Level Security
-ALTER TABLE public.resources ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Anyone can read resources
     ON public.resources

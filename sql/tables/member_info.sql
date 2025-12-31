@@ -49,7 +49,6 @@ CREATE UNIQUE INDEX member_info_user_email_key ON public.member_info USING btree
 CREATE UNIQUE INDEX member_info_user_id_unique ON public.member_info USING btree (user_id);
 
 -- Row Level Security
-ALTER TABLE public.member_info ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Authenticated users can read member profiles
     ON public.member_info
