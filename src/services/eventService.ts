@@ -4,6 +4,7 @@ import { getDistance } from "geolib";
 import UserRoleService from "./userService";
 import sgMail from '@sendgrid/mail';
 import {SupabaseEventResponse, PublicEvent, MemberEvent, EBoardEvent, EventParticipant, EventParticipantsResponse, RoleBasedEvent } from "../types/event";
+import ical, { ICalCalendar } from 'ical-generator';
 
 export class EventService {
 
@@ -589,5 +590,70 @@ export class EventService {
       }
 
       return "Member successfully removed from the event!";
+  }
+
+  /**
+   * Generate iCal calendar feed for public events
+   * Returns the calendar as a string in .ics format
+   */
+  async generateCalendarFeed(): Promise<string> {
+    // Use service role to bypass RLS for this public query
+    const supabaseServiceRole = createSupabaseClient(undefined, true);
+
+    // Get all public events (including past for testing)
+    const { data: events, error } = await supabaseServiceRole
+      .from("events")
+      .select('id, event_name, event_description, event_location, event_date, event_time, event_hours')
+      .eq('is_hidden', false)
+      .order('event_date', { ascending: true });
+
+    if (error) {
+      console.error('EventService: Error fetching events for calendar:', error);
+      throw error;
+    }
+
+    console.log(`Calendar feed: Found ${events?.length || 0} events`);
+    if (events && events.length > 0) {
+      console.log('First event sample:', JSON.stringify(events[0], null, 2));
+    }
+
+    // Create calendar
+    const calendar = ical({
+      name: 'BAP Events Calendar',
+      description: 'Subscribe to stay updated on all public BAP events',
+      timezone: 'America/New_York',
+      ttl: 3600 // Suggest clients refresh every hour
+    });
+
+    // Add each event to the calendar
+    (events || []).forEach((event, index) => {
+      try {
+        // Combine date and time for start
+        const startDateTime = event.event_time
+          ? new Date(`${event.event_date}T${event.event_time}`)
+          : new Date(`${event.event_date}T00:00:00`);
+
+        // Calculate end time (start + event_hours, or default to 2 hours)
+        const durationHours = event.event_hours || 2;
+        const endDateTime = new Date(startDateTime.getTime() + (durationHours * 60 * 60 * 1000));
+
+        calendar.createEvent({
+          start: startDateTime,
+          end: endDateTime,
+          summary: event.event_name,
+          description: event.event_description || '',
+          location: event.event_location || ''
+        });
+
+        if (index === 0) {
+          console.log('Successfully added first event to calendar');
+        }
+      } catch (err) {
+        console.error(`Error adding event ${event.id} to calendar:`, err);
+      }
+    });
+
+    console.log(`Calendar has ${calendar.events().length} events`);
+    return calendar.toString();
   }
 }

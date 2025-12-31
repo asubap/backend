@@ -8,6 +8,7 @@ const controller = new EventController();
 
 // PUBLIC ROUTES - No authentication required
 eventRoutes.get('/public', controller.getPublicEvents.bind(controller));
+eventRoutes.get('/calendar.ics', controller.getCalendarFeed.bind(controller));
 
 // MEMBER/SPONSOR ROUTES - Allow both members and sponsors to view events
 eventRoutes.get('/', verifySupabaseToken, requireMemberOrSponsor, controller.getEvents.bind(controller) as RequestHandler);

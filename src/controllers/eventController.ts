@@ -490,9 +490,9 @@ export class EventController {
 
     /**
      * Get public events (no auth required)
-     * @param req 
-     * @param res 
-     * @returns 
+     * @param req
+     * @param res
+     * @returns
      */
     async getPublicEvents(req: Request, res: Response) {
         try {
@@ -501,6 +501,26 @@ export class EventController {
         } catch (error) {
             console.error('Error getting public events:', error);
             res.status(500).json({ error: 'Failed to get events' });
+        }
+    }
+
+    /**
+     * Get calendar feed in iCal format (no auth required)
+     * @param req
+     * @param res
+     * @returns
+     */
+    async getCalendarFeed(req: Request, res: Response) {
+        try {
+            const icsContent = await this.eventService.generateCalendarFeed();
+
+            // Set proper headers for calendar file
+            res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+            res.setHeader('Content-Disposition', 'inline; filename="events.ics"');
+            res.send(icsContent);
+        } catch (error) {
+            console.error('Error generating calendar feed:', error);
+            res.status(500).json({ error: 'Failed to generate calendar feed' });
         }
     }
 
