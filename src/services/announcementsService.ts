@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
-
+import juice from 'juice'
 export class announcementsService {
     private supabase: SupabaseClient;
 
@@ -35,14 +35,14 @@ export class announcementsService {
 
     async addannouncements(title: string, description: string) {
         try{
-            const { error: aError } = await this.supabase
-                .from('announcements')
-                .insert(
-                    {
-                        title: title,
-                        description: description
-                    });
-                if (aError) throw aError;
+            // const { error: aError } = await this.supabase
+            //     .from('announcements')
+            //     .insert(
+            //         {
+            //             title: title,
+            //             description: description
+            //         });
+            //     if (aError) throw aError;
             
                 const emailList = await this.getUsersEmails(title, description);
                 if (!emailList || emailList.length === 0) {
@@ -89,22 +89,50 @@ export class announcementsService {
     async sendAnnouncments(emailList: string[], title: string, description: string): Promise<void> {
           try {
             // Create email messages for each recipient using dynamic template
-            const messages = emailList.map(email => ({
-                to: email,
+            // const messages = emailList.map(email => ({
+            //     to: email,
+            //     from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
+            //     templateId: process.env.SENDGRID_TEMPLATE_ID || '', // Your dynamic template ID
+            //     dynamicTemplateData: {
+            //       name: title,
+            //       description: description,
+            //       email_type: "announcement" // To distinguish from events in template
+            //     }
+            // }));
+
+            const inlinedDescription = juice(description);
+
+            // 3. Send via SendGrid
+            const msg = {
+                to: 'ashishkurse@gmail.com',
                 from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
                 templateId: process.env.SENDGRID_TEMPLATE_ID || '', // Your dynamic template ID
                 dynamicTemplateData: {
                   name: title,
-                  description: description,
+                  description: inlinedDescription,
                   email_type: "announcement" // To distinguish from events in template
                 }
-            }));
+                
+                
+                // Pass the inlined HTML here
+            };
+
+            try {
+                await sgMail.send(msg);
+                
+            } catch (error) {
+                console.error(error);
+                
+            }
+            // console.log(`Successfully sent invitation emails to ${emailList.length} users.`);
+            console.log(`Successfully sent invitation emails to Ashish`);
+        
          
-            //Send all emails in parallel
-            const promises = messages.map(msg => sgMail.send(msg));
-            await Promise.all(promises);
+            // //Send all emails in parallel
+            // const promises = messages.map(msg => sgMail.send(msg));
+            // await Promise.all(promises);
        
-           console.log(`Successfully sent invitation emails to ${emailList.length} users.`);
+           
           } catch (error) {
             console.error('Error sending invitation emails:', error);
             if (error) {
