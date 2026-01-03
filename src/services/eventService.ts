@@ -617,33 +617,52 @@ export class EventService {
       console.log('First event sample:', JSON.stringify(events[0], null, 2));
     }
 
-    // Create calendar
+    // Create calendar (no timezone set for proper UTC output)
     const calendar = ical({
       name: 'BAP Events Calendar',
       description: 'Subscribe to stay updated on all public BAP events',
-      timezone: 'America/New_York',
       ttl: 3600 // Suggest clients refresh every hour
     });
 
     // Add each event to the calendar
     (events || []).forEach((event, index) => {
       try {
-        // Combine date and time for start
-        const startDateTime = event.event_time
-          ? new Date(`${event.event_date}T${event.event_time}`)
-          : new Date(`${event.event_date}T00:00:00`);
+        // Parse date components
+        const eventDate = event.event_date; // Format: YYYY-MM-DD
+        const [year, month, day] = eventDate.split('-').map(Number);
 
-        // Calculate end time (start + event_hours, or default to 2 hours)
-        const durationHours = event.event_hours || 2;
-        const endDateTime = new Date(startDateTime.getTime() + (durationHours * 60 * 60 * 1000));
+        if (event.event_time) {
+          // Event with specific time - convert Phoenix time to UTC
+          const [hours, minutes, seconds = 0] = event.event_time.split(':').map(Number);
 
-        calendar.createEvent({
-          start: startDateTime,
-          end: endDateTime,
-          summary: event.event_name,
-          description: event.event_description || '',
-          location: event.event_location || ''
-        });
+          // Phoenix is always UTC-7 (Arizona doesn't observe DST)
+          const startDateTime = new Date(Date.UTC(year, month - 1, day, hours + 7, minutes, seconds));
+
+          // Calculate end time (start + event_hours, or default to 2 hours)
+          const durationHours = event.event_hours || 2;
+          const endDateTime = new Date(startDateTime.getTime() + (durationHours * 60 * 60 * 1000));
+
+          calendar.createEvent({
+            start: startDateTime,
+            end: endDateTime,
+            summary: event.event_name,
+            description: event.event_description || '',
+            location: event.event_location || ''
+          });
+        } else {
+          // All-day event (no specific time)
+          const startDate = new Date(year, month - 1, day);
+          const endDate = new Date(year, month - 1, day + 1);
+
+          calendar.createEvent({
+            start: startDate,
+            end: endDate,
+            summary: event.event_name,
+            description: event.event_description || '',
+            location: event.event_location || '',
+            allDay: true
+          });
+        }
 
         if (index === 0) {
           console.log('Successfully added first event to calendar');
