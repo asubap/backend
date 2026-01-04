@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 import juice from 'juice'
 
 const window = (new JSDOM('').window as unknown) as any;
-const purify = DOMPurify(window);
+const purify: any = DOMPurify(window);
 
 export class announcementsService {
     private supabase: SupabaseClient;
