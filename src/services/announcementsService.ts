@@ -45,14 +45,17 @@ export class announcementsService {
                     {
                         title: title,
                         description: cleanDescription
+                        description: cleanDescription
                     });
                 if (aError) throw aError;
             
+                const emailList = await this.getUsersEmails(title, cleanDescription);
                 const emailList = await this.getUsersEmails(title, cleanDescription);
                 if (!emailList || emailList.length === 0) {
                     throw new Error('No users found');
                 }
             // Send email to users
+            await this.sendAnnouncments(emailList, title, cleanDescription);
             await this.sendAnnouncments(emailList, title, cleanDescription);
             return ("Announcement added and sent successfully");
          
@@ -107,6 +110,20 @@ export class announcementsService {
             const inlinedDescription = juice(description);
 
             // 3. Send via SendGrid
+            // const messages = emailList.map(email => ({
+            //     to: email,
+            //     from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
+            //     templateId: process.env.SENDGRID_TEMPLATE_ID || '', // Your dynamic template ID
+            //     dynamicTemplateData: {
+            //       name: title,
+            //       description: description,
+            //       email_type: "announcement" // To distinguish from events in template
+            //     }
+            // }));
+
+            const inlinedDescription = juice(description);
+
+            // 3. Send via SendGrid
             const messages = emailList.map(email => ({
                 to: email,
                 from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
@@ -114,9 +131,29 @@ export class announcementsService {
                 dynamicTemplateData: {
                   name: title,
                   description: inlinedDescription,
+                  description: inlinedDescription,
                   email_type: "announcement" // To distinguish from events in template
                 }
             }));
+                
+                
+
+            try {
+                
+                 //Send all emails in parallel
+                const promises = messages.map(msg => sgMail.send(msg));
+                await Promise.all(promises);
+                
+            } catch (error) {
+                console.error(error);
+                
+            }
+            console.log(`Successfully sent invitation emails to ${emailList.length} users.`);
+            
+        
+         
+       
+           
                 
                 
 
@@ -161,6 +198,7 @@ export class announcementsService {
          }
         const { error } = await this.supabase
             .from('announcements')
+            .update(updateFields)
             .update(updateFields)
             .eq('id', announcement_id);
 
