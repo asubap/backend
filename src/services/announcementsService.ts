@@ -2,13 +2,8 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
-import DOMPurify from 'dompurify'
-import { JSDOM } from 'jsdom';
-
-import juice from 'juice'
-
-const window = new JSDOM('').window;
-const purify = DOMPurify(window);
+import DOMPurify from 'isomorphic-dompurify';
+import juice from 'juice';
 
 export class announcementsService {
     private supabase: SupabaseClient;
@@ -43,7 +38,7 @@ export class announcementsService {
     async addannouncements(title: string, description: string) {
         try{
 
-            const cleanDescription = purify.sanitize(description);
+            const cleanDescription = DOMPurify.sanitize(description);
             const { error: aError } = await this.supabase
                 .from('announcements')
                 .insert(
@@ -157,7 +152,7 @@ export class announcementsService {
              updateFields.title = title;
          }
          if (description && description.trim() !== '') {
-             updateFields.description = purify.sanitize(description);
+             updateFields.description = DOMPurify.sanitize(description);
          }
          
          // If there's nothing to update, respond accordingly
