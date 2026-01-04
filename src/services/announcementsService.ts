@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 import juice from 'juice';
 
 export class announcementsService {
@@ -38,7 +38,7 @@ export class announcementsService {
     async addannouncements(title: string, description: string) {
         try{
 
-            const cleanDescription = DOMPurify.sanitize(description);
+            const cleanDescription = sanitizeHtml(description);
             const { error: aError } = await this.supabase
                 .from('announcements')
                 .insert(
@@ -152,7 +152,7 @@ export class announcementsService {
              updateFields.title = title;
          }
          if (description && description.trim() !== '') {
-             updateFields.description = DOMPurify.sanitize(description);
+             updateFields.description = sanitizeHtml(description);
          }
          
          // If there's nothing to update, respond accordingly
