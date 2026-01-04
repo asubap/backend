@@ -79,6 +79,7 @@ export class announcementsController {
     }
 
     async editannouncements(req: Request, res: Response) {
+        {/* if tinymce is working and its successful and then they bring up edit-announcement functionality then we will change this but until then if they want to edit they delete and then create a new one*/}
         const { announcement_id, title, description } = req.body;
 
         const token = extractToken(req);
@@ -96,23 +97,10 @@ export class announcementsController {
             return;
         }
         
-        // Build an update object only with non-empty fields
-        const updateFields: Record<string, string> = {};
-        if (title && title.trim() !== '') {
-            updateFields.title = title;
-        }
-        if (description && description.trim() !== '') {
-            updateFields.description = description;
-        }
-        
-        // If there's nothing to update, respond accordingly
-        if (Object.keys(updateFields).length === 0) {
-            res.status(400).json({ error: 'No valid update fields provided.' });
-            return;
-        }
+       
         
         try {
-            const updatedAnnouncement = await this.announcementsService.editannouncements(announcement_id, updateFields);
+            const updatedAnnouncement = await this.announcementsService.editannouncements(announcement_id, title, description);
             
             res.json(updatedAnnouncement);
         } catch (error) {

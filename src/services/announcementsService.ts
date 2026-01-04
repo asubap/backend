@@ -2,7 +2,14 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
+import DOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom';
+
 import juice from 'juice'
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
+
 export class announcementsService {
     private supabase: SupabaseClient;
 
@@ -35,21 +42,23 @@ export class announcementsService {
 
     async addannouncements(title: string, description: string) {
         try{
-            // const { error: aError } = await this.supabase
-            //     .from('announcements')
-            //     .insert(
-            //         {
-            //             title: title,
-            //             description: description
-            //         });
-            //     if (aError) throw aError;
+
+            const cleanDescription = purify.sanitize(description);
+            const { error: aError } = await this.supabase
+                .from('announcements')
+                .insert(
+                    {
+                        title: title,
+                        description: cleanDescription
+                    });
+                if (aError) throw aError;
             
-                const emailList = await this.getUsersEmails(title, description);
+                const emailList = await this.getUsersEmails(title, cleanDescription);
                 if (!emailList || emailList.length === 0) {
                     throw new Error('No users found');
                 }
             // Send email to users
-            await this.sendAnnouncments(emailList, title, description);
+            await this.sendAnnouncments(emailList, title, cleanDescription);
             return ("Announcement added and sent successfully");
          
             
@@ -103,8 +112,8 @@ export class announcementsService {
             const inlinedDescription = juice(description);
 
             // 3. Send via SendGrid
-            const msg = {
-                to: 'ashishkurse@gmail.com',
+            const messages = emailList.map(email => ({
+                to: email,
                 from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
                 templateId: process.env.SENDGRID_TEMPLATE_ID || '', // Your dynamic template ID
                 dynamicTemplateData: {
@@ -112,25 +121,24 @@ export class announcementsService {
                   description: inlinedDescription,
                   email_type: "announcement" // To distinguish from events in template
                 }
+            }));
                 
                 
-                // Pass the inlined HTML here
-            };
 
             try {
-                await sgMail.send(msg);
+                
+                 //Send all emails in parallel
+                const promises = messages.map(msg => sgMail.send(msg));
+                await Promise.all(promises);
                 
             } catch (error) {
                 console.error(error);
                 
             }
-            // console.log(`Successfully sent invitation emails to ${emailList.length} users.`);
-            console.log(`Successfully sent invitation emails to Ashish`);
+            console.log(`Successfully sent invitation emails to ${emailList.length} users.`);
+            
         
          
-            // //Send all emails in parallel
-            // const promises = messages.map(msg => sgMail.send(msg));
-            // await Promise.all(promises);
        
            
           } catch (error) {
@@ -142,10 +150,23 @@ export class announcementsService {
           }
         }
 
-    async editannouncements(announcement_id: string, updateData: Record<string, string>) {
+    async editannouncements(announcement_id: string, title: string, description: string ) {
+         // Build an update object only with non-empty fields
+         const updateFields: Record<string, string> = {};
+         if (title && title.trim() !== '') {
+             updateFields.title = title;
+         }
+         if (description && description.trim() !== '') {
+             updateFields.description = purify.sanitize(description);
+         }
+         
+         // If there's nothing to update, respond accordingly
+         if (Object.keys(updateFields).length === 0) {
+             throw { error: 'No valid update fields provided.' }
+         }
         const { error } = await this.supabase
             .from('announcements')
-            .update(updateData)
+            .update(updateFields)
             .eq('id', announcement_id);
 
         if (error) throw error;
