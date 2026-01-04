@@ -7,7 +7,7 @@ import { JSDOM } from 'jsdom';
 
 import juice from 'juice'
 
-const window = new JSDOM('').window as unknown as Window;
+const window = (new JSDOM('').window as unknown) as any;
 const purify = DOMPurify(window);
 
 export class announcementsService {
