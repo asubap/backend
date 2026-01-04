@@ -2,21 +2,21 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseClient } from "../config/db";
 import sgMail from '@sendgrid/mail';
 import { v4 as uuidv4 } from 'uuid';
-// import sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 
 import juice from 'juice'
-//I WILL USE THIS LATER IF THERE IS A POSSIBILITY OF A XSS ATTACK WHICH IS VERY UNLIKELY SINCE ONLY ADMINS CAN CREATE ANNOUNCEMENTS
+// I WILL USE THIS LATER IF THERE IS A POSSIBILITY OF A XSS ATTACK WHICH IS VERY UNLIKELY SINCE ONLY ADMINS CAN CREATE ANNOUNCEMENTS
 // Allow everything EXCEPT dangerous elements (script, iframe, etc.)
-// const sanitizeOptions: sanitizeHtml.IOptions = {
-//     allowedTags: false,        // Allow all tags
-//     allowedAttributes: false,  // Allow all attributes
-//     disallowedTagsMode: 'discard',
-//     // Block dangerous tags that can execute scripts or load external content
-//     exclusiveFilter: (frame) => {
-//         const dangerousTags = ['script', 'iframe', 'object'];
-//         return dangerousTags.includes(frame.tag);
-//     }
-// };
+const sanitizeOptions: sanitizeHtml.IOptions = {
+    allowedTags: false,        // Allow all tags
+    allowedAttributes: false,  // Allow all attributes
+    disallowedTagsMode: 'discard',
+    // Block dangerous tags that can execute scripts or load external content
+    exclusiveFilter: (frame) => {
+        const dangerousTags = ['script', 'iframe'];
+        return dangerousTags.includes(frame.tag);
+    }
+};
 
 
 export class announcementsService {
@@ -53,7 +53,7 @@ export class announcementsService {
         try{
 
             
-            const cleanDescription = description;
+            const cleanDescription = sanitizeHtml(description, sanitizeOptions);
             const { error: aError } = await this.supabase
                 .from('announcements')
                 .insert(
@@ -167,7 +167,7 @@ export class announcementsService {
              updateFields.title = title;
          }
          if (description && description.trim() !== '') {
-            updateFields.description = description;
+            updateFields.description = sanitizeHtml(description, sanitizeOptions);
          }
          
          // If there's nothing to update, respond accordingly
