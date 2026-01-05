@@ -763,7 +763,7 @@ export class SponsorService {
     try {
       const { data: sponsors, error } = await this.supabase
         .from('sponsor_info')
-        .select('id, company_name, pfp_url, tier, about, links');
+        .select('id, company_name, pfp_url, tier, about, links, emails');
 
       if (error) throw error;
 
