@@ -82,16 +82,17 @@ export class announcementsService {
     async getUsersEmails(title: string, description: string){
         try{
             // Join allowed_members with member_info to filter by rank
-            // Filter out: sponsors, e-board, and alumni
+            // Filter out: sponsors, e-board, alumni, and archived members
             const { data: allMemberEmails, error: eError } = await this.supabase
                 .from('allowed_members')
                 .select(`
                     email,
-                    member_info!inner(rank)
+                    member_info!inner(rank, deleted_at)
                 `)
                 .neq('role', 'sponsor')
                 .neq('role', 'e-board')
-                .neq('member_info.rank', 'alumni');
+                .neq('member_info.rank', 'alumni')
+                .is('member_info.deleted_at', null);
 
             if (eError) throw eError;
 
@@ -136,7 +137,6 @@ export class announcementsService {
                 
 
             try {
-                
                  //Send all emails in parallel
                 const promises = messages.map(msg => sgMail.send(msg));
                 await Promise.all(promises);
