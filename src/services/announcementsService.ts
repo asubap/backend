@@ -92,7 +92,7 @@ export class announcementsService {
                 .neq('role', 'sponsor')
                 .neq('role', 'e-board')
                 .neq('member_info.rank', 'alumni')
-                .is('member_info.deleted_at', null);
+                .is('allowed_members.deleted_at', null);
 
             if (eError) throw eError;
 
