@@ -87,7 +87,7 @@ export class announcementsService {
                 .from('allowed_members')
                 .select(`
                     email,
-                    member_info!inner(rank, deleted_at)
+                    member_info!inner(rank)
                 `)
                 .neq('role', 'sponsor')
                 .neq('role', 'e-board')
