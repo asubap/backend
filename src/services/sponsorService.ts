@@ -173,7 +173,7 @@ export class SponsorService {
  {
     try {
       // replace spaces with - and add a @example.com to the email
-      const email = sponsor_name.replace(/\s+/g, '-') + "@example.com";
+      const email = sponsor_name.replace(/\s+/g, '-').toLowerCase() + "@example.com";
       
       // Delete sponsor profile photo
       try {
