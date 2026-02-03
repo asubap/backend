@@ -34,8 +34,8 @@ memberInfoRoutes
 .post('/', verifySupabaseToken, controller.getMemberInfoByEmail.bind(controller))
 .post('/event-attendance', verifySupabaseToken, controller.getEventAttendance.bind(controller))
 
-// E-board only - Admin routes
-.post('/edit-member-info', verifySupabaseToken, requireEBoard, controller.editMemberInfo.bind(controller))
+// Auth required - Edit member info (users can edit own, e-board can edit all)
+.post('/edit-member-info', verifySupabaseToken, controller.editMemberInfo.bind(controller))
 .post('/:email/archive', verifySupabaseToken, requireEBoard, controller.archiveMember.bind(controller))
 .post('/:email/restore', verifySupabaseToken, requireEBoard, controller.restoreMember.bind(controller))
 

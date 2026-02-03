@@ -145,6 +145,7 @@ export class MemberInfoController {
 
     /**
      * Edit member info
+     * Users can edit their own profile, e-board can edit anyone's
      * @param req 
      * @param res 
      * @returns the updated member info
@@ -160,9 +161,32 @@ export class MemberInfoController {
 
         this.memberInfoService.setToken(token);
 
+        // Get the authenticated user's email from the JWT
+        const authenticatedUser = (req as any).user;
+        if (!authenticatedUser || !authenticatedUser.email) {
+            res.status(401).json({ error: 'User not authenticated' });
+            return;
+        }
+
         if (!user_email) {
             res.status(400).json({ error: 'User email is required' });
             return;
+        }
+
+        // Check if user is editing their own profile or is e-board
+        const isEditingOwnProfile = authenticatedUser.email === user_email;
+        
+        if (!isEditingOwnProfile) {
+            // Check if user is e-board (only e-board can edit others)
+            const UserService = (await import('../services/userService')).default;
+            const userService = new UserService();
+            userService.setToken(token);
+            const userRole = await userService.getUserRole(authenticatedUser.email);
+            
+            if (userRole !== 'e-board') {
+                res.status(403).json({ error: 'You can only edit your own profile' });
+                return;
+            }
         }
 
         // Build an update object only with non-empty fields
