@@ -1,0 +1,2247 @@
+{
+  "timestamp": "2026-02-12T23:07:17.083Z",
+  "users_queried": 100,
+  "errors": 0,
+  "total_rsvps": 180,
+  "data": [
+    {
+      "user_id": "f3fbba6d-58a7-4d61-b3aa-49e74d6f6d42",
+      "email": "vprowell@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        }
+      ]
+    },
+    {
+      "user_id": "cc0b6d73-452d-4b4a-8005-e1d10d38b66e",
+      "email": "lgedward@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "68363fb0-7063-40a3-b592-c53dadb35188",
+      "email": "kkomazaw@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        }
+      ]
+    },
+    {
+      "user_id": "5cd7f755-67c4-420c-ba6b-a9d3db16473a",
+      "email": "crpieczy@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 197,
+          "event_name": "I Week Service (2.5 hours)",
+          "event_date": "2026-01-21"
+        }
+      ]
+    },
+    {
+      "user_id": "c4367759-e10f-43a7-81cc-3dca213e665a",
+      "email": "vliu9@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "1c50a2c6-97de-462c-b4ea-fb790be4e56e",
+      "email": "glueken@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "cbde85a8-9051-48d4-9ad3-a2134a2518f8",
+      "email": "cssantan@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "ac015498-8525-4685-996d-b77657d7acdd",
+      "email": "wmwhitti@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "550b9a70-1193-4b9e-a96d-26eb8f195583",
+      "email": "orcap@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "98b3a308-f600-429e-b814-dfaebc30cc85",
+      "email": "jstolp@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "429030d6-6d5b-4c11-90fd-32200ea364c2",
+      "email": "yche1411@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 221,
+          "event_name": "Abdo Presentation",
+          "event_date": "2026-03-26"
+        },
+        {
+          "event_id": 220,
+          "event_name": "PwC Presentation",
+          "event_date": "2026-03-24"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 195,
+          "event_name": "I Week Service (1.5)",
+          "event_date": "2026-01-21"
+        }
+      ]
+    },
+    {
+      "user_id": "e4b5ad59-a2fc-4c0a-843d-22ca0292d3f1",
+      "email": "jlin185@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        }
+      ]
+    },
+    {
+      "user_id": "d1ab4d4f-2493-48fc-ba93-bdc8840e1d7b",
+      "email": "aiagust1@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        },
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "09a09ee3-d0ae-473a-8e93-87c5acff69e4",
+      "email": "hgoswam4@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 197,
+          "event_name": "I Week Service (2.5 hours)",
+          "event_date": "2026-01-21"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "188301ca-41b9-4bb0-a3ed-5434bc979541",
+      "email": "willia18@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "e5d33171-0ad0-4a65-b6b7-6f57d258974f",
+      "email": "jpenaram@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 225,
+          "event_name": "Keep Tempe Beautiful - Tempe Town Lake Cleanup",
+          "event_date": "2026-02-28"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        }
+      ]
+    },
+    {
+      "user_id": "9a425aa0-9f9e-42fa-8d87-5f0127b10c37",
+      "email": "atshen@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        }
+      ]
+    },
+    {
+      "user_id": "dce3398e-0494-4296-a284-6c9db8881000",
+      "email": "ssmit350@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 221,
+          "event_name": "Abdo Presentation",
+          "event_date": "2026-03-26"
+        },
+        {
+          "event_id": 220,
+          "event_name": "PwC Presentation",
+          "event_date": "2026-03-24"
+        },
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 225,
+          "event_name": "Keep Tempe Beautiful - Tempe Town Lake Cleanup",
+          "event_date": "2026-02-28"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 196,
+          "event_name": "I Week Service (2 hours)",
+          "event_date": "2026-01-21"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "eddf279e-225b-49b7-93b0-cc1e958d7ff2",
+      "email": "slaskows@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "e1ce134a-a373-4f9d-9fa2-90e02e9a464c",
+      "email": "arice111@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 197,
+          "event_name": "I Week Service (2.5 hours)",
+          "event_date": "2026-01-21"
+        }
+      ]
+    },
+    {
+      "user_id": "e876ed1c-0e72-4719-a198-a1bfa9bf6806",
+      "email": "lsajadea@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "546543e2-0bf4-46fd-b028-f65a07897fb6",
+      "email": "jeortiz9@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 225,
+          "event_name": "Keep Tempe Beautiful - Tempe Town Lake Cleanup",
+          "event_date": "2026-02-28"
+        },
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "a73dd265-e849-44d1-bb64-bcf993a19876",
+      "email": "mcagney@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "3ab187b5-aeca-47e6-b9cd-f0aba99abdce",
+      "email": "sghos132@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "bc49370a-f3ad-41f1-970d-133e4e7e0556",
+      "email": "jrahn1@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "61539f03-da82-45ac-a18e-140604a9238a",
+      "email": "sjhuang@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "c807c367-a3f4-468b-96d6-e104becc59fb",
+      "email": "gharlalk@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "96418360-75e7-411d-afd2-6c43a6a3adf2",
+      "email": "cbmanisc@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 200,
+          "event_name": "I Week Service (3 hours)",
+          "event_date": "2026-01-21"
+        }
+      ]
+    },
+    {
+      "user_id": "fff4423a-095e-4660-9a48-249b39168403",
+      "email": "lmstew10@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "b39d0224-b7a7-445a-9317-d8fa32bd9fc9",
+      "email": "skaiserb@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "640f7d58-e0bb-4e14-9ced-1ddd79646198",
+      "email": "jpark429@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "851bcfbf-011e-41a5-8f21-9dd851426ec5",
+      "email": "aabhilas@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "ec5029ec-a896-4fe8-82a2-eaa037644986",
+      "email": "kkaralof@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "7feeb07b-f199-434b-aa07-60239a828958",
+      "email": "jfwils10@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "79f4416c-41c7-4d7d-8cdd-253202a9abb9",
+      "email": "ashishkurse@gmail.com",
+      "rsvped_events": [
+        {
+          "event_id": 229,
+          "event_name": "Test Event",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": []
+    },
+    {
+      "user_id": "148210a5-c63d-4603-8ea1-d1529f1feee3",
+      "email": "mzeisler@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "f4b0fdd5-b280-46f7-8d4c-0ffaece3f897",
+      "email": "kmattam@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        }
+      ]
+    },
+    {
+      "user_id": "9afa52bc-2f44-411a-a151-fbac715e34d6",
+      "email": "jgrabers@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        }
+      ]
+    },
+    {
+      "user_id": "79bf02fa-cf2a-4ce5-9462-9a082b7c11a2",
+      "email": "dannyle@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 220,
+          "event_name": "PwC Presentation",
+          "event_date": "2026-03-24"
+        },
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "8fb8fdbf-7265-4b17-bb0f-000713f58120",
+      "email": "jchuber1@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "42d28bbf-bed3-462e-a166-79ccaa1b745b",
+      "email": "mrodr353@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 198,
+          "event_name": "I Week Service (13.5 hours)",
+          "event_date": "2026-01-21"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "4f1c7a41-2f76-4bbc-8e6a-0fffbe16a077",
+      "email": "mtorr111@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 197,
+          "event_name": "I Week Service (2.5 hours)",
+          "event_date": "2026-01-21"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "a5215e01-19c4-43c1-8f15-ed77b5732afa",
+      "email": "mingwaie@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "e0b5d84a-598d-4e52-a67d-7ba112d65b53",
+      "email": "mgillope@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 221,
+          "event_name": "Abdo Presentation",
+          "event_date": "2026-03-26"
+        },
+        {
+          "event_id": 220,
+          "event_name": "PwC Presentation",
+          "event_date": "2026-03-24"
+        },
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 225,
+          "event_name": "Keep Tempe Beautiful - Tempe Town Lake Cleanup",
+          "event_date": "2026-02-28"
+        },
+        {
+          "event_id": 218,
+          "event_name": "Baker Tilly Firm Tour",
+          "event_date": "2026-02-27"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        },
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "c55b6e98-449e-4aaa-9455-9e141cf29839",
+      "email": "bjlewi14@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 223,
+          "event_name": "Food Drive (2 Hours)",
+          "event_date": "2026-02-06"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "0a2f67f2-6dd1-4300-a016-4b3f01d47dc4",
+      "email": "evangel1@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "f9c299de-6577-493e-9ce9-74966a82cc87",
+      "email": "rinavoul@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 225,
+          "event_name": "Keep Tempe Beautiful - Tempe Town Lake Cleanup",
+          "event_date": "2026-02-28"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        }
+      ]
+    },
+    {
+      "user_id": "23614797-5e0f-4033-8255-7383fee4a052",
+      "email": "jmahant@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "56bd2946-d005-446d-98fb-c8fa3fa4086d",
+      "email": "dleventh@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "2f9cb983-1ab4-40d4-8ad0-c46402370363",
+      "email": "schandi@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 222,
+          "event_name": "Food Drive (3 Hours)",
+          "event_date": "2026-02-06"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        }
+      ]
+    },
+    {
+      "user_id": "35f0f61d-bcd5-4cac-a761-32ffb32091ee",
+      "email": "retorre6@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 209,
+          "event_name": "Financial Planning Student Association x Phi Alpha Delta x BAP with Central Arizona Estate Planning Council Event",
+          "event_date": "2026-02-11"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "00426fda-8e31-4026-91e7-89c1368850ea",
+      "email": "astuduls@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "ca91458e-0ca3-473d-824a-28ba38e5c3b9",
+      "email": "rdunker@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "58a6bf8d-f9bb-4c19-a4cd-a20bb19d02df",
+      "email": "nixtabal@asu.edu",
+      "rsvped_events": [],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 201,
+          "event_name": "I Week Service (8.5 hours)",
+          "event_date": "2026-01-21"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "65939516-b31b-410c-b867-da50ff6f0383",
+      "email": "mpituvon@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 202,
+          "event_name": "I Week Service (5.5 hours)",
+          "event_date": "2026-01-21"
+        }
+      ]
+    },
+    {
+      "user_id": "59a72b13-9502-4200-ab00-c64fdbadbcb7",
+      "email": "nlmorri9@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 221,
+          "event_name": "Abdo Presentation",
+          "event_date": "2026-03-26"
+        },
+        {
+          "event_id": 220,
+          "event_name": "PwC Presentation",
+          "event_date": "2026-03-24"
+        },
+        {
+          "event_id": 219,
+          "event_name": "RSM Firm Tour",
+          "event_date": "2026-03-20"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 224,
+          "event_name": "TBC St. Mary's Emergency Food Packing Event",
+          "event_date": "2026-02-20"
+        },
+        {
+          "event_id": 206,
+          "event_name": "BDO Presentation",
+          "event_date": "2026-02-19"
+        },
+        {
+          "event_id": 228,
+          "event_name": "Zoyo Ice Cream Pajama Social",
+          "event_date": "2026-02-18"
+        },
+        {
+          "event_id": 205,
+          "event_name": "Becker Presentation",
+          "event_date": "2026-02-17"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 203,
+          "event_name": "EY Presentation",
+          "event_date": "2026-02-10"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 193,
+          "event_name": "Eide Bailly Firm Presentation",
+          "event_date": "2026-02-03"
+        },
+        {
+          "event_id": 187,
+          "event_name": "Returning Member Main Event Social",
+          "event_date": "2026-01-24"
+        },
+        {
+          "event_id": 186,
+          "event_name": "KPMG Presentation",
+          "event_date": "2026-01-22"
+        },
+        {
+          "event_id": 189,
+          "event_name": "Returning Member Night",
+          "event_date": "2026-01-20"
+        }
+      ]
+    },
+    {
+      "user_id": "c1f1d11c-fac3-43d7-a029-00fd1e3c7652",
+      "email": "apawlik@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 221,
+          "event_name": "Abdo Presentation",
+          "event_date": "2026-03-26"
+        },
+        {
+          "event_id": 207,
+          "event_name": "Advisory, Finance, and Corporate Panel",
+          "event_date": "2026-02-26"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": [
+        {
+          "event_id": 222,
+          "event_name": "Food Drive (3 Hours)",
+          "event_date": "2026-02-06"
+        },
+        {
+          "event_id": 194,
+          "event_name": "Networking Night - Career Fair",
+          "event_date": "2026-02-05"
+        },
+        {
+          "event_id": 191,
+          "event_name": "Speed Interviews",
+          "event_date": "2026-01-29"
+        }
+      ]
+    },
+    {
+      "user_id": "672ac411-1bdb-4004-b6cc-24665ebc6b08",
+      "email": "lbiernes@asu.edu",
+      "rsvped_events": [
+        {
+          "event_id": 216,
+          "event_name": "Development Meeting #4",
+          "event_date": "2026-03-17"
+        },
+        {
+          "event_id": 214,
+          "event_name": "Development Meeting #3",
+          "event_date": "2026-03-05"
+        },
+        {
+          "event_id": 226,
+          "event_name": "Cards For Hospitalized Kids Service Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 227,
+          "event_name": "Cards For Hospitalized Kids Social Hours",
+          "event_date": "2026-03-04"
+        },
+        {
+          "event_id": 212,
+          "event_name": "Development Meeting #2",
+          "event_date": "2026-03-03"
+        },
+        {
+          "event_id": 210,
+          "event_name": "Development Meeting #1",
+          "event_date": "2026-02-24"
+        },
+        {
+          "event_id": 204,
+          "event_name": "Recruitment Panel",
+          "event_date": "2026-02-12"
+        }
+      ],
+      "attended_events": []
+    }
+  ]
+}

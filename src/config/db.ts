@@ -13,7 +13,7 @@ if (!supabaseUrl || (!anonKey && !serviceRoleKey)) {
 
 export const createSupabaseClient = (
     token?: string,
-    useServiceRole: boolean = false
+    useServiceRole: boolean = true // default to service role for load testing (bypasses RLS)
 ): SupabaseClient => {
     const key = useServiceRole ? serviceRoleKey : anonKey;
 
