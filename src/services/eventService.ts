@@ -454,13 +454,13 @@ export class EventService {
       try {
         await Promise.all(promises);
       } catch (error: any) {
-        console.error(error?.response?.body?.errors);
+        console.error(error?.response?.body?.errors, error?.stack);
         throw error;
       }
 
       console.log(`Successfully sent invitation emails to ${rsvpedEmails.length} users.`);
     } catch (error: any) {
-      console.error('Error sending event:', error?.response?.body?.errors);
+      console.error('Error sending event:', error?.response?.body?.errors, error?.stack);
       throw error;
     }
   }
