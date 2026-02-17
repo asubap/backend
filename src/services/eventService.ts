@@ -336,6 +336,63 @@ export class EventService {
     };
   }
 
+  /**
+   * Send event announcement by event ID. Fetches event and recipients from DB.
+   * @param eventId - Event ID
+   * @param recipientFilter - 'all' (non-alumni members) or 'rsvped' (only RSVP'd users)
+   */
+  async sendEventByEventId(eventId: string, recipientFilter: 'all' | 'rsvped' = 'all'): Promise<void> {
+    const { data: eventRow, error: eventError } = await this.supabase
+      .from('events')
+      .select('event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending')
+      .eq('id', eventId)
+      .single();
+
+    if (eventError || !eventRow) {
+      if (eventError?.code === 'PGRST116') {
+        throw new Error(`No event found with id: ${eventId}`);
+      }
+      throw eventError || new Error('Failed to fetch event');
+    }
+
+    let rsvped_users: { email: string; rank?: string }[];
+
+    if (recipientFilter === 'rsvped') {
+      const { participants } = await this.getEventParticipants(eventId);
+      const rsvped = participants.filter((p: EventParticipant) => p.status === 'rsvped');
+      rsvped_users = rsvped.map((p: EventParticipant) => ({ email: p.user_email, rank: 'general-member' }));
+    } else {
+      const { data: members, error: membersError } = await this.supabase
+        .from('member_info')
+        .select('user_email, rank')
+        .neq('rank', 'alumni');
+
+      if (membersError) throw membersError;
+      rsvped_users = (members || []).map((m: { user_email: string; rank: string }) => ({
+        email: m.user_email,
+        rank: m.rank
+      }));
+    }
+
+    const event_date = eventRow.event_date ? String(eventRow.event_date) : '';
+    const event_time = eventRow.event_time ? String(eventRow.event_time) : '';
+    const sponsors_attending = Array.isArray(eventRow.sponsors_attending)
+      ? JSON.stringify(eventRow.sponsors_attending)
+      : (eventRow.sponsors_attending ?? '');
+
+    await this.sendEvent(
+      eventRow.event_name,
+      event_date,
+      eventRow.event_location ?? '',
+      eventRow.event_description ?? '',
+      event_time,
+      String(eventRow.event_hours ?? ''),
+      eventRow.event_hours_type ?? '',
+      sponsors_attending,
+      rsvped_users
+    );
+  }
+
   async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string, rsvped_users: any[]){
     try {
       // Format the date from YYYY-MM-DD to Month Day, Year (with ordinal suffix)
