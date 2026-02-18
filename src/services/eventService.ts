@@ -336,9 +336,29 @@ export class EventService {
     };
   }
 
-  async sendEvent(event_name: string, event_date:  string, event_location:  string, event_description:  string, event_time: string, event_hours: string, event_hours_type: string, sponsors_attending: string, rsvped_users: any[]){
+  async sendEvent(event_id : number){
     try {
       // Format the date from YYYY-MM-DD to Month Day, Year (with ordinal suffix)
+      const { data: event, error } = await this.supabase
+      .from("events_with_attendance")
+      .select('*')
+      .eq("id", event_id)
+      .single();
+      
+      if (error || !event) throw error || new Error("Event not found");
+      
+      const rsvpedEmails = (event.event_attendance || [])
+      .filter((a: any) => a.status === "rsvped")
+      .map((a: any) => a.member_info?.user_email)
+      .filter(Boolean);
+
+      if(!rsvpedEmails.length){
+        throw new Error("No Rsvped Members")
+      }
+
+
+      
+      
       const formatDate = (dateStr: string): string => {
         // Use the date string directly without creating a Date object to avoid timezone issues
         const [year, month, day] = dateStr.split('-').map(Number);
@@ -396,57 +416,51 @@ export class EventService {
       };
       
       // Format the values
-      const formattedDate = formatDate(event_date);
-      const formattedTime = formatTime(event_time);
-      const locationData = processLocation(event_location);
-      const formattedSponsors = formatSponsors(sponsors_attending);
-      const formattedHoursType = formatHoursType(event_hours_type);
+      const formattedDate = formatDate(event.event_date);
+      const formattedTime = formatTime(event.event_time);
+      const locationData = processLocation(event.event_location);
+      const formattedSponsors = formatSponsors(event.sponsors_attending);
+      const formattedHoursType = formatHoursType(event.event_hours_type);
 
-      // Extract emails from rsvped_users, filtering out alumni
-      // Frontend should pre-filter, but this is a safety check
-      const emailsFromMembers = rsvped_users
-          .filter(user => user.rank && user.rank.toLowerCase() !== 'alumni')
-          .map(user => user.email);
-
-      if (emailsFromMembers.length === 0) {
-          console.warn('No eligible members to receive event email after filtering');
-          return;
-      }
+    
 
       // Create email messages for each recipient using dynamic template
-      const messages = emailsFromMembers.map(email => ({
+      const messages = rsvpedEmails.map((email: string) => ({
           to: email,
           from: process.env.SENDGRID_FROM_EMAIL || 'your-verified-sender@example.com',
           templateId: process.env.SENDGRID_TEMPLATE_ID, // Your dynamic template ID
           dynamicTemplateData: {
-            name: event_name,
+            name: event.event_name,
             date: formattedDate,
             location_display: locationData.display,
             location_link: locationData.mapsLink,
-            description: event_description,
+            description: event.event_description,
             time: formattedTime,
-            hours: event_hours,
+            hours: event.event_hours,
             hours_type: formattedHoursType,
             sponsors_attending: formattedSponsors,
             email_type: "event" // To distinguish from announcements in template
           }
       }as sgMail.MailDataRequired));
 
-    
-      const promises = messages.map(msg => sgMail
-  .send(msg)
-  .then(() => {
-    console.log('Email sent')
-  })
-  .catch((error) => {
-    console.error(error?.response?.body?.errors);
-    throw error;
-  }));
-      await Promise.all(promises);
+      const promises = messages.map((msg: sgMail.MailDataRequired) =>
+        sgMail
+          .send(msg)
+          .then(() => {
+            console.log(`Email sent to ${msg.to}`);
+          })
+      );
 
-      console.log(`Successfully sent invitation emails to ${emailsFromMembers.length} users.`);
+      try {
+        await Promise.all(promises);
+      } catch (error: any) {
+        console.error(error?.response?.body?.errors, error?.stack);
+        throw error;
+      }
+
+      console.log(`Successfully sent invitation emails to ${rsvpedEmails.length} users.`);
     } catch (error: any) {
-      console.error('Error sending event:', error?.response?.body?.errors);
+      console.error('Error sending event:', error?.response?.body?.errors, error?.stack);
       throw error;
     }
   }
