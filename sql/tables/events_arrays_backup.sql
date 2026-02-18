@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.events_arrays_backup (
 );
 
 -- Row Level Security
+ALTER TABLE public.events_arrays_backup ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY Only e-board can access backup
     ON public.events_arrays_backup

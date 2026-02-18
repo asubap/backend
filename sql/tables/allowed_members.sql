@@ -109,6 +109,58 @@ END;
 $function$
 ;
 
+CREATE OR REPLACE FUNCTION public.handle_soft_delete_auth_ban()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'auth', 'pg_temp'
+AS $function$
+    DECLARE
+      auth_user_exists BOOLEAN;
+    BEGIN
+      -- Check if auth user exists
+      SELECT EXISTS(
+        SELECT 1 FROM auth.users WHERE email = NEW.email
+      ) INTO auth_user_exists;
+
+      -- User being archived (deleted_at set)
+      IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
+
+        IF auth_user_exists THEN
+          -- Ban the user in Supabase Auth (using far-future date instead of 'infinity' for Go compatibility)
+          UPDATE auth.users
+          SET banned_until = '2099-12-31 23:59:59+00'::timestamptz,
+              updated_at = NOW()
+          WHERE email = NEW.email;
+
+          RAISE NOTICE 'User % has been banned', NEW.email;
+        ELSE
+          -- User never logged in, log warning but don't fail
+          RAISE WARNING 'Cannot ban user % - no auth record exists', NEW.email;
+        END IF;
+
+      -- User being restored (deleted_at cleared)
+      ELSIF NEW.deleted_at IS NULL AND OLD.deleted_at IS NOT NULL THEN
+
+        IF auth_user_exists THEN
+          -- Unban the user
+          UPDATE auth.users
+          SET banned_until = NULL,
+              updated_at = NOW()
+          WHERE email = NEW.email;
+
+          RAISE NOTICE 'User % has been unbanned', NEW.email;
+        ELSE
+          RAISE WARNING 'Cannot unban user % - no auth record exists', NEW.email;
+        END IF;
+
+      END IF;
+
+      RETURN NEW;
+    END;
+    $function$
+;
+
 CREATE OR REPLACE FUNCTION public.sync_member_info_on_allowed_member_update()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -184,58 +236,6 @@ AS $function$
   $function$
 ;
 
-CREATE OR REPLACE FUNCTION public.handle_soft_delete_auth_ban()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'auth', 'pg_temp'
-AS $function$
-    DECLARE
-      auth_user_exists BOOLEAN;
-    BEGIN
-      -- Check if auth user exists
-      SELECT EXISTS(
-        SELECT 1 FROM auth.users WHERE email = NEW.email
-      ) INTO auth_user_exists;
-
-      -- User being archived (deleted_at set)
-      IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
-
-        IF auth_user_exists THEN
-          -- Ban the user in Supabase Auth (using far-future date instead of 'infinity' for Go compatibility)
-          UPDATE auth.users
-          SET banned_until = '2099-12-31 23:59:59+00'::timestamptz,
-              updated_at = NOW()
-          WHERE email = NEW.email;
-
-          RAISE NOTICE 'User % has been banned', NEW.email;
-        ELSE
-          -- User never logged in, log warning but don't fail
-          RAISE WARNING 'Cannot ban user % - no auth record exists', NEW.email;
-        END IF;
-
-      -- User being restored (deleted_at cleared)
-      ELSIF NEW.deleted_at IS NULL AND OLD.deleted_at IS NOT NULL THEN
-
-        IF auth_user_exists THEN
-          -- Unban the user
-          UPDATE auth.users
-          SET banned_until = NULL,
-              updated_at = NOW()
-          WHERE email = NEW.email;
-
-          RAISE NOTICE 'User % has been unbanned', NEW.email;
-        ELSE
-          RAISE WARNING 'Cannot unban user % - no auth record exists', NEW.email;
-        END IF;
-
-      END IF;
-
-      RETURN NEW;
-    END;
-    $function$
-;
-
 CREATE TRIGGER add_member_info_on_allowed_member_insert AFTER INSERT ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION create_member_info_on_allowed_member_insert();
 
 CREATE TRIGGER delete_auth_user_trigger AFTER DELETE ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION delete_auth_user_by_email();
@@ -244,9 +244,9 @@ CREATE TRIGGER delete_member_info_on_allowed_member_delete AFTER DELETE ON publi
 
 CREATE TRIGGER delete_sponsor_trigger AFTER DELETE ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION delete_sponsor_by_email_and_company();
 
-CREATE TRIGGER sync_member_info_on_allowed_member_update AFTER UPDATE ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION sync_member_info_on_allowed_member_update();
-
 CREATE TRIGGER on_allowed_member_soft_delete AFTER UPDATE OF deleted_at ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION handle_soft_delete_auth_ban();
+
+CREATE TRIGGER sync_member_info_on_allowed_member_update AFTER UPDATE ON public.allowed_members FOR EACH ROW EXECUTE FUNCTION sync_member_info_on_allowed_member_update();
 
 -- Indexes
 
