@@ -168,7 +168,7 @@ export class EventController {
 
         this.eventService.setToken(token as string);
 
-        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
+        const { event_name, event_description, event_location, event_lat, event_long, event_date, event_time, event_hours, event_hours_type, dress_code, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
 
         if (!event_name || !event_description || !event_location || event_lat === undefined || event_long === undefined || !event_date || !event_time || event_hours === undefined || !event_hours_type || sponsors_attending === undefined || check_in_window === undefined || check_in_radius === undefined || event_limit === undefined || is_hidden === undefined) {
             res.status(400).json({ error: 'Missing required fields' });
@@ -181,7 +181,7 @@ export class EventController {
         }
 
         try {
-            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden);
+            await this.eventService.addEvent(event_name, event_date, event_location, event_description, event_lat, event_long, event_time, event_hours, event_hours_type, dress_code?.trim() || null, sponsors_attending, check_in_window, check_in_radius, event_limit, is_hidden);
             res.json("Event added successfully");
             return;
         } catch (error) {
@@ -196,7 +196,7 @@ export class EventController {
      * @returns 
      */
     async editEvent(req: Request, res: Response) {
-        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
+        const { event_id, name, date, location, description, time, sponsors, event_hours, event_hours_type, dress_code, check_in_window, check_in_radius, event_limit, is_hidden } = req.body;
 
         const token = extractToken(req);
         
@@ -214,7 +214,7 @@ export class EventController {
         }
         
         // Build an update object only with non-empty fields
-        const updateFields: Record<string, any> = {};
+        const updateFields: Record<string, unknown> = {};
         if (name && name.trim() !== '') {
             updateFields.event_name = name;
         }
@@ -250,6 +250,9 @@ export class EventController {
                 return;
             }
             updateFields.event_hours_type = event_hours_type;
+        }
+        if (dress_code !== undefined) {
+            updateFields.dress_code = typeof dress_code === 'string' ? dress_code.trim() : dress_code;
         }
 
         // convert check_in_window from string to number

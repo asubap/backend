@@ -22,6 +22,7 @@ export interface SupabaseEventResponse {
   event_time: string;
   event_hours: number;
   event_hours_type: string;
+  dress_code: string | null;
   sponsors_attending: string[] | null;
   check_in_window: number;
   event_limit: number;
@@ -41,6 +42,7 @@ export interface Event {
   event_time: string;
   event_hours: number;
   event_hours_type: string;
+  dress_code?: string | null;
   sponsors_attending: string[];
   check_in_window: number;
   event_limit: number;
@@ -59,6 +61,7 @@ export interface PublicEvent {
   id: number;
   event_name: string;
   event_date: string;
+  dress_code?: string | null;
 }
 
 // Member view - no PII, geolocation only if user RSVP'd
@@ -73,6 +76,7 @@ export interface MemberEvent {
   event_time: string;
   event_hours: number;
   event_hours_type: string;
+  dress_code?: string | null;
   sponsors_attending: string[];
   check_in_window: number;
   event_limit: number;

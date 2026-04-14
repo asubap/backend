@@ -67,7 +67,8 @@ export class EventService {
     return {
       id: event.id,
       event_name: event.event_name,
-      event_date: event.event_date
+      event_date: event.event_date,
+      dress_code: event.dress_code
     };
   }
 
@@ -96,6 +97,7 @@ export class EventService {
       event_time: event.event_time,
       event_hours: event.event_hours,
       event_hours_type: event.event_hours_type,
+      dress_code: event.dress_code,
       sponsors_attending: event.sponsors_attending || [],
       check_in_window: event.check_in_window,
       event_limit: event.event_limit,
@@ -129,6 +131,7 @@ export class EventService {
       event_time: event.event_time,
       event_hours: event.event_hours,
       event_hours_type: event.event_hours_type,
+      dress_code: event.dress_code,
       sponsors_attending: event.sponsors_attending || [],
       check_in_window: event.check_in_window,
       event_limit: event.event_limit,
@@ -209,7 +212,7 @@ export class EventService {
     }
   }
 
-  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number, is_hidden: boolean) {
+  async addEvent(name: string, date: string, location: string, description: string, lat: number, long: number, time: string, hours: number, hours_type: string, dress_code: string | null, sponsors: string[], check_in_window: number, check_in_radius: number, event_limit: number, is_hidden: boolean) {
     const { data, error } = await this.supabase
         .from('events')
         .insert(
@@ -217,6 +220,7 @@ export class EventService {
               event_time: time,
               event_hours: hours,
               event_hours_type: hours_type,
+              dress_code: dress_code,
               event_name: name,
               event_date: date,
               event_location: location,
@@ -234,7 +238,7 @@ export class EventService {
     return data;
   }
 
-  async editEvent(event_id: string, updateData: Record<string, any>) {
+  async editEvent(event_id: string, updateData: Record<string, unknown>) {
     const { data, error } = await this.supabase
       .from("events")
       .update(updateData)
