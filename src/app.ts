@@ -8,24 +8,13 @@ dotenv.config();
 
 const app = express();
 
-const defaultAllowedOrigins = [
-    "https://asubap.com",
-    "https://www.asubap.com",
-    "https://frontend-iota-gules-58.vercel.app",
-    "http://localhost:5173"
-];
-
-const allowedOrigins = [
-    ...defaultAllowedOrigins,
-    ...(process.env.FRONTEND_ORIGIN ?? "")
-        .split(",")
-        .map((origin) => origin.trim())
-        .filter(Boolean)
-];
-
 // Configure CORS
 app.use(cors({
-    origin: allowedOrigins,
+    origin: [
+        "https://frontend-iota-gules-58.vercel.app",
+        "http://localhost:5173",
+        "https://www.asubap.com"
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
